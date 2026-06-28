@@ -105,12 +105,29 @@ job-search-kit/
 └── examples/              # sample output
 ```
 
-## Credit
+## What's original here
 
-The 5-prompt LinkedIn method is adapted from Abhijay Arora Vuyyuru's *AI Action Letter
-#29*, ["I rewrote my LinkedIn with 5 Claude prompts"](https://abhijayvuyyuru.substack.com/p/i-rewrote-my-linkedin-with-5-claude).
-This repo packages and extends that idea with a résumé toolkit, ATS rules, and a PDF
-pipeline. Original framing credit to the author.
+This kit is **not** a copy of someone's prompt list. The bulk of it is original work:
+
+- A full **résumé toolkit** — `resume-review` (diagnostic), `resume-improve` (general
+  strengthening), `resume-build` (from scratch via guided intake), `resume-tailor`
+  (targeted to one JD), and `resume-interview` (interactive gap-filling) — none of which
+  come from any external source.
+- A `job-analyzer` that turns job descriptions into structured ATS keyword profiles.
+- A shared **ATS ruleset**, an ATS-safe single-column **HTML résumé template**, and an
+  **HTML→PDF rendering pipeline** (`render_pdf.py`).
+- **Skill + slash-command packaging** and a **Claude Code plugin** so it installs and runs
+  as one unit.
+- A design philosophy enforced across every capability: diagnose before rewriting, anchor
+  to real job descriptions, and never fabricate a metric (`[METRIC NEEDED]`).
+
+### Acknowledgment
+
+One component — the **LinkedIn profile** workflow (`linkedin-rewrite`, in
+`prompts/linkedin/`) — adapts a 5-prompt sequencing idea from Abhijay Arora Vuyyuru's
+*AI Action Letter #29*, ["I rewrote my LinkedIn with 5 Claude prompts"](https://abhijayvuyyuru.substack.com/p/i-rewrote-my-linkedin-with-5-claude).
+That method (an uncopyrightable idea) informed one of the seven capabilities; the prompts
+were rewritten and the rest of the kit is independent. Credited here out of good practice.
 
 ## License
 

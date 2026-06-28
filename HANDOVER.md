@@ -20,10 +20,14 @@ Core philosophy (applies to every capability):
 
 ## How it was built (origin)
 
-- The LinkedIn half adapts the 5-prompt method from Abhijay Arora Vuyyuru's *AI Action
-  Letter #29* ("I rewrote my LinkedIn with 5 Claude prompts"). Credited in the README.
-- The résumé half + ATS rules + PDF pipeline + skill/command packaging were added on top.
-- It started as `linkedin-rewrite-kit`, then was renamed and expanded to `job-search-kit`.
+- Most of the kit is original: the résumé toolkit (`resume-review`, `resume-improve`,
+  `resume-build`, `resume-tailor`, `resume-interview`), `job-analyzer`, the ATS ruleset,
+  the HTML résumé template, the HTML→PDF pipeline, and the skill/command/plugin packaging.
+- One of the seven capabilities — the LinkedIn `linkedin-rewrite` workflow — adapts a
+  5-prompt sequencing *idea* from Abhijay Arora Vuyyuru's *AI Action Letter #29* (the
+  prompts were rewritten; the idea is uncopyrightable). Credited in the README.
+- It started as `linkedin-rewrite-kit`, then was renamed and substantially expanded into
+  the broader `job-search-kit`.
 
 ## Current state (what exists)
 
