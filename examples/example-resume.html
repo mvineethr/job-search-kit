@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!-- Example filled from shared/resume-html/resume-template.html (fictional person).
+     Render: python scripts/render_pdf.py examples/example-resume.html -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Jordan Rivera — Resume</title>
+<style>
+  @page { size: Letter; margin: 0.5in 0.6in; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, "Calibri", sans-serif; font-size: 10.5pt;
+         line-height: 1.35; color: #111; margin: 0; }
+  h1 { font-size: 20pt; margin: 0 0 2px 0; letter-spacing: 0.3px; }
+  .title { font-size: 11pt; color: #333; margin: 0 0 4px 0; }
+  .contact { font-size: 9.5pt; color: #333; margin: 0 0 10px 0; }
+  .contact a { color: #111; text-decoration: none; }
+  h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: 0.5px;
+       border-bottom: 1px solid #444; padding-bottom: 2px; margin: 14px 0 6px 0; }
+  .role { margin: 0 0 8px 0; }
+  .role-line { display: flex; justify-content: space-between; }
+  .role-title { font-weight: bold; }
+  .role-meta { color: #333; white-space: nowrap; }
+  .company { font-style: italic; color: #222; }
+  ul { margin: 4px 0 0 0; padding-left: 18px; }
+  li { margin: 0 0 3px 0; }
+  .skills p { margin: 2px 0; }
+  p { margin: 0 0 6px 0; }
+</style>
+</head>
+<body>
+  <h1>Jordan Rivera</h1>
+  <p class="title">Site Reliability Engineer</p>
+  <p class="contact">
+    Austin, TX &nbsp;|&nbsp; 555-010-2030 &nbsp;|&nbsp;
+    <a href="mailto:jordan.rivera@example.com">jordan.rivera@example.com</a> &nbsp;|&nbsp;
+    <a href="https://linkedin.com/in/jordanrivera">linkedin.com/in/jordanrivera</a>
+  </p>
+
+  <h2>Summary</h2>
+  <p>Site Reliability Engineer who builds reliability tooling, not just runs it. Shipped
+  an incident-automation platform across 9+ observability sources and owns Terraform for a
+  multi-account AWS estate. Strongest in Python, Kubernetes, and CI/CD.</p>
+
+  <h2>Skills</h2>
+  <div class="skills">
+    <p><strong>Reliability:</strong> SRE, SLO/SLI/SLA, incident response, on-call, error budgets</p>
+    <p><strong>Cloud &amp; Infra:</strong> AWS, GCP, Kubernetes, Docker, Terraform, CI/CD</p>
+    <p><strong>Languages:</strong> Python, Go, Bash, SQL</p>
+  </div>
+
+  <h2>Experience</h2>
+  <div class="role">
+    <div class="role-line">
+      <span class="role-title">Site Reliability Engineer</span>
+      <span class="role-meta">Feb 2022 – Present</span>
+    </div>
+    <div class="role-line">
+      <span class="company">Northwind Financial</span>
+      <span class="role-meta">Austin, TX</span>
+    </div>
+    <ul>
+      <li>Built an agentic incident-response platform (Python, FastAPI) correlating 9+ observability sources in parallel, cutting on-call investigation time by [METRIC NEEDED]%.</li>
+      <li>Standardized Terraform modules across [METRIC NEEDED] AWS accounts, reducing environment provisioning from days to hours.</li>
+      <li>Established SLO/SLI/SLA frameworks for [METRIC NEEDED] production services, improving alert signal-to-noise.</li>
+    </ul>
+  </div>
+
+  <h2>Education</h2>
+  <div class="role">
+    <div class="role-line">
+      <span class="role-title">B.S., Computer Science</span>
+      <span class="role-meta">2017</span>
+    </div>
+    <div class="role-line">
+      <span class="company">State University</span>
+      <span class="role-meta">Austin, TX</span>
+    </div>
+  </div>
+
+  <h2>Certifications</h2>
+  <ul>
+    <li>AWS Certified Solutions Architect – Associate</li>
+  </ul>
+</body>
+</html>

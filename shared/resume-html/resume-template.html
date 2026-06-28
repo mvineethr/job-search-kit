@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+  ATS-safe single-column résumé template.
+  Fill the {{PLACEHOLDERS}} (or duplicate blocks), then render to PDF with
+  scripts/render_pdf.py. Keep it single-column, no tables, no images, real text.
+  Sections use standard headings so parsers map them to the right fields.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{FULL_NAME}} — Resume</title>
+<style>
+  @page { size: Letter; margin: 0.5in 0.6in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, "Calibri", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.35;
+    color: #111;
+    margin: 0;
+  }
+  h1 { font-size: 20pt; margin: 0 0 2px 0; letter-spacing: 0.3px; }
+  .title { font-size: 11pt; color: #333; margin: 0 0 4px 0; }
+  .contact { font-size: 9.5pt; color: #333; margin: 0 0 10px 0; }
+  .contact a { color: #111; text-decoration: none; }
+  h2 {
+    font-size: 11pt; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid #444; padding-bottom: 2px;
+    margin: 14px 0 6px 0;
+  }
+  .role { margin: 0 0 8px 0; }
+  .role-line { display: flex; justify-content: space-between; }
+  .role-title { font-weight: bold; }
+  .role-meta { color: #333; white-space: nowrap; }
+  .company { font-style: italic; color: #222; }
+  ul { margin: 4px 0 0 0; padding-left: 18px; }
+  li { margin: 0 0 3px 0; }
+  .skills p { margin: 2px 0; }
+  p { margin: 0 0 6px 0; }
+</style>
+</head>
+<body>
+
+  <!-- ===== HEADER (plain text block, NOT a page header) ===== -->
+  <h1>{{FULL_NAME}}</h1>
+  <p class="title">{{TARGET_TITLE}}</p>
+  <p class="contact">
+    {{CITY_STATE}} &nbsp;|&nbsp; {{PHONE}} &nbsp;|&nbsp;
+    <a href="mailto:{{EMAIL}}">{{EMAIL}}</a> &nbsp;|&nbsp;
+    <a href="{{LINKEDIN_URL}}">{{LINKEDIN_SHORT}}</a>
+  </p>
+
+  <!-- ===== SUMMARY ===== -->
+  <h2>Summary</h2>
+  <p>{{SUMMARY_2_3_LINES}}</p>
+
+  <!-- ===== SKILLS (comma-separated keywords parse best) ===== -->
+  <h2>Skills</h2>
+  <div class="skills">
+    <p><strong>{{SKILL_GROUP_1_LABEL}}:</strong> {{SKILL_GROUP_1_ITEMS}}</p>
+    <p><strong>{{SKILL_GROUP_2_LABEL}}:</strong> {{SKILL_GROUP_2_ITEMS}}</p>
+    <p><strong>{{SKILL_GROUP_3_LABEL}}:</strong> {{SKILL_GROUP_3_ITEMS}}</p>
+  </div>
+
+  <!-- ===== EXPERIENCE (duplicate .role per job, newest first) ===== -->
+  <h2>Experience</h2>
+
+  <div class="role">
+    <div class="role-line">
+      <span class="role-title">{{JOB_TITLE}}</span>
+      <span class="role-meta">{{START}} – {{END}}</span>
+    </div>
+    <div class="role-line">
+      <span class="company">{{COMPANY}}</span>
+      <span class="role-meta">{{LOCATION}}</span>
+    </div>
+    <ul>
+      <li>{{BULLET_1}}</li>
+      <li>{{BULLET_2}}</li>
+      <li>{{BULLET_3}}</li>
+    </ul>
+  </div>
+
+  <!-- copy the .role block above for each additional role -->
+
+  <!-- ===== EDUCATION ===== -->
+  <h2>Education</h2>
+  <div class="role">
+    <div class="role-line">
+      <span class="role-title">{{DEGREE}}</span>
+      <span class="role-meta">{{GRAD_YEAR}}</span>
+    </div>
+    <div class="role-line">
+      <span class="company">{{SCHOOL}}</span>
+      <span class="role-meta">{{SCHOOL_LOCATION}}</span>
+    </div>
+  </div>
+
+  <!-- ===== CERTIFICATIONS (optional) ===== -->
+  <h2>Certifications</h2>
+  <ul>
+    <li>{{CERT_1}}</li>
+  </ul>
+
+</body>
+</html>

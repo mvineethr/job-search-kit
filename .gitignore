@@ -1,0 +1,14 @@
+# Your personal inputs — never commit these
+inputs/
+*.pdf
+*.docx
+my-profile*
+voice-doc.md
+target-jds.md
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
