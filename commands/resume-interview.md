@@ -4,7 +4,7 @@ description: Interview me to fill resume metric gaps and improve my resume + Lin
 
 Interview me to finish and strengthen my resume (and LinkedIn if I want).
 
-Follow `skills/resume-interview/SKILL.md`.
+Follow `${CLAUDE_PLUGIN_ROOT}/skills/resume-interview/SKILL.md`.
 
 Scan my current draft for every [METRIC NEEDED] and weak bullet. Then ask me questions
 in small batches (3–5 at a time) — use clickable choice questions where it helps, and

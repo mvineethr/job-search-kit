@@ -5,7 +5,7 @@ description: Edit an existing resume to target a specific job description — re
 
 # Resume Tailor (one job at a time)
 
-Re-aim an existing resume at a single target job. Read `shared/ats-rules.md` first.
+Re-aim an existing resume at a single target job. Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` first.
 
 ## Inputs
 - The user's current resume.
@@ -32,8 +32,8 @@ Re-aim an existing resume at a single target job. Read `shared/ats-rules.md` fir
 
 ## Output
 - Tailored content section by section with before/after.
-- Then render: fill `shared/resume-html/resume-template.html`, run
-  `python scripts/render_pdf.py <file>.html Company_Role_Resume.pdf`. **PDF only.**
+- Then render: fill `${CLAUDE_PLUGIN_ROOT}/shared/resume-html/resume-template.html`, run
+  `python ${CLAUDE_PLUGIN_ROOT}/scripts/render_pdf.py <file>.html Company_Role_Resume.pdf`. **PDF only.**
 
 ## Rules
 - Tailoring = reframing + reprioritizing **real** experience to match the JD. Never

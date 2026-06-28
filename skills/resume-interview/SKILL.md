@@ -7,7 +7,7 @@ description: Interactively interview the user to fill missing resume metrics and
 
 Drive a guided Q&A that turns a placeholder-filled draft into a finished, defensible
 resume — and surfaces improvements the user wouldn't think to volunteer. Read
-`shared/ats-rules.md` first.
+`${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` first.
 
 ## How to run it
 

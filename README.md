@@ -24,22 +24,40 @@ Each is a standalone skill **and** a slash command.
 
 All résumé outputs render to a **single-column, ATS-safe PDF** (the only output format).
 
-## Install / attach to your agent
+## Requirements
 
-**Claude Code / Cowork** — clone, then make the skills and commands discoverable:
+- **An agent with a filesystem and shell** — Claude Code or Cowork. The résumé skills run
+  a script to produce the PDF, so a plain browser chat (no shell) can do the *writing* but
+  **cannot render the PDF**.
+- **Python 3** with the rendering deps: `pip install -r requirements.txt`
+  (WeasyPrint; or the Playwright fallback — see `requirements.txt`).
 
-```bash
-git clone <your-fork-url> job-search-kit
-cd job-search-kit
+The LinkedIn prompts and all the *text* work need none of the above; only PDF rendering does.
+
+## Install
+
+This repo is a self-contained **Claude Code plugin** and a single-plugin **marketplace**,
+so it installs as one unit (don't cherry-pick individual skill folders — internal paths
+resolve via `${CLAUDE_PLUGIN_ROOT}` and only work when installed whole).
+
+**Option A — install as a plugin (recommended):**
+
+```text
+/plugin marketplace add mvineethr/job-search-kit
+/plugin install job-search-kit@job-search-kit
 ```
 
-- **Skills:** copy (or symlink) the folders in `skills/` into your project's or user
-  `.claude/skills/` directory — each `skills/<name>/SKILL.md` becomes an auto-triggered skill.
-- **Commands:** copy the files in `commands/` into `.claude/commands/` — each becomes a
-  `/<name>` slash command.
+Skills are then namespaced, e.g. `/job-search-kit:resume-review`, `/job-search-kit:resume-tailor`.
 
-Or just keep the repo in your working folder and tell the agent: *"use the job-search-kit
-skills in this repo."*
+**Option B — load locally for development:**
+
+```bash
+git clone https://github.com/mvineethr/job-search-kit
+claude --plugin-dir ./job-search-kit
+```
+
+**Option C — no install:** keep the repo in your working folder and tell the agent
+*"use the job-search-kit skills in this repo"* (works in Cowork, paths resolve against the repo root).
 
 ## How to use it
 
@@ -55,7 +73,7 @@ skills in this repo."*
 4. **Fill every `[METRIC NEEDED]`** with a real, defensible number.
 5. **Render the PDF** (résumé tools do this for you):
    ```bash
-   pip install weasyprint        # or: pip install playwright && playwright install chromium
+   pip install -r requirements.txt
    python scripts/render_pdf.py shared/resume-html/resume-template.html FirstLast_Resume.pdf
    ```
 6. **ATS self-check:** open the PDF, select-all → copy → paste into a text editor. If the
@@ -71,6 +89,8 @@ images, PDF only. Every résumé skill follows it.
 
 ```
 job-search-kit/
+├── .claude-plugin/        # plugin.json manifest + marketplace.json
+├── requirements.txt       # PDF rendering deps (WeasyPrint, pypdf)
 ├── README.md  ·  LICENSE (MIT)  ·  CONTRIBUTING.md  ·  .gitignore
 ├── skills/                 # auto-triggered skills (one folder each)
 │   ├── job-analyzer/        resume-review/      resume-improve/

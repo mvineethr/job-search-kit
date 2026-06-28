@@ -13,7 +13,7 @@ only finds problems. (Use `resume-improve` or `resume-tailor` to fix them.)
 - *(Optional)* target job descriptions — if given, run `job-analyzer` first and review
   against them. If not, review against general standards and say so.
 
-## Read `shared/ats-rules.md` and judge against it.
+## Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` and judge against it.
 
 ## Output — a scored diagnostic
 

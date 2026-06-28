@@ -12,7 +12,7 @@ mega-prompt, which produces shallow, generic output for every section.
 ## Before starting — gather inputs
 1. LinkedIn profile **PDF export** (Profile → Resources → Save to PDF).
 2. **3–5 target job descriptions** (run `job-analyzer` on them if useful).
-3. *(Optional)* a voice sample (`templates/voice-doc-template.md`).
+3. *(Optional)* a voice sample (`${CLAUDE_PLUGIN_ROOT}/templates/voice-doc-template.md`).
 
 If JDs are missing, say so and either wait or proceed with a clearly-flagged role
 archetype — never silently pretend to have targets.
@@ -24,7 +24,7 @@ archetype — never silently pretend to have targets.
 - **Mobile-first formatting** for profile copy: short lines, frequent breaks.
 - Flag inconsistencies between the user's documents.
 
-## The five steps (full prompts in `prompts/linkedin/`)
+## The five steps (full prompts in `${CLAUDE_PLUGIN_ROOT}/prompts/linkedin/`)
 1. `01-brutal-audit.md` — diagnostic only (identity, keyword, credibility, search,
    one-line). Quote the user's actual lines back.
 2. `02-headline-and-about.md` — 3 ranked headlines (≤120 chars) + 2 About versions

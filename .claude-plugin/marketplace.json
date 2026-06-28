@@ -1,0 +1,14 @@
+{
+  "name": "job-search-kit",
+  "owner": {
+    "name": "Vineeth Reddy Mudda",
+    "url": "https://github.com/mvineethr"
+  },
+  "plugins": [
+    {
+      "name": "job-search-kit",
+      "source": "./",
+      "description": "Resume + LinkedIn AI toolkit: skills, slash commands, and an ATS-safe PDF pipeline. Grounded in real job descriptions; never fabricates metrics."
+    }
+  ]
+}

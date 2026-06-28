@@ -1,0 +1,8 @@
+# PDF rendering pipeline (resume skills). Install with:
+#   pip install -r requirements.txt
+weasyprint>=60
+pypdf>=4
+
+# Optional fallback renderer (headless Chromium) if WeasyPrint can't install:
+#   pip install playwright && playwright install chromium
+# playwright>=1.40

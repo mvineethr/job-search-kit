@@ -11,7 +11,7 @@ Improve an existing resume for overall quality and ATS-safety, not for one speci
 ## Inputs
 - The user's current resume. Optionally the output of `resume-review` if already run.
 
-## Read `shared/ats-rules.md` first.
+## Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` first.
 
 ## Workflow
 
@@ -32,8 +32,8 @@ Improve an existing resume for overall quality and ATS-safety, not for one speci
 ## Output
 - The improved content, section by section, with before/after for bullets.
 - A consolidated **[METRIC NEEDED] gap list**.
-- Then offer to render a PDF: fill `shared/resume-html/resume-template.html` and run
-  `python scripts/render_pdf.py <file>.html`. **PDF is the only output format.**
+- Then offer to render a PDF: fill `${CLAUDE_PLUGIN_ROOT}/shared/resume-html/resume-template.html` and run
+  `python ${CLAUDE_PLUGIN_ROOT}/scripts/render_pdf.py <file>.html`. **PDF is the only output format.**
 
 ## Rules
 - Never fabricate metrics, employers, dates, or skills.

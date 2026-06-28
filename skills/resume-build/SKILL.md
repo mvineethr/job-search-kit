@@ -6,7 +6,7 @@ description: Build a resume from scratch through guided intake when the user has
 # Resume Build (from scratch)
 
 Create a complete resume from nothing via a short structured interview, then render an
-ATS-safe PDF. Read `shared/ats-rules.md` first.
+ATS-safe PDF. Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` first.
 
 ## Step 1 — Intake (ask in small batches, not all at once)
 
@@ -28,13 +28,13 @@ faster / how big was the team?"). This is where resume quality is won.
 - **Experience:** max 3–5 bullets per role, `[verb]+[scope]+[outcome]+[impact]`,
   strongest first, a number in every bullet (else `[METRIC NEEDED]`).
 - **Education / Certifications.**
-- Banned verbs/words per `shared/ats-rules.md`.
+- Banned verbs/words per `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md`.
 
 ## Step 3 — Render PDF (only output format)
 
-1. Fill `shared/resume-html/resume-template.html` with the content (duplicate the
+1. Fill `${CLAUDE_PLUGIN_ROOT}/shared/resume-html/resume-template.html` with the content (duplicate the
    `.role` block per job).
-2. Run `python scripts/render_pdf.py path/to/resume.html FirstLast_Resume.pdf`.
+2. Run `python ${CLAUDE_PLUGIN_ROOT}/scripts/render_pdf.py path/to/resume.html FirstLast_Resume.pdf`.
 3. Tell the user to do the select-all/copy ATS check.
 
 ## Rules

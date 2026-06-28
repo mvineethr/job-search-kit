@@ -32,6 +32,9 @@ beautiful résumé that parses badly gets auto-ranked to the bottom.
 
 ## File / output
 
+- **Requirements:** rendering needs an agent with a shell + Python
+  (`pip install -r requirements.txt`). A browser-only chat can draft the resume text but
+  cannot produce the PDF.
 - **Output format: PDF only**, generated from the HTML template in
   `shared/resume-html/` so the text layer is clean and selectable.
 - Filename: `FirstLast_Resume.pdf` (no spaces, no version junk like `final_v3`).

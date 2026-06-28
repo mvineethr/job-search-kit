@@ -1,0 +1,12 @@
+{
+  "name": "job-search-kit",
+  "description": "Resume + LinkedIn optimization toolkit: diagnose, build, improve, tailor, and interview — grounded in real job descriptions, never fabricating metrics, with an ATS-safe PDF pipeline.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Vineeth Reddy Mudda"
+  },
+  "homepage": "https://github.com/mvineethr/job-search-kit",
+  "repository": "https://github.com/mvineethr/job-search-kit",
+  "license": "MIT",
+  "keywords": ["resume", "linkedin", "ats", "job-search", "career", "cv"]
+}

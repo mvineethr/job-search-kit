@@ -58,6 +58,11 @@ layer, ATS keywords parse, `[METRIC NEEDED]` placeholders survive until filled.
 
 ## Roadmap / open items
 
+- [x] **Packaged as a Claude Code plugin** (`.claude-plugin/plugin.json` + `marketplace.json`).
+      Internal file refs use `${CLAUDE_PLUGIN_ROOT}` so skills work after install. Install via
+      `/plugin marketplace add mvineethr/job-search-kit` then `/plugin install job-search-kit@job-search-kit`.
+- [x] **Documented requirements** (shell + Python; `requirements.txt`) — résumé PDF
+      rendering needs Claude Code/Cowork, not a browser-only chat.
 - [ ] **More résumé UI templates** — modern-accent (ATS-safe), compact/dense (ATS-safe),
       and an optional two-column "designer" variant (NOT ATS-safe; humans only).
       Status: discussed, put on hold by user.
