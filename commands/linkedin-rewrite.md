@@ -7,6 +7,10 @@ Run the sequenced LinkedIn rewrite on my profile.
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/linkedin-rewrite/SKILL.md`; the full prompts live in `${CLAUDE_PLUGIN_ROOT}/prompts/linkedin/`.
 Use my LinkedIn PDF export + 3–5 target JDs (run job-analyzer on them if useful).
 
+This is a ROLE-LEVEL, run-once-then-refresh optimization — not per-application. Optimize my
+profile for my target role family using signal shared across the JDs, not any single posting.
+Per-job tailoring belongs on my resume (`resume-tailor`), not here.
+
 Go step by step, in order, one at a time — do NOT do it all in one shot:
 1) brutal audit, 2) headline + About, 3) experience bullets, 4) Featured + Skills,
 5) 4-week content plan.

@@ -20,6 +20,7 @@ Each is a standalone skill **and** a slash command.
 | **Resume Build** | `resume-build` | Build a résumé from scratch via guided intake. |
 | **Resume Tailor** | `resume-tailor` | Re-aim a résumé at one specific job, matching its exact keywords. |
 | **Resume Interview** | `resume-interview` | Interactive Q&A that fills `[METRIC NEEDED]` gaps and probes for improvements. |
+| **Cover Letter** | `cover-letter` | Tailored one-page cover letter (hook → value-match → proof → close) for a specific job. |
 | **LinkedIn Rewrite** | `linkedin-rewrite` | The 5-step sequenced LinkedIn profile workflow. |
 
 All résumé outputs render to a **single-column, ATS-safe PDF** (the only output format).
@@ -61,6 +62,10 @@ claude --plugin-dir ./job-search-kit
 
 ## How to use it
 
+> **New here? Read [`INSTRUCTIONS.md`](INSTRUCTIONS.md)** for the full step-by-step guide
+> (install, inputs, every capability, the end-to-end workflow, theming, troubleshooting).
+> The quick version:
+
 1. **Gather inputs** (see `templates/inputs-checklist.md`): your résumé, your LinkedIn PDF,
    and 3–5 target job descriptions.
 2. **Analyze the target:** `/job-analyzer` on your JDs.
@@ -79,11 +84,36 @@ claude --plugin-dir ./job-search-kit
 6. **ATS self-check:** open the PDF, select-all → copy → paste into a text editor. If the
    text comes out in order with nothing missing, it'll parse.
 
+## Strategy: optimize once vs. tailor per job
+
+The kit is built around a two-tier model — get this right and you stop wasting effort:
+
+**Stable layer (set once, refresh occasionally).** Your **LinkedIn profile** and your
+**master resume**. LinkedIn is a single public page every recruiter sees, and you don't
+control when they look — so you can't and shouldn't re-tailor it per application. Optimize
+both *once* for your **target role family**, using the keywords that recur **across several
+JDs** (not one posting), then refresh quarterly or when your target shifts.
+→ `linkedin-rewrite` (profile) and `resume-improve` (master resume).
+
+**Per-application layer (do every time).** Your submitted **resume** — this is one file per
+application, so per-JD tailoring belongs here and only here. Tailor a *copy* of the master
+resume to each posting's exact requirements and keywords.
+→ `resume-tailor`.
+
+Rule of thumb: **LinkedIn + master resume = role-level and stable; the submitted resume =
+job-level and tailored.** Keep all three factually consistent (same titles, dates,
+employers) — only emphasis and keywords shift per job, never the facts.
+
 ## ATS rules
 
 The single source of truth is [`shared/ats-rules.md`](shared/ats-rules.md) — single
 column, standard headings, literal JD keywords, real selectable text, no tables/columns/
 images, PDF only. Every résumé skill follows it.
+
+**Themes:** the HTML template has a theme layer (CSS variables for accent color, font, and
+density) with presets — Classic, Modern (navy/teal), and Compact — so two people using this
+kit don't produce an identical-looking résumé. Themes change only the *look*; the ATS-safe
+*structure* never changes.
 
 ## Repo layout
 
@@ -97,9 +127,12 @@ job-search-kit/
 │   ├── resume-build/        resume-tailor/      linkedin-rewrite/
 ├── commands/              # /slash-command wrappers (one .md each)
 ├── prompts/linkedin/      # the 5 sequenced LinkedIn prompts
+├── INSTRUCTIONS.md        # detailed step-by-step usage guide
+├── PLAN.md                # vision + roadmap (planning doc)
 ├── shared/
 │   ├── ats-rules.md        # shared ATS reference
-│   └── resume-html/        # ATS-safe single-column HTML template
+│   ├── resume-html/        # ATS-safe single-column HTML template (themeable)
+│   └── cover-letter-html/  # matching cover-letter template
 ├── scripts/render_pdf.py  # HTML → PDF (WeasyPrint, Playwright fallback)
 ├── templates/             # inputs checklist + voice doc
 └── examples/              # sample output

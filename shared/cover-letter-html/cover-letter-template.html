@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+  One-page cover letter, themed to match the résumé. Same :root variables as the résumé
+  template (keep them in sync so the two documents look like a set). Fill {{PLACEHOLDERS}},
+  then render with scripts/render_pdf.py.
+
+  ATS-SAFE: single column, standard fonts, real selectable text, no tables/columns/images/
+  text-boxes/page-headers — same rules as the résumé (shared/ats-rules.md). Theme the look
+  via the :root variables; never change the structure.
+
+  Use the SAME preset values you chose for the résumé (see resume-template.html for presets).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{FULL_NAME}} — Cover Letter</title>
+<style>
+  :root {
+    --accent: #111;
+    --text: #111;
+    --muted: #333;
+    --font: Arial, Helvetica, "Calibri", sans-serif;
+    --fontsize: 11pt;
+    --line: 1.45;
+    --namesize: 18pt;
+  }
+  @page { size: Letter; margin: 0.8in 0.9in; }
+  * { box-sizing: border-box; }
+  body { font-family: var(--font); font-size: var(--fontsize); line-height: var(--line);
+         color: var(--text); margin: 0; }
+  .name { font-size: var(--namesize); color: var(--accent); font-weight: bold; margin: 0 0 1px 0; }
+  .sender { font-size: 9.5pt; color: var(--muted); margin: 0 0 18px 0; }
+  .sender a { color: var(--text); text-decoration: none; }
+  .meta { margin: 0 0 16px 0; }
+  .recipient { margin: 0 0 16px 0; }
+  p { margin: 0 0 11px 0; }
+  .signoff { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+  <p class="name">{{FULL_NAME}}</p>
+  <p class="sender">
+    {{CITY_STATE}} &nbsp;|&nbsp; {{PHONE}} &nbsp;|&nbsp;
+    <a href="mailto:{{EMAIL}}">{{EMAIL}}</a> &nbsp;|&nbsp;
+    <a href="{{LINKEDIN_URL}}">{{LINKEDIN_SHORT}}</a>
+  </p>
+
+  <p class="meta">{{DATE}}</p>
+
+  <div class="recipient">
+    {{HIRING_MANAGER_OR_TEAM}}<br>
+    {{COMPANY}}
+  </div>
+
+  <p>{{SALUTATION}}</p>
+
+  <p>{{PARAGRAPH_1_HOOK}}</p>
+  <p>{{PARAGRAPH_2_VALUE_MATCH}}</p>
+  <p>{{PARAGRAPH_3_PROOF}}</p>
+  <p>{{PARAGRAPH_4_CLOSE}}</p>
+
+  <div class="signoff">
+    <p>Sincerely,<br>{{FULL_NAME}}</p>
+  </div>
+
+</body>
+</html>

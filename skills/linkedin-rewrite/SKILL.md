@@ -9,9 +9,29 @@ A sequenced, no-fabrication workflow for the LinkedIn *profile* (distinct from t
 skills in this kit). Run the five steps **in order** — never collapse them into one
 mega-prompt, which produces shallow, generic output for every section.
 
+## This is a ROLE-LEVEL, run-once-then-refresh workflow — NOT per-application
+
+LinkedIn is one public page that every recruiter sees, and you don't control *when* (or
+whether) any of them looks. So you do **not** re-tailor it for each job — that's both
+impossible (you can't version a single profile) and pointless (timing is unpredictable).
+
+Instead, optimize it **once** for the user's whole **target role family** (e.g. SRE /
+Platform / Reliability), using the keywords and themes that recur **across all 3–5 target
+JDs**, not any single posting. The goal is *discoverability* (ranking in recruiter search)
+and a strong, stable narrative — not reactive edits.
+
+- Optimize for the role, not one posting. "Role-targeted and sharp," never "generic."
+- **Refresh cadence:** revisit when the target shifts or the user ships something notable —
+  think quarterly, not per-application.
+- Per-job tailoring belongs on the **resume** (`resume-tailor`), not here.
+- Keep the profile factually consistent with the resume (titles, dates, employers); only
+  emphasis differs across documents.
+
 ## Before starting — gather inputs
 1. LinkedIn profile **PDF export** (Profile → Resources → Save to PDF).
-2. **3–5 target job descriptions** (run `job-analyzer` on them if useful).
+2. **3–5 target job descriptions for the same role family.** Run `job-analyzer` across all
+   of them and use the **shared signal** — terms that appear in 3+ JDs — to drive the
+   rewrite. You're optimizing for the role pattern, not one posting.
 3. *(Optional)* a voice sample (`${CLAUDE_PLUGIN_ROOT}/templates/voice-doc-template.md`).
 
 If JDs are missing, say so and either wait or proceed with a clearly-flagged role

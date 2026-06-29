@@ -1,6 +1,6 @@
 # ATS Rules (shared reference)
 
-Every résumé skill in this kit must follow these. ATS = Applicant Tracking System —
+Every résumé **and cover-letter** skill in this kit must follow these. ATS = Applicant Tracking System —
 the software that parses your résumé into fields before a human ever sees it. A
 beautiful résumé that parses badly gets auto-ranked to the bottom.
 
@@ -17,6 +17,14 @@ beautiful résumé that parses badly gets auto-ranked to the bottom.
 - **Reverse-chronological** experience (most recent first).
 - **One page** for <10 yrs experience; two pages max otherwise.
 - **Dates** as `Mon YYYY – Mon YYYY` (or `– Present`), consistent everywhere.
+
+## Theming (allowed variation — so everyone's output isn't identical)
+
+The HTML template exposes a theme layer (CSS variables: accent color, font family, density)
+with presets (Classic, Modern, Compact). Vary these freely — they don't affect parsing.
+What must NOT change for ATS safety: single column, standard section headings, real
+selectable text, no tables/columns/images, standard fonts. Theme the *look*, never the
+*structure*.
 
 ## Content
 

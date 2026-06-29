@@ -7,8 +7,13 @@ description: Edit an existing resume to target a specific job description — re
 
 Re-aim an existing resume at a single target job. Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` first.
 
+**Work from the user's "master resume"** (the stable role-level base from `resume-improve`)
+and produce a **separate per-application copy** — never overwrite the master. This is the
+per-application layer; the master resume and LinkedIn stay stable. Save tailored output as
+`Company_Role_Resume.pdf` so each application has its own file.
+
 ## Inputs
-- The user's current resume.
+- The user's master resume (or current resume).
 - The target job description.
 
 ## Workflow

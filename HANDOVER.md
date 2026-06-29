@@ -67,7 +67,12 @@ layer, ATS keywords parse, `[METRIC NEEDED]` placeholders survive until filled.
       `/plugin marketplace add mvineethr/job-search-kit` then `/plugin install job-search-kit@job-search-kit`.
 - [x] **Documented requirements** (shell + Python; `requirements.txt`) — résumé PDF
       rendering needs Claude Code/Cowork, not a browser-only chat.
-- [ ] **More résumé UI templates** — modern-accent (ATS-safe), compact/dense (ATS-safe),
+- [x] **Theming / output variety** — résumé template now has a theme layer (CSS variables:
+      accent, font, density) + presets (Classic / Modern / Compact) so users don't all
+      produce identical output. ATS structure unchanged.
+- [x] **Cover-letter capability** (`cover-letter` skill + command + matching template).
+- [x] **Vision + roadmap captured** in `PLAN.md` (kept out of the README by request).
+- [ ] **More résumé UI templates / second layout** — modern-accent (ATS-safe), compact/dense (ATS-safe),
       and an optional two-column "designer" variant (NOT ATS-safe; humans only).
       Status: discussed, put on hold by user.
 - [ ] **`recommendation-request` capability** — draft a personalized LinkedIn
@@ -79,6 +84,7 @@ layer, ATS keywords parse, `[METRIC NEEDED]` placeholders survive until filled.
 
 ## How to continue
 
+- Full usage guide: `INSTRUCTIONS.md` (detailed step-by-step).
 - To use the kit: see `README.md` (gather inputs → `/job-analyzer` → pick a résumé or
   LinkedIn capability → fill `[METRIC NEEDED]` → render PDF).
 - To extend it: see `CONTRIBUTING.md`. Keep the no-fabricated-metrics rule and the

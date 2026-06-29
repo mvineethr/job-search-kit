@@ -8,6 +8,12 @@ description: Take an existing resume and produce an improved version — stronge
 Improve an existing resume for overall quality and ATS-safety, not for one specific JD.
 (For one-job targeting, use `resume-tailor`.)
 
+**This produces the user's "master resume"** — the strong, stable, role-level base
+(optimized using signal shared across their target JDs, not any single posting). The master
+is the source of truth; `resume-tailor` makes per-application copies *from* it without
+changing it. Think of `resume-improve` + `linkedin-rewrite` as the **stable layer** you set
+once and refresh occasionally, and `resume-tailor` as the **per-application layer**.
+
 ## Inputs
 - The user's current resume. Optionally the output of `resume-review` if already run.
 

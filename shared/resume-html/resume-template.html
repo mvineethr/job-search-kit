@@ -1,41 +1,52 @@
 <!DOCTYPE html>
 <!--
-  ATS-safe single-column résumé template.
-  Fill the {{PLACEHOLDERS}} (or duplicate blocks), then render to PDF with
-  scripts/render_pdf.py. Keep it single-column, no tables, no images, real text.
-  Sections use standard headings so parsers map them to the right fields.
+  ATS-safe single-column résumé template with a THEME LAYER.
+  Fill the {{PLACEHOLDERS}}, then render with scripts/render_pdf.py.
+  Stays single-column, no tables/images, real selectable text — ATS-safe in every theme.
+
+  ===== THEMING =====
+  Change the look by editing the :root variables below. Three presets are provided so two
+  people using this kit don't produce identical-looking résumés. Pick one (copy its values
+  into :root) or tune your own. All presets keep the ATS-safe structure.
+
+  PRESET: Classic (default)  -> --accent:#111; --font: Arial, Helvetica, sans-serif; --fontsize:10.5pt; --line:1.35
+  PRESET: Modern (navy)      -> --accent:#1f3a5f; --font: "Helvetica Neue", Arial, sans-serif; --fontsize:10.5pt; --line:1.35
+  PRESET: Modern (teal)      -> --accent:#0b5d4e; --font: Georgia, "Times New Roman", serif; --fontsize:10.5pt; --line:1.4
+  PRESET: Compact (dense)    -> --accent:#111; --font: Arial, Helvetica, sans-serif; --fontsize:9.5pt;  --line:1.22
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>{{FULL_NAME}} — Resume</title>
 <style>
+  :root {
+    --accent: #111;                                   /* name + section rules + headings */
+    --text: #111;
+    --muted: #333;
+    --font: Arial, Helvetica, "Calibri", sans-serif;  /* body + headings font */
+    --fontsize: 10.5pt;
+    --line: 1.35;
+    --namesize: 20pt;
+  }
   @page { size: Letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; }
-  body {
-    font-family: Arial, Helvetica, "Calibri", sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.35;
-    color: #111;
-    margin: 0;
-  }
-  h1 { font-size: 20pt; margin: 0 0 2px 0; letter-spacing: 0.3px; }
-  .title { font-size: 11pt; color: #333; margin: 0 0 4px 0; }
-  .contact { font-size: 9.5pt; color: #333; margin: 0 0 10px 0; }
-  .contact a { color: #111; text-decoration: none; }
-  h2 {
-    font-size: 11pt; text-transform: uppercase; letter-spacing: 0.5px;
-    border-bottom: 1px solid #444; padding-bottom: 2px;
-    margin: 14px 0 6px 0;
-  }
+  body { font-family: var(--font); font-size: var(--fontsize); line-height: var(--line);
+         color: var(--text); margin: 0; }
+  h1 { font-size: var(--namesize); color: var(--accent); margin: 0 0 2px 0; letter-spacing: 0.3px; }
+  .title { font-size: 11pt; color: var(--muted); margin: 0 0 4px 0; }
+  .contact { font-size: 9.5pt; color: var(--muted); margin: 0 0 10px 0; }
+  .contact a { color: var(--text); text-decoration: none; }
+  h2 { font-size: 11pt; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;
+       border-bottom: 1px solid var(--accent); padding-bottom: 2px; margin: 13px 0 6px 0; }
   .role { margin: 0 0 8px 0; }
   .role-line { display: flex; justify-content: space-between; }
   .role-title { font-weight: bold; }
-  .role-meta { color: #333; white-space: nowrap; }
+  .role-meta { color: var(--muted); white-space: nowrap; }
   .company { font-style: italic; color: #222; }
   ul { margin: 4px 0 0 0; padding-left: 18px; }
   li { margin: 0 0 3px 0; }
   .skills p { margin: 2px 0; }
+  .edu { margin: 1px 0; }
   p { margin: 0 0 6px 0; }
 </style>
 </head>
@@ -50,11 +61,9 @@
     <a href="{{LINKEDIN_URL}}">{{LINKEDIN_SHORT}}</a>
   </p>
 
-  <!-- ===== SUMMARY ===== -->
   <h2>Summary</h2>
   <p>{{SUMMARY_2_3_LINES}}</p>
 
-  <!-- ===== SKILLS (comma-separated keywords parse best) ===== -->
   <h2>Skills</h2>
   <div class="skills">
     <p><strong>{{SKILL_GROUP_1_LABEL}}:</strong> {{SKILL_GROUP_1_ITEMS}}</p>
@@ -62,9 +71,7 @@
     <p><strong>{{SKILL_GROUP_3_LABEL}}:</strong> {{SKILL_GROUP_3_ITEMS}}</p>
   </div>
 
-  <!-- ===== EXPERIENCE (duplicate .role per job, newest first) ===== -->
   <h2>Experience</h2>
-
   <div class="role">
     <div class="role-line">
       <span class="role-title">{{JOB_TITLE}}</span>
@@ -80,23 +87,11 @@
       <li>{{BULLET_3}}</li>
     </ul>
   </div>
-
   <!-- copy the .role block above for each additional role -->
 
-  <!-- ===== EDUCATION ===== -->
   <h2>Education</h2>
-  <div class="role">
-    <div class="role-line">
-      <span class="role-title">{{DEGREE}}</span>
-      <span class="role-meta">{{GRAD_YEAR}}</span>
-    </div>
-    <div class="role-line">
-      <span class="company">{{SCHOOL}}</span>
-      <span class="role-meta">{{SCHOOL_LOCATION}}</span>
-    </div>
-  </div>
+  <p class="edu"><strong>{{DEGREE}}</strong>, {{SCHOOL}}{{GRAD_YEAR}}</p>
 
-  <!-- ===== CERTIFICATIONS (optional) ===== -->
   <h2>Certifications</h2>
   <ul>
     <li>{{CERT_1}}</li>
