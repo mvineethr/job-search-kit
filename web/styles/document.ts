@@ -30,6 +30,11 @@ export const DOCUMENT_CSS = `
   background:#fdf4e0; color:#8a6410; padding:0 3pt; border-radius:2pt; font-weight:600;
 }
 
+/* Screen only: the half-inch print margin costs a quarter of a phone screen. */
+@media screen and (max-width:640px){
+  .resume{padding:24px 20px}
+}
+
 @media print{
   @page{margin:0.5in}
   .resume{padding:0; max-width:none}
