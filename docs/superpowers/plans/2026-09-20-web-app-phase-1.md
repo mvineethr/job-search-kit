@@ -504,9 +504,9 @@ cd web && npx vitest run test/render-resume.test.ts
 
 Expected: FAIL — cannot resolve `@/lib/render-resume`.
 
-- [ ] **Step 3: Write `web/styles/document.css`**
+- [ ] **Step 3: Write the document stylesheet**
 
-Single column, standard fonts, print rules. Referenced by the renderer and by `ResumeDocument`.
+Single column, standard fonts, print rules. Used by both the renderer and `ResumeDocument`. Write it as CSS first for readability; Step 5 wraps it as a TypeScript string.
 
 ```css
 .resume{
@@ -639,37 +639,33 @@ ${renderResumeBody(resume)}
 }
 ```
 
-- [ ] **Step 5: Inline the stylesheet at build time**
+- [ ] **Step 5: Make the CSS available as a string**
 
-Replace the `__DOCUMENT_CSS__` placeholder by importing the CSS as a string. Add to the top of `web/lib/render-resume.ts`:
+The document CSS is needed twice: as a stylesheet on screen, and as text to inline inside the standalone export HTML. A normal CSS import only gives the first. Rather than configure the bundler to also hand back the raw text — which risks the test build and the app build disagreeing — keep the CSS as a TypeScript string. One source, both uses, no bundler configuration.
 
-```ts
-import documentCss from '../styles/document.css?raw';
-```
-
-And change the `<style>` line in `renderResumeHtml` to:
+Rename `web/styles/document.css` to `web/styles/document.ts` and wrap its contents:
 
 ```ts
-<style>${documentCss}</style>
+export const DOCUMENT_CSS = `
+/* …the exact CSS from Step 3, unchanged… */
+`;
 ```
 
-Then add to `web/next.config.ts` so `?raw` imports work in the Next build:
+Then in `web/lib/render-resume.ts`, import it and use it:
 
 ```ts
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  turbopack: {
-    rules: {
-      '*.css': { loaders: ['raw-loader'], as: '*.js' },
-    },
-  },
-};
-
-export default nextConfig;
+import { DOCUMENT_CSS } from '../styles/document';
 ```
 
-If that proves awkward, the simpler fallback is to move the CSS into a `export const DOCUMENT_CSS = \`...\`` in `web/styles/document.ts` and import it normally. Prefer whichever builds cleanly; the test asserts behaviour, not mechanism.
+and change the `<style>` line in `renderResumeHtml` to:
+
+```ts
+<style>${DOCUMENT_CSS}</style>
+```
+
+The React component in Task 4 injects the same string with `<style>{DOCUMENT_CSS}</style>`, so screen and print cannot drift apart.
+
+**Careful:** the CSS contains no backticks or `${`, so it is safe inside a template literal as written. If you later add either, escape them.
 
 - [ ] **Step 6: Run the tests to verify they pass**
 
@@ -695,7 +691,7 @@ git commit -m "feat(web): render résumé JSON to ATS-safe HTML"
 - Modify: `web/app/page.tsx`
 
 **Interfaces:**
-- Consumes: `Resume` and `METRIC_NEEDED` from Task 2, and `styles/document.css` from Task 3. It does **not** use `renderResumeBody` — that function produces the standalone export document, while this component renders React so it can carry section anchors and, in Phase 2, inline editing. The two share the stylesheet, which is what keeps screen and print identical.
+- Consumes: `Resume` and `METRIC_NEEDED` from Task 2, and `DOCUMENT_CSS` from `styles/document.ts` (Task 3). It does **not** use `renderResumeBody` — that function produces the standalone export document, while this component renders React so it can carry section anchors and, in Phase 2, inline editing. The two share the stylesheet, which is what keeps screen and print identical.
 - Produces: `<ResumeDocument resume={resume} pendingSections={['Experience']} />`. Every section carries `id="sec-summary"`, `id="sec-skills"`, `id="sec-experience"`, `id="sec-education"`, `id="sec-certifications"` so findings can link to them.
 
 **Note on sequencing:** this component is built before anything generates `ResumeJSON`, and Phase 1's shipping UI displays pasted text instead. That is deliberate — proving the document renders correctly from a fixture de-risks every later task, and it costs one evening. It goes live as the first task of Phase 2.
@@ -706,7 +702,7 @@ The on-screen document shares the printed document's structure so what is seen i
 
 ```tsx
 import { METRIC_NEEDED, type Resume, type Role } from '@/lib/resume-schema';
-import '@/styles/document.css';
+import { DOCUMENT_CSS } from '@/styles/document';
 
 function Bullet({ children }: { children: string }) {
   const parts = children.split(METRIC_NEEDED);
@@ -759,6 +755,7 @@ export default function ResumeDocument({
 
   return (
     <article className="resume">
+      <style>{DOCUMENT_CSS}</style>
       <h1>{resume.name}</h1>
       {resume.targetTitle && <p className="target">{resume.targetTitle}</p>}
       <p className="contact">{contact}</p>
