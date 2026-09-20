@@ -39,12 +39,24 @@ export function pickConfig(tier: Tier): ProviderConfig | null {
   return { baseURL, apiKey, model };
 }
 
-type DeltaChunk = { choices: Array<{ delta?: { content?: string | null } }> };
+type DeltaChunk = {
+  choices: Array<{ delta?: { content?: string | null; reasoning_content?: string | null } }>;
+};
 
-async function* toTextStream(stream: AsyncIterable<DeltaChunk>): AsyncIterable<string> {
+/**
+ * Reasoning models emit their thinking on `reasoning_content` for a long time
+ * before the first `content` token — measured at 28s on a one-sentence question
+ * and 84s on a résumé review. Dropping it means the user watches a blank panel
+ * while hundreds of chunks arrive, so it is surfaced as progress instead.
+ */
+export type StreamEvent = { type: 'reasoning' | 'content'; text: string };
+
+async function* toEventStream(stream: AsyncIterable<DeltaChunk>): AsyncIterable<StreamEvent> {
   for await (const chunk of stream) {
-    const piece = chunk.choices[0]?.delta?.content;
-    if (piece) yield piece;
+    const delta = chunk.choices[0]?.delta;
+    if (!delta) continue;
+    if (delta.reasoning_content) yield { type: 'reasoning', text: delta.reasoning_content };
+    if (delta.content) yield { type: 'content', text: delta.content };
   }
 }
 
@@ -60,12 +72,12 @@ async function open(config: ProviderConfig, system: string, messages: ChatMessag
 export async function streamCompletion(opts: {
   system: string;
   messages: ChatMessage[];
-}): Promise<{ stream: AsyncIterable<string>; degraded: boolean }> {
+}): Promise<{ stream: AsyncIterable<StreamEvent>; degraded: boolean }> {
   const primary = pickConfig('primary')!;
 
   try {
     const s = await open(primary, opts.system, opts.messages);
-    return { stream: toTextStream(s as AsyncIterable<DeltaChunk>), degraded: false };
+    return { stream: toEventStream(s as AsyncIterable<DeltaChunk>), degraded: false };
   } catch (err) {
     if (!shouldFallback(err as { status?: number })) throw err;
 
@@ -73,6 +85,6 @@ export async function streamCompletion(opts: {
     if (!fallback) throw err;
 
     const s = await open(fallback, opts.system, opts.messages);
-    return { stream: toTextStream(s as AsyncIterable<DeltaChunk>), degraded: true };
+    return { stream: toEventStream(s as AsyncIterable<DeltaChunk>), degraded: true };
   }
 }

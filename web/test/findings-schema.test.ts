@@ -42,4 +42,18 @@ describe('stripFindings', () => {
   it('returns text unchanged when there is no block', () => {
     expect(stripFindings('Just prose.')).toBe('Just prose.');
   });
+
+  it('hides a fence that is still streaming, so raw JSON never reaches the user', () => {
+    const midStream = 'Your résumé reads as duties.\n\n```json\n[\n  { "section": "summary",';
+    const prose = stripFindings(midStream);
+    expect(prose).toBe('Your résumé reads as duties.');
+    expect(prose).not.toContain('section');
+    expect(prose).not.toContain('```');
+  });
+
+  it('does not eat prose that merely mentions json', () => {
+    expect(stripFindings('Your résumé is fine, no json needed.')).toBe(
+      'Your résumé is fine, no json needed.',
+    );
+  });
 });

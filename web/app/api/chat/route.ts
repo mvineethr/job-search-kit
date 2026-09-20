@@ -1,5 +1,6 @@
 import { loadPrompt } from '@/lib/prompts';
 import { streamCompletion, type ChatMessage } from '@/lib/provider';
+import { encodeEvent } from '@/lib/ndjson';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -39,12 +40,19 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const piece of result.stream) {
-          controller.enqueue(encoder.encode(piece));
+        for await (const event of result.stream) {
+          controller.enqueue(encoder.encode(encodeEvent(event)));
         }
       } catch (err) {
         console.error('[chat] stream broke', err);
-        controller.enqueue(encoder.encode('\n\n[The connection dropped before this finished.]'));
+        controller.enqueue(
+          encoder.encode(
+            encodeEvent({
+              type: 'content',
+              text: '\n\n[The connection dropped before this finished.]',
+            }),
+          ),
+        );
       } finally {
         controller.close();
       }
@@ -53,8 +61,10 @@ export async function POST(req: Request) {
 
   return new Response(stream, {
     headers: {
-      'content-type': 'text/plain; charset=utf-8',
+      'content-type': 'application/x-ndjson; charset=utf-8',
       'cache-control': 'no-store',
+      // Proxies that buffer would defeat streaming entirely.
+      'x-accel-buffering': 'no',
       'x-degraded': String(result.degraded),
     },
   });

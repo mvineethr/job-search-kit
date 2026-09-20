@@ -18,6 +18,13 @@ export type Finding = z.infer<typeof FindingSchema>;
 const FENCE = /```json\s*([\s\S]*?)```/;
 
 /**
+ * A fence that has opened but not yet closed. Mid-stream the closing ``` has not
+ * arrived, so FENCE does not match and the raw JSON would otherwise be displayed
+ * to the user as it arrives.
+ */
+const OPEN_FENCE = /```json[\s\S]*$/;
+
+/**
  * Findings arrive at the end of a streamed prose answer, inside a fenced json block.
  * Anything unparseable yields an empty array — the prose is still useful on its own,
  * and throwing here would blank a review the user already watched arrive.
@@ -34,7 +41,10 @@ export function parseFindings(text: string): Finding[] {
   }
 }
 
-/** The prose half, with the json block removed, for display. */
+/**
+ * The prose half, for display. Removes a completed findings block, and also any
+ * fence still being streamed — otherwise the user watches raw JSON scroll past.
+ */
 export function stripFindings(text: string): string {
-  return text.replace(FENCE, '').trim();
+  return text.replace(FENCE, '').replace(OPEN_FENCE, '').trim();
 }

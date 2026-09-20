@@ -2,10 +2,18 @@
 
 import { useState } from 'react';
 import { parseFindings, stripFindings, type Finding } from '@/lib/findings-schema';
+import { parseEventLines } from '@/lib/ndjson';
 import FindingsList from './FindingsList';
+
+/** The last line of the model's thinking, as a live sign of progress. */
+function lastLine(s: string): string {
+  const lines = s.trim().split('\n');
+  return lines[lines.length - 1]?.slice(-160) ?? '';
+}
 
 export default function AssistantPanel({ resumeText }: { resumeText: string }) {
   const [raw, setRaw] = useState('');
+  const [thinking, setThinking] = useState('');
   const [findings, setFindings] = useState<Finding[]>([]);
   const [running, setRunning] = useState(false);
   const [degraded, setDegraded] = useState(false);
@@ -17,6 +25,7 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
     setController(ac);
     setRunning(true);
     setRaw('');
+    setThinking('');
     setFindings([]);
     setError(null);
 
@@ -39,14 +48,26 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let acc = '';
+      let buffer = '';
+      let content = '';
+      let reasoning = '';
+
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += decoder.decode(value, { stream: true });
-        setRaw(acc);
+        buffer += decoder.decode(value, { stream: true });
+
+        const { events, rest } = parseEventLines(buffer);
+        buffer = rest;
+
+        for (const ev of events) {
+          if (ev.type === 'content') content += ev.text;
+          else reasoning += ev.text;
+        }
+        if (content) setRaw(content);
+        if (reasoning) setThinking(reasoning);
       }
-      setFindings(parseFindings(acc));
+      setFindings(parseFindings(content));
     } catch (e) {
       if ((e as Error).name !== 'AbortError') {
         setError('That did not finish. Your résumé is unchanged — try again?');
@@ -98,7 +119,25 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
       )}
 
       {running && raw === '' && (
-        <p style={{ color: 'var(--text-muted)' }}>Reading your résumé…</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {thinking ? 'Working through your résumé…' : 'Reading your résumé…'}
+          </p>
+          {thinking && (
+            <p
+              style={{
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-faint)',
+                fontStyle: 'italic',
+                lineHeight: 1.5,
+                borderLeft: '2px solid var(--border)',
+                paddingLeft: 'var(--s-3)',
+              }}
+            >
+              {lastLine(thinking)}
+            </p>
+          )}
+        </div>
       )}
 
       {degraded && (
