@@ -1,0 +1,40 @@
+{
+  "name": "Priya Raman",
+  "targetTitle": "Site Reliability Engineer",
+  "contact": {
+    "location": "Austin, TX",
+    "email": "priya.raman@example.com",
+    "phone": "(512) 555-0142",
+    "linkedin": "linkedin.com/in/priyaraman"
+  },
+  "summary": "Site reliability engineer with eight years running production infrastructure for payments and logistics platforms.",
+  "skills": ["Kubernetes", "Terraform", "AWS", "Go", "Python", "Prometheus", "CI/CD"],
+  "experience": [
+    {
+      "title": "Senior Site Reliability Engineer",
+      "company": "Meridian Freight",
+      "location": "Austin, TX",
+      "start": "Mar 2022",
+      "end": "Present",
+      "bullets": [
+        "Rebuilt the deployment pipeline across 40 services, cutting median deploy time from 34 minutes to 6.",
+        "Led incident response for the 2024 regional outage; wrote the post-mortem that produced nine follow-up actions."
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "company": "Halcyon Payments",
+      "location": "Remote",
+      "start": "Jun 2019",
+      "end": "Feb 2022",
+      "bullets": [
+        "Migrated the core ledger service to Kubernetes with zero customer-visible downtime across a six-week cutover.",
+        "Introduced error-budget policy for six teams, cutting change-related incidents by 41% year over year."
+      ]
+    }
+  ],
+  "education": [
+    { "degree": "B.E. Computer Science", "school": "Anna University", "year": "2015" }
+  ],
+  "certifications": ["Certified Kubernetes Administrator"]
+}
