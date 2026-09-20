@@ -414,10 +414,32 @@ document):
 That's the grouping: **4 entry points, 6 contextual actions, 1 hidden step, 1 follow-on.**
 Eight capabilities, none of them lost, none of them shouting.
 
-### Navigation
+### Navigation — revised after the mockup
 
-A single top bar: logo → `/app`, then **Résumés · Jobs · LinkedIn**, then avatar menu
-(settings, sign out). Three nav items. Everything else is reached from a document.
+A single top bar: **Home · Jobs · Cold email · LinkedIn**, then the avatar menu.
+
+Two changes from the original proposal, both from walking the mockup:
+
+- **Home replaces "Résumés"** and carries three things at once: who you are (name, email,
+  runs used against quota), the four starting actions, and your documents. A separate hub
+  and résumé list was one screen too many.
+- **Cold email is top-level**, not a follow-on hanging off a job. It frequently has no job
+  description at all — a referral ask, a recruiter nudge, a company with nothing posted.
+  Burying it under a job would have hidden its most common uses.
+
+**Jobs is the hub the product turns on.** A job card owns its artifacts, shown as a row where
+`✓` opens what exists and a dashed `+` generates what doesn't, working from the posting already
+stored. Paste once, produce many. This is the structure that keeps someone applying to thirty
+jobs from losing track of what they sent where — and it is the single best reason this is an
+app rather than a chat.
+
+Each card also carries a match meter ("14 of 19 requirements matched"). When a posting scores
+badly the card says so plainly, because telling someone a job is aimed a level above them
+saves them an hour they would rather spend elsewhere.
+
+**Interview prep** is designed and mocked up (questions sourced from the gaps, from the user's
+own résumé claims, and from the posting's language) but sits outside v1. Its chip appears on
+job cards as a dashed `+`.
 
 **LinkedIn sits outside the résumé hierarchy on purpose.** It produces profile copy to
 paste into LinkedIn, not a document to export. Forcing it into the résumé canvas would

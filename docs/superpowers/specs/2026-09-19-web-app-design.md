@@ -66,6 +66,15 @@ system prompt, appends conversation history, and streams the reply.
 The difference between `resume-review` and `resume-tailor` lives entirely in markdown.
 Zero branching in code. Adding a ninth capability means adding a markdown file and a route.
 
+### Capabilities
+
+Nine in v1: the original eight plus **cold email**, which the web app makes obvious because it
+sits naturally beside the cover letter and often needs no job description at all. A tenth,
+**interview prep**, is designed and mocked up but deliberately out of v1 scope.
+
+Adding either is a markdown file, a route, and a sheet config — no new machinery. That is the
+return on the "one engine, many entry points" decision.
+
 ### No tool calling, anywhere
 
 For any flow ending in a document, the model's final message is structured résumé JSON.
@@ -79,6 +88,11 @@ Three reasons this matters:
 3. **ATS safety is enforced by the template,** not trusted to the model. The single-column
    structure in `shared/ats-rules.md` becomes a code guarantee rather than an instruction
    the model might drift from.
+
+Document flows are not the only ones needing structure. `resume-review` emits prose, but its
+findings must be `{section, severity, finding}` so the UI can anchor each one to the part of
+the document it refers to and offer a jump link. That anchoring is what makes criticism
+actionable rather than a wall of text, so it is a `core/` prompt requirement, not a nicety.
 
 ### PDF rendering
 
@@ -111,9 +125,24 @@ currently does.
 | Table | Holds |
 |---|---|
 | `users` | Better Auth's tables (Google OAuth identity) |
-| `resumes` | résumé JSON per user, versioned; master vs tailored copies |
-| `runs` | capability, timestamp, tokens, provider, cost |
+| `jobs` | company, role, pasted description, extracted requirements and keywords |
+| `resumes` | résumé JSON; `parent_id` → the master it came from, `job_id` → what it was tailored to |
+| `letters` | cover letters and cold emails, each with its `job_id` (nullable — a cold email needs no job) |
+| `runs` | capability, timestamp, tokens, provider, cost, and the turn state for multi-turn flows |
 | `usage` | per-user monthly run count against quota |
+
+**`jobs` is the hub, not a by-product.** The UX makes a job the container that owns everything
+written for it — tailored résumé, cover letter, cold email, and later interview prep. A user
+pastes a posting once and every artifact for that application hangs off it.
+
+**Versioning is a parent/child relationship, not a version integer.** A tailored résumé points
+at the master it was copied from and at the job it targets. Without both pointers, the user's
+document list becomes a dozen indistinguishable résumés and the master is unfindable — the
+structural mistake that is cheapest to avoid now and most expensive to fix later.
+
+**Multi-turn intake state persists server-side on every turn.** A ten-turn résumé build is ten
+separate function calls; if the state lives in client memory, a phone backgrounding the tab
+destroys twenty minutes of someone's work. This is the worst available failure in the product.
 
 `runs` and `usage` exist from day one even though nothing is charged yet. The quota **is**
 the billing meter — enabling payments later raises a number rather than adding a subsystem.
