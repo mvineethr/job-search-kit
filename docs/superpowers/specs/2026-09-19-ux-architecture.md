@@ -441,6 +441,23 @@ saves them an hour they would rather spend elsewhere.
 own résumé claims, and from the posting's language) but sits outside v1. Its chip appears on
 job cards as a dashed `+`.
 
+### LinkedIn has two modes, not one
+
+The route opens by asking what to work from, because the workflow genuinely differs:
+
+- **Audit and rewrite** — the user uploads their LinkedIn export (Profile → Resources → Save
+  to PDF). The audit quotes their real headline and About text back at them, and every rewrite
+  step shows Currently / Suggested. This is the strong version: criticism of a real artifact.
+- **Generate only** — no profile supplied, so the copy is written from the master résumé.
+  **Step 1 does not exist in this mode.** You cannot audit a profile you have not seen, and
+  pretending otherwise would produce invented criticism — the exact failure the kit's
+  no-fabrication rule exists to prevent.
+
+A source strip above the steps names what was read (filename, page count, when) with controls
+to replace it or switch modes. The uploaded file is parsed to text and discarded like any other
+upload, and the UI says so — a page asking for someone's whole professional profile should
+state what happens to it.
+
 **LinkedIn sits outside the résumé hierarchy on purpose.** It produces profile copy to
 paste into LinkedIn, not a document to export. Forcing it into the résumé canvas would
 mean building a second document type for a different shape of output. Give it its own
