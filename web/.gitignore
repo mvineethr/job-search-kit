@@ -43,3 +43,6 @@ next-env.d.ts
 # local scratch files (benchmarks, probes)
 *.local.mjs
 *.local.txt
+
+# build artifact: copied from ../core by scripts/copy-core.mjs
+/core
