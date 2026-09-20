@@ -6,6 +6,13 @@ export type ProviderConfig = {
   baseURL: string;
   apiKey: string;
   model: string;
+  /**
+   * Reasoning models default to maximum deliberation. Measured on a résumé review:
+   * kimi-k3 at the default 'max' took 107s and produced 11 findings; at 'low' it
+   * took 33s and produced 12. Maximum effort bought nothing but latency, so this
+   * is set explicitly rather than left to the provider's default.
+   */
+  effort?: string;
 };
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
@@ -27,6 +34,7 @@ export function pickConfig(tier: Tier): ProviderConfig | null {
   const baseURL = process.env[`${prefix}_BASE_URL`] ?? '';
   const apiKey = process.env[`${prefix}_KEY`] ?? '';
   const model = process.env[`${prefix}_NAME`] ?? '';
+  const effort = process.env[`${prefix}_EFFORT`] ?? '';
 
   if (!baseURL || !apiKey || !model) {
     if (tier === 'primary') {
@@ -36,7 +44,7 @@ export function pickConfig(tier: Tier): ProviderConfig | null {
     }
     return null; // a fallback is optional
   }
-  return { baseURL, apiKey, model };
+  return { baseURL, apiKey, model, effort: effort || undefined };
 }
 
 type DeltaChunk = {
@@ -65,8 +73,9 @@ async function open(config: ProviderConfig, system: string, messages: ChatMessag
   return client.chat.completions.create({
     model: config.model,
     stream: true,
+    ...(config.effort ? { reasoning_effort: config.effort } : {}),
     messages: [{ role: 'system', content: system }, ...messages],
-  });
+  } as Parameters<typeof client.chat.completions.create>[0]);
 }
 
 export async function streamCompletion(opts: {
