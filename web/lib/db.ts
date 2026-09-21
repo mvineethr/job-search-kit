@@ -22,6 +22,15 @@ export type JobRow = {
   created_at: string;
 };
 
+export type LetterRow = {
+  id: string;
+  kind: string;
+  job_id: string | null;
+  resume_id: string | null;
+  content: unknown;
+  created_at: string;
+};
+
 export type ResumeRow = {
   id: string;
   title: string;
@@ -69,7 +78,19 @@ export async function ensureSchema(): Promise<void> {
       updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
     )`;
 
+  await q`
+    CREATE TABLE IF NOT EXISTS letters (
+      id          TEXT PRIMARY KEY,
+      sid         TEXT NOT NULL,
+      kind        TEXT NOT NULL DEFAULT 'cover',
+      job_id      TEXT REFERENCES jobs(id) ON DELETE CASCADE,
+      resume_id   TEXT REFERENCES resumes(id) ON DELETE SET NULL,
+      content     JSONB NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
+  await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;
   await q`CREATE INDEX IF NOT EXISTS resumes_sid_idx ON resumes (sid, updated_at DESC)`;
 
   ensured = true;

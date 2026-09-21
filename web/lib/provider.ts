@@ -1,6 +1,13 @@
 import OpenAI from 'openai';
 
-export type Tier = 'primary' | 'fallback';
+/**
+ * primary  — the careful model, for work that needs judgment (review, tailoring)
+ * fast     — for mechanical work (parsing a résumé into fields). Transcription needs
+ *            no deliberation: on kimi-k3 it took 47s, most of it thinking about a job
+ *            that is copy-and-label.
+ * fallback — used only when the primary is unavailable (429 / 5xx)
+ */
+export type Tier = 'primary' | 'fast' | 'fallback';
 
 export type ProviderConfig = {
   baseURL: string;
@@ -30,6 +37,19 @@ export function shouldFallback(err: { status?: number }): boolean {
 }
 
 export function pickConfig(tier: Tier): ProviderConfig | null {
+  if (tier === 'fast') {
+    // Only a model name is required: it shares the primary's endpoint and key,
+    // since it is normally a sibling model on the same provider.
+    const model = process.env.MODEL_FAST_NAME ?? '';
+    if (!model) return null; // unset => use the primary for everything
+    return {
+      baseURL: process.env.MODEL_FAST_BASE_URL || process.env.MODEL_PRIMARY_BASE_URL || '',
+      apiKey: process.env.MODEL_FAST_KEY || process.env.MODEL_PRIMARY_KEY || '',
+      model,
+      effort: process.env.MODEL_FAST_EFFORT || undefined,
+    };
+  }
+
   const prefix = tier === 'primary' ? 'MODEL_PRIMARY' : 'MODEL_FALLBACK';
   const baseURL = process.env[`${prefix}_BASE_URL`] ?? '';
   const apiKey = process.env[`${prefix}_KEY`] ?? '';
@@ -85,6 +105,7 @@ async function open(config: ProviderConfig, system: string, messages: ChatMessag
 export async function completeText(opts: {
   system: string;
   messages: ChatMessage[];
+  tier?: 'primary' | 'fast';
 }): Promise<{ text: string; degraded: boolean }> {
   const collect = async (stream: AsyncIterable<StreamEvent>) => {
     let out = '';
@@ -99,11 +120,13 @@ export async function completeText(opts: {
 export async function streamCompletion(opts: {
   system: string;
   messages: ChatMessage[];
+  tier?: 'primary' | 'fast';
 }): Promise<{ stream: AsyncIterable<StreamEvent>; degraded: boolean }> {
-  const primary = pickConfig('primary')!;
+  // An unset fast tier quietly means "use the primary", so it is opt-in.
+  const chosen = (opts.tier === 'fast' && pickConfig('fast')) || pickConfig('primary')!;
 
   try {
-    const s = await open(primary, opts.system, opts.messages);
+    const s = await open(chosen, opts.system, opts.messages);
     return { stream: toEventStream(s as AsyncIterable<DeltaChunk>), degraded: false };
   } catch (err) {
     if (!shouldFallback(err as { status?: number })) throw err;

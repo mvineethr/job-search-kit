@@ -12,12 +12,33 @@ a job description. Produce a tailored **copy**.
 Two things, in this order: a short prose note (three or four sentences) saying what you
 changed and what you could not, then a single fenced `json` block and nothing after it.
 
-The JSON has the same shape as the résumé you were given, plus a `tailoring` key:
+The résumé you are given may be structured JSON or plain pasted text. **Either way, your
+output uses exactly this shape and these key names** — do not rename, merge or invent keys:
 
 ```json
 {
-  "name": "...", "targetTitle": "...", "contact": { }, "summary": "...",
-  "skills": ["..."], "experience": [ ], "education": [ ], "certifications": ["..."],
+  "name": "string",
+  "targetTitle": "the posting's job title",
+  "contact": {
+    "location": "string, optional",
+    "email": "string, optional",
+    "phone": "string, optional",
+    "linkedin": "string, optional"
+  },
+  "summary": "string",
+  "skills": ["string"],
+  "experience": [
+    {
+      "title": "string",
+      "company": "string",
+      "location": "string, optional",
+      "start": "Mon YYYY",
+      "end": "Mon YYYY or Present",
+      "bullets": ["string"]
+    }
+  ],
+  "education": [{ "degree": "string", "school": "string", "year": "string, optional" }],
+  "certifications": ["string"],
   "tailoring": {
     "matched": ["keywords from the posting that are genuinely in this résumé"],
     "missing": ["requirements the person genuinely does not have"],
@@ -25,6 +46,9 @@ The JSON has the same shape as the résumé you were given, plus a `tailoring` k
   }
 }
 ```
+
+Dates go in `start` and `end` as two separate strings — never a single `dates` or `period`
+field. If the résumé gives no date for a role, use empty strings rather than guessing.
 
 `requirements` is the total count of distinct requirements you found in the posting.
 

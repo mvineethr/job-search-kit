@@ -1,14 +1,19 @@
 import Link from 'next/link';
 import { currentSid } from '@/lib/auth';
-import { ensureSchema, sql, type JobRow, type ResumeRow } from '@/lib/db';
+import { ensureSchema, sql, type JobRow, type ResumeRow, type LetterRow } from '@/lib/db';
 import AddJobForm from '@/components/AddJobForm';
-import TailorButton from '@/components/TailorButton';
+import GenerateButton from '@/components/GenerateButton';
 
 export const dynamic = 'force-dynamic';
 
-export default async function JobsPage() {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const sid = await currentSid();
-  if (!sid) return null; // middleware redirects; this is belt and braces
+  if (!sid) return null;
 
   await ensureSchema();
   const q = sql();
@@ -16,32 +21,59 @@ export default async function JobsPage() {
   const jobs = (await q`
     SELECT id, company, role, description, analysis, created_at
     FROM jobs WHERE sid = ${sid} ORDER BY created_at DESC`) as unknown as JobRow[];
-
   const resumes = (await q`
     SELECT id, title, content, parent_id, job_id, created_at, updated_at, source_text
     FROM resumes WHERE sid = ${sid} ORDER BY updated_at DESC`) as unknown as ResumeRow[];
+  const letters = (await q`
+    SELECT id, kind, job_id, resume_id, content, created_at
+    FROM letters WHERE sid = ${sid} ORDER BY created_at DESC`) as unknown as LetterRow[];
 
-  const masters = resumes.filter((r) => !r.parent_id);
-  const tailoredByJob = new Map(resumes.filter((r) => r.job_id).map((r) => [r.job_id!, r]));
+  const master = resumes.find((r) => !r.parent_id);
+  const tailoredByJob = new Map<string, ResumeRow>();
+  for (const r of resumes) if (r.job_id && !tailoredByJob.has(r.job_id)) tailoredByJob.set(r.job_id, r);
+  const letterByJob = new Map<string, LetterRow>();
+  for (const l of letters) if (l.job_id && !letterByJob.has(l.job_id)) letterByJob.set(l.job_id, l);
 
   return (
     <div className="wrap">
-      <div className="page-head" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-4)', alignItems: 'flex-end' }}>
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <h1>Jobs</h1>
-          <p className="sub">
-            Add a posting once. Tailoring, and later the cover letter, work from what you
-            enter here — you never paste the description twice.
-          </p>
-        </div>
+      <div className="page-head">
+        <h1>Jobs</h1>
+        <p className="sub">
+          Add a posting once. The tailored résumé and cover letter are both written from what
+          you enter here — you never paste the description twice.
+        </p>
       </div>
+
+      {error && (
+        <div
+          role="alert"
+          style={{
+            border: '1px solid var(--danger)',
+            borderRadius: 8,
+            padding: 'var(--s-3) var(--s-4)',
+            marginBottom: 'var(--s-6)',
+            color: 'var(--danger)',
+            background: 'var(--bg-surface)',
+            maxWidth: 680,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!master && (
+        <p className="note" style={{ maxWidth: 680, marginBottom: 'var(--s-6)' }}>
+          You have not added a résumé yet. <Link href="/review">Add one first</Link> — tailoring
+          and cover letters are written from it.
+        </p>
+      )}
 
       <div className="sec">
         <AddJobForm />
       </div>
 
       {jobs.length === 0 ? (
-        <p className="note" style={{ maxWidth: 640 }}>
+        <p className="note" style={{ maxWidth: 680 }}>
           No jobs yet. Add one above — paste the whole posting, including the requirements
           section, because that is where the keywords live.
         </p>
@@ -55,6 +87,7 @@ export default async function JobsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
             {jobs.map((job) => {
               const tailored = tailoredByJob.get(job.id);
+              const letter = letterByJob.get(job.id);
               const matched = job.analysis?.matched?.length ?? 0;
               const missing = job.analysis?.missing?.length ?? 0;
               const total = matched + missing;
@@ -104,18 +137,43 @@ export default async function JobsPage() {
                   )}
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
+                    {/* Tailored résumé */}
                     {tailored ? (
                       <Link href={`/resume/${tailored.id}`} className="btn">
-                        Tailored résumé
+                        ✓ Tailored résumé
                       </Link>
-                    ) : masters.length > 0 ? (
-                      <TailorButton jobId={job.id} resumeId={masters[0].id} />
-                    ) : (
-                      <Link href="/review" className="btn">
-                        Add a résumé first
+                    ) : master ? (
+                      <GenerateButton
+                        action="/api/tailor"
+                        jobId={job.id}
+                        resumeId={master.id}
+                        label="Tailor my résumé"
+                        busyLabel="Tailoring… about a minute"
+                        primary
+                      />
+                    ) : null}
+
+                    {/* Cover letter */}
+                    {letter ? (
+                      <Link href={`/letter/${letter.id}`} className="btn">
+                        ✓ Cover letter
                       </Link>
-                    )}
+                    ) : master ? (
+                      <GenerateButton
+                        action="/api/letter"
+                        jobId={job.id}
+                        label="Write a cover letter"
+                        busyLabel="Writing… about a minute"
+                      />
+                    ) : null}
                   </div>
+
+                  {!tailored && !letter && master && (
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-faint)' }}>
+                      Tailor first if you can — the cover letter is sharper when it is written
+                      from the tailored résumé rather than your master.
+                    </p>
+                  )}
                 </div>
               );
             })}
