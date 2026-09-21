@@ -5,32 +5,17 @@ description: Diagnose what is weak or broken in an existing resume — gaps, vag
 
 # Resume Review (diagnose, don't rewrite)
 
-A no-flattery diagnostic of an existing resume. **Do not rewrite anything** — this skill
-only finds problems. (Use `resume-improve` or `resume-tailor` to fix them.)
+Read and follow `${CLAUDE_PLUGIN_ROOT}/core/resume-review.md`. That file is the single source
+of truth for this capability and is shared with the web app, so improvements to it reach both.
 
-## Inputs
-- The user's resume (PDF/DOCX/text).
-- *(Optional)* target job descriptions — if given, run `job-analyzer` first and review
-  against them. If not, review against general standards and say so.
+Where it says `{{ATS_RULES}}`, read `${CLAUDE_PLUGIN_ROOT}/core/ats-rules.md`.
 
-## Read `${CLAUDE_PLUGIN_ROOT}/shared/ats-rules.md` and judge against it.
+## Additional instructions for Claude Code only
 
-## Output — a scored diagnostic
-
-1. **Verdict in one line** — would this resume pass a 6-second recruiter scan + an ATS
-   parse? Yes/No and why.
-2. **Identity** — what role this resume currently reads as vs. the target (if JDs given).
-3. **Bullet quality** — quote the 3–5 weakest bullets verbatim and say why (no number,
-   vague verb, no impact, responsibility-not-achievement).
-4. **Metric coverage** — what % of bullets contain a real number. List the biggest
-   missing-metric opportunities.
-5. **ATS risks** — concrete parse problems (columns, tables, images, non-standard
-   headings, abbreviations, fonts).
-6. **Keyword gaps** — required JD terms absent from the resume (needs JDs).
-7. **Formatting/length/ordering** — one page? reverse-chron? consistent dates?
-8. **Top 5 fixes, ranked by impact.**
-
-## Rules
-- Quote the user's actual lines back. Do not soften.
-- Flag inconsistencies (company names, dates, education) across documents.
-- Never fabricate; where a metric is missing, say so rather than inventing one.
+- Read the user's resume from the filesystem when they name a path; ask for it otherwise.
+- *(Optional)* If the user supplies target job descriptions, run `job-analyzer` first and
+  review against them. If they don't, review against general standards and say so.
+- Present the prose verdict directly. You may render the findings as a readable list rather
+  than as raw JSON — the JSON shape exists for the web UI, which anchors each finding to a
+  section of the rendered document. There is no such UI here.
+- Flag inconsistencies (company names, dates, education) across any documents you were given.
