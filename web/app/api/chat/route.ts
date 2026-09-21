@@ -3,7 +3,9 @@ import { streamCompletion, type ChatMessage } from '@/lib/provider';
 import { encodeEvent } from '@/lib/ndjson';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+// Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3;
+// 180 leaves headroom for long résumés while still stopping a runaway request.
+export const maxDuration = 180;
 
 export async function POST(req: Request) {
   let body: { capability?: string; messages?: ChatMessage[] };

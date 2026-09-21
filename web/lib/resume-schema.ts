@@ -15,12 +15,18 @@ export const SECTION_HEADINGS = [
   'Certifications',
 ] as const;
 
+/**
+ * Strict on what makes a résumé a résumé (a name, roles with bullets), lenient on
+ * what real résumés genuinely omit. Many have no summary; some give no dates for a
+ * role. Rejecting those made valid résumés fail to parse entirely, which then broke
+ * tailoring downstream — so absent-but-legitimate fields default to empty instead.
+ */
 const RoleSchema = z.object({
   title: z.string().min(1),
   company: z.string().min(1),
   location: z.string().optional(),
-  start: z.string().min(1), // "Mar 2022"
-  end: z.string().min(1), // "Present"
+  start: z.string().default(''), // "Mar 2022", or empty when the résumé gives none
+  end: z.string().default(''), // "Present"
   bullets: z.array(z.string().min(1)).min(1),
 });
 
@@ -39,10 +45,10 @@ export const ResumeSchema = z.object({
     phone: z.string().optional(),
     linkedin: z.string().optional(),
   }),
-  summary: z.string().min(1),
-  skills: z.array(z.string().min(1)),
+  summary: z.string().default(''), // many résumés have none
+  skills: z.array(z.string().min(1)).default([]),
   experience: z.array(RoleSchema).min(1),
-  education: z.array(EducationSchema),
+  education: z.array(EducationSchema).default([]),
   certifications: z.array(z.string().min(1)).optional(),
 });
 

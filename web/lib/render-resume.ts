@@ -16,12 +16,18 @@ function text(s: string): string {
     .join(`<span class="metric-needed">${escapeHtml(METRIC_NEEDED)}</span>`);
 }
 
+/** "Mar 2022 – Present", or whichever half exists, or nothing. Never a lone dash. */
+export function dateRange(start: string, end: string): string {
+  if (start && end) return `${start} – ${end}`;
+  return start || end || '';
+}
+
 function renderRole(role: Role): string {
   const loc = role.location ? text(role.location) : '';
   return `  <div class="role">
     <div class="role-line">
       <span class="role-title">${text(role.title)}</span>
-      <span class="role-meta">${text(role.start)} – ${text(role.end)}</span>
+      <span class="role-meta">${text(dateRange(role.start, role.end))}</span>
     </div>
     <div class="role-line">
       <span class="company">${text(role.company)}</span>
@@ -55,9 +61,7 @@ ${resume.certifications.map((x) => `    <li>${text(x)}</li>`).join('\n')}
   ${resume.targetTitle ? `<p class="target">${text(resume.targetTitle)}</p>` : ''}
   <p class="contact">${contactLine}</p>
 
-  <h2>Summary</h2>
-  <p>${text(resume.summary)}</p>
-
+${resume.summary ? `  <h2>Summary</h2>\n  <p>${text(resume.summary)}</p>\n` : ''}
   <h2>Skills</h2>
   <p>${resume.skills.map(text).join(', ')}</p>
 

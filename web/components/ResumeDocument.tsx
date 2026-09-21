@@ -1,5 +1,6 @@
 import { METRIC_NEEDED, type Resume, type Role } from '@/lib/resume-schema';
 import { DOCUMENT_CSS } from '@/styles/document';
+import { dateRange } from '@/lib/render-resume';
 
 function Bullet({ children }: { children: string }) {
   const parts = children.split(METRIC_NEEDED);
@@ -20,9 +21,7 @@ function RoleBlock({ role }: { role: Role }) {
     <div className="role">
       <div className="role-line">
         <span className="role-title">{role.title}</span>
-        <span className="role-meta">
-          {role.start} – {role.end}
-        </span>
+        <span className="role-meta">{dateRange(role.start, role.end)}</span>
       </div>
       <div className="role-line">
         <span className="company">{role.company}</span>
@@ -62,10 +61,12 @@ export default function ResumeDocument({
       {resume.targetTitle && <p className="target">{resume.targetTitle}</p>}
       <p className="contact">{contact}</p>
 
-      <section id="sec-summary" style={pending('Summary')}>
-        <h2>Summary</h2>
-        <p>{resume.summary}</p>
-      </section>
+      {resume.summary && (
+        <section id="sec-summary" style={pending('Summary')}>
+          <h2>Summary</h2>
+          <p>{resume.summary}</p>
+        </section>
+      )}
 
       <section id="sec-skills" style={pending('Skills')}>
         <h2>Skills</h2>

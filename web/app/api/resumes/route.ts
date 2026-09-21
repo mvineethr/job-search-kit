@@ -7,7 +7,9 @@ import { extractJsonObject } from '@/lib/extract-json';
 import { ResumeSchema } from '@/lib/resume-schema';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+// Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3;
+// 180 leaves headroom for long résumés while still stopping a runaway request.
+export const maxDuration = 180;
 
 /**
  * Saves a résumé. The pasted text is stored as-is, and a model turns it into
@@ -36,6 +38,7 @@ export async function POST(req: Request) {
   try {
     const { text: reply } = await completeText({
       system: loadPrompt('resume-parse'),
+      tier: 'fast', // transcription needs no deliberation
       messages: [{ role: 'user', content: text }],
     });
     const raw = extractJsonObject(reply);

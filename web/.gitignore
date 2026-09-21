@@ -46,3 +46,5 @@ next-env.d.ts
 
 # build artifact: copied from ../core by scripts/copy-core.mjs
 /core
+*.local.mts
+*.local.ts
