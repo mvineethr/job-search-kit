@@ -1,6 +1,25 @@
 import Link from 'next/link';
+import { currentSid } from '@/lib/auth';
+import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const sid = await currentSid();
+  if (!sid) return null;
+
+  await ensureSchema();
+  const q = sql();
+
+  const resumes = (await q`
+    SELECT id, title, content, parent_id, job_id, created_at, updated_at, source_text
+    FROM resumes WHERE sid = ${sid} ORDER BY updated_at DESC`) as unknown as ResumeRow[];
+  const jobs = (await q`
+    SELECT id, company, role, description, analysis, created_at
+    FROM jobs WHERE sid = ${sid}`) as unknown as JobRow[];
+
+  const hasResume = resumes.length > 0;
+
   return (
     <div className="wrap">
       <div className="page-head">
@@ -16,30 +35,37 @@ export default function Home() {
           JS
         </div>
         <div className="identity-main">
-          <strong>Not signed in</strong>
-          <span>Nothing is saved yet — accounts arrive with the jobs workspace.</span>
+          <strong>Test build</strong>
+          <span className="tnum">
+            {resumes.length} {resumes.length === 1 ? 'résumé' : 'résumés'} · {jobs.length}{' '}
+            {jobs.length === 1 ? 'job' : 'jobs'} · kept to this browser
+          </span>
         </div>
-        <span className="pill">Free while in testing</span>
+        <form method="post" action="/api/login">
+          <input type="hidden" name="_method" value="delete" />
+          <Link href="/login" className="btn">
+            Switch session
+          </Link>
+        </form>
       </div>
 
       <div className="sec">
         <div className="sec-head">
           <h2>Start something</h2>
-          <span className="count">1 of 4 available</span>
         </div>
 
         <div className="entries">
           <Link href="/review" className="entry entry-lead">
-            <strong>Review my résumé</strong>
+            <strong>{hasResume ? 'Add another résumé' : 'Add my résumé'}</strong>
             <span>
-              An honest read of what is weak, quoting your own lines back at you. Takes about
-              half a minute.
+              Paste or upload it. It gets read into sections so it can be reviewed, tailored
+              and exported.
             </span>
           </Link>
 
-          <Link href="/jobs" className="entry entry-soon">
+          <Link href="/jobs" className="entry">
             <strong>Tailor to a job</strong>
-            <span>Aim a copy of your résumé at one posting, matching its exact keywords.</span>
+            <span>Add a posting and aim a copy of your résumé at it, keyword for keyword.</span>
           </Link>
 
           <Link href="/email" className="entry entry-soon">
@@ -57,12 +83,36 @@ export default function Home() {
       <div className="sec">
         <div className="sec-head">
           <h2>Your documents</h2>
+          {hasResume && <span className="count">{resumes.length}</span>}
         </div>
-        <p className="note" style={{ maxWidth: 640 }}>
-          Nothing saved yet. Saved résumés, version history and the jobs you are going after
-          all arrive together with accounts — until then every review is a one-off, and closing
-          the tab loses it.
-        </p>
+
+        {!hasResume ? (
+          <p className="note" style={{ maxWidth: 640 }}>
+            Nothing saved yet. Add a résumé and it will show up here, along with any copies
+            you tailor to specific jobs.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
+            {resumes.map((r) => (
+              <Link
+                key={r.id}
+                href={`/resume/${r.id}`}
+                className="entry"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 'var(--s-3)' }}
+              >
+                <span className={r.parent_id ? 'pill' : 'pill pill-master'}>
+                  {r.parent_id ? 'Tailored' : 'Master'}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ display: 'block', fontSize: 'var(--text-sm)' }}>{r.title}</strong>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                    {r.content ? 'Read into sections' : 'Plain text only'}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,126 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { currentSid } from '@/lib/auth';
+import { ensureSchema, sql, type ResumeRow } from '@/lib/db';
+import { ResumeSchema } from '@/lib/resume-schema';
+import ResumeDocument from '@/components/ResumeDocument';
+import AssistantPanel from '@/components/AssistantPanel';
+import PrintButton from '@/components/PrintButton';
+
+export const dynamic = 'force-dynamic';
+
+export default async function ResumePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const sid = await currentSid();
+  if (!sid) return null;
+
+  await ensureSchema();
+  const rows = (await sql()`
+    SELECT id, title, source_text, content, parent_id, job_id, created_at, updated_at
+    FROM resumes WHERE id = ${id} AND sid = ${sid}`) as unknown as ResumeRow[];
+
+  const row = rows[0];
+  if (!row) notFound();
+
+  const parsed = ResumeSchema.safeParse(row.content);
+  const resume = parsed.success ? parsed.data : null;
+  const isTailored = Boolean(row.parent_id);
+
+  // For the review panel: the structured version reads better than raw text.
+  const forReview = resume
+    ? JSON.stringify(resume, null, 2)
+    : (row.source_text ?? '');
+
+  return (
+    <>
+      <div className="canvas-head">
+        <div className="canvas-head-in">
+          <div className="crumb">
+            <Link href="/">Home</Link>
+            <span className="sep">›</span>
+            {isTailored ? (
+              <>
+                <Link href={`/resume/${row.parent_id}`}>Master</Link>
+                <span className="sep">›</span>
+                <strong>{row.title}</strong>
+              </>
+            ) : (
+              <strong>{row.title}</strong>
+            )}
+          </div>
+          <div className="rail">
+            {isTailored && <Link href="/jobs" className="btn">All jobs</Link>}
+            <PrintButton />
+          </div>
+        </div>
+      </div>
+
+      <main
+        className="canvas-split"
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: 'var(--s-6) var(--s-4) var(--s-16)',
+          display: 'grid',
+          gap: 'var(--s-6)',
+          gridTemplateColumns: 'minmax(0,1fr) 380px',
+          alignItems: 'start',
+        }}
+      >
+        <div id="printable">
+          {resume ? (
+            <div
+              style={{
+                border: '1px solid var(--doc-border)',
+                borderRadius: 8,
+                boxShadow: 'var(--shadow)',
+                overflow: 'hidden',
+              }}
+            >
+              <ResumeDocument resume={resume} />
+            </div>
+          ) : (
+            <article
+              style={{
+                background: 'var(--doc-bg)',
+                color: 'var(--doc-text)',
+                border: '1px solid var(--doc-border)',
+                borderRadius: 8,
+                padding: 'var(--s-12)',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'var(--serif)',
+                lineHeight: 1.6,
+              }}
+            >
+              {row.source_text}
+            </article>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
+          {!resume && (
+            <p className="note">
+              This one could not be read into sections, so it is shown as plain text. The
+              review still works; the formatted document and PDF export need the structured
+              version.
+            </p>
+          )}
+          {isTailored && row.source_text && (
+            <div className="panel">
+              <div className="panel-head">
+                <h2>What changed</h2>
+              </div>
+              <div className="panel-body">
+                <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{row.source_text}</p>
+                <p className="note">
+                  Your master résumé is untouched. This is a separate copy for this job.
+                </p>
+              </div>
+            </div>
+          )}
+          <AssistantPanel resumeText={forReview} />
+        </div>
+      </main>
+    </>
+  );
+}
