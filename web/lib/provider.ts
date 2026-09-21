@@ -78,6 +78,24 @@ async function open(config: ProviderConfig, system: string, messages: ChatMessag
   } as Parameters<typeof client.chat.completions.create>[0]);
 }
 
+/**
+ * For flows whose output is a document rather than a conversation. Nothing can be
+ * shown until the JSON is complete and valid, so there is no reason to stream it.
+ */
+export async function completeText(opts: {
+  system: string;
+  messages: ChatMessage[];
+}): Promise<{ text: string; degraded: boolean }> {
+  const collect = async (stream: AsyncIterable<StreamEvent>) => {
+    let out = '';
+    for await (const ev of stream) if (ev.type === 'content') out += ev.text;
+    return out;
+  };
+
+  const { stream, degraded } = await streamCompletion(opts);
+  return { text: await collect(stream), degraded };
+}
+
 export async function streamCompletion(opts: {
   system: string;
   messages: ChatMessage[];

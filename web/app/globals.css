@@ -174,3 +174,14 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
   border:1px solid var(--border-strong); background:var(--bg-surface); color:var(--text);
   line-height:1.5;
 }
+
+/* Printing: only the document reaches the page. */
+@media print{
+  .topbar, .canvas-head, .panel, .note, .btn{display:none!important}
+  .canvas-split{display:block!important; padding:0!important; max-width:none!important}
+  #printable{border:0!important; box-shadow:none!important}
+  #printable > div{border:0!important; box-shadow:none!important; border-radius:0!important}
+  body{background:#fff!important}
+}
+
+.pill-master{background:var(--accent-subtle); color:var(--accent); border-color:transparent}
