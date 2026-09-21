@@ -52,5 +52,5 @@ export async function POST(req: Request) {
     INSERT INTO resumes (id, sid, title, source_text, content)
     VALUES (${id}, ${sid}, ${title}, ${text}, ${content ? JSON.stringify(content) : null})`;
 
-  return Response.redirect(new URL(`/resume/${id}`, req.url), 303);
+  return new Response(null, { status: 303, headers: { location: new URL(`/resume/${id}`, req.url).toString() } });
 }

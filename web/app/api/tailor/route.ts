@@ -88,5 +88,5 @@ export async function POST(req: Request) {
     await q`UPDATE jobs SET analysis = ${JSON.stringify(analysis)} WHERE id = ${job.id} AND sid = ${sid}`;
   }
 
-  return Response.redirect(new URL(`/resume/${id}`, req.url), 303);
+  return new Response(null, { status: 303, headers: { location: new URL(`/resume/${id}`, req.url).toString() } });
 }

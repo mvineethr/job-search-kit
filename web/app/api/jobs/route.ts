@@ -30,5 +30,5 @@ export async function POST(req: Request) {
     INSERT INTO jobs (id, sid, company, role, description)
     VALUES (${id}, ${sid}, ${company}, ${role}, ${description})`;
 
-  return Response.redirect(new URL('/jobs', req.url), 303);
+  return new Response(null, { status: 303, headers: { location: new URL('/jobs', req.url).toString() } });
 }
