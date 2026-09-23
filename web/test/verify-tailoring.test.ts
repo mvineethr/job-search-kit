@@ -38,6 +38,26 @@ describe('verifyTailoring — skills', () => {
     expect(verifyTailoring(tailored, original).cleaned.skills).toEqual(['KUBERNETES']);
   });
 
+  it('keeps a skill the person confirmed, even though the résumé never mentions it', () => {
+    // The point of asking: résumés are incomplete, and a confirmed skill is real.
+    const tailored = tailoredFrom({ skills: ['Istio'] });
+    const { cleaned, audit } = verifyTailoring(tailored, original, null, ['Istio']);
+    expect(cleaned.skills).toEqual(['Istio']);
+    expect(audit.removedSkills).toEqual([]);
+  });
+
+  it('still removes a skill that was asked about but not confirmed', () => {
+    const tailored = tailoredFrom({ skills: ['Istio', 'ServiceNow'] });
+    const { cleaned, audit } = verifyTailoring(tailored, original, null, ['Istio']);
+    expect(cleaned.skills).toEqual(['Istio']);
+    expect(audit.removedSkills).toEqual(['ServiceNow']);
+  });
+
+  it('matches confirmed skills case-insensitively', () => {
+    const tailored = tailoredFrom({ skills: ['istio'] });
+    expect(verifyTailoring(tailored, original, null, ['Istio']).cleaned.skills).toEqual(['istio']);
+  });
+
   it('falls back to the raw text when the original was never parsed', () => {
     const tailored = tailoredFrom({ skills: ['Rust'] });
     const withRaw = verifyTailoring(tailored, null, 'I have written Rust for three years');

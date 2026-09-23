@@ -79,8 +79,13 @@ field. If the résumé gives no date for a role, use empty strings rather than g
 
 - **Never invent experience.** If the posting requires something the person has not done, it
   goes in `missing` and nowhere else. It does not go in the résumé in softened language.
-- **Never invent a number.** Keep the metrics that are there. Where a rewritten bullet needs
-  a number the résumé does not supply, write `[METRIC NEEDED]` literally and move on.
+- **Never invent a number.** Keep the metrics that are there, worded as they are there. Where
+  a rewritten bullet needs a number the résumé does not supply, write `[METRIC NEEDED]`
+  literally and move on.
+
+  *Every number in your output is checked against the source. A figure that appears nowhere
+  in the résumé is flagged to the person as a suspected fabrication, under their own name, on
+  a document they are about to send to an employer. Do not produce one.*
 - **Never change the facts** — employers, titles, dates, education stay exactly as given.
   Only emphasis, ordering and wording change.
 - **Never drop a role** to make room. Reorder bullets within a role instead.

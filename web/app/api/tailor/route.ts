@@ -7,6 +7,7 @@ import { extractJsonObject, proseBefore } from '@/lib/extract-json';
 import { ResumeSchema, type Resume } from '@/lib/resume-schema';
 import { backWithError, redirectTo } from '@/lib/redirect';
 import { verifyTailoring } from '@/lib/verify-tailoring';
+import { answerDetailText, answersForPrompt, claimableSkills, loadAnswers } from '@/lib/answers';
 
 export const runtime = 'nodejs';
 // Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3, plus
@@ -78,6 +79,9 @@ export async function POST(req: Request) {
   const structured = await ensureParsed(master, sid);
   const base = structured ? JSON.stringify(structured, null, 2) : (master.source_text ?? '');
 
+  // What the person told us about themselves, beyond what the résumé says.
+  const answers = await loadAnswers(sid);
+
   let reply: string;
   try {
     const out = await completeText({
@@ -85,7 +89,10 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'user',
-          content: `MY RESUME:\n${base}\n\nTHE JOB (${job.company} — ${job.role}):\n${job.description}`,
+          content:
+            `MY RESUME:\n${base}\n\n` +
+            `THE JOB (${job.company} — ${job.role}):\n${job.description}` +
+            answersForPrompt(answers),
         },
       ],
     });
@@ -116,7 +123,13 @@ export async function POST(req: Request) {
   const analysis = (raw?.tailoring as JobRow['analysis']) ?? null;
 
   // Enforce the no-fabrication rule in code, not only in the prompt.
-  const { cleaned, audit } = verifyTailoring(parsed.data, structured, master.source_text);
+  const { cleaned, audit } = verifyTailoring(
+    parsed.data,
+    structured,
+    // what they typed when answering counts as their own words
+    [master.source_text ?? '', answerDetailText(answers)].join('\n'),
+    claimableSkills(answers),
+  );
   if (audit.removedSkills.length || audit.unsupportedNumbers.length || audit.unsupportedEmployers.length) {
     console.warn('[tailor] audit', {
       removedSkills: audit.removedSkills,

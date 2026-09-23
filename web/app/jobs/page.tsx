@@ -3,15 +3,17 @@ import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow, type ResumeRow, type LetterRow } from '@/lib/db';
 import AddJobForm from '@/components/AddJobForm';
 import GenerateButton from '@/components/GenerateButton';
+import { QuestionsSchema } from '@/lib/question-schema';
+import { loadAnswers, skillKey } from '@/lib/answers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; answered?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, answered } = await searchParams;
   const sid = await currentSid();
   if (!sid) return null;
 
@@ -33,6 +35,16 @@ export default async function JobsPage({
   for (const r of resumes) if (r.job_id && !tailoredByJob.has(r.job_id)) tailoredByJob.set(r.job_id, r);
   const letterByJob = new Map<string, LetterRow>();
   for (const l of letters) if (l.job_id && !letterByJob.has(l.job_id)) letterByJob.set(l.job_id, l);
+
+  // Questions already answered are not worth showing again.
+  const answeredKeys = new Set((await loadAnswers(sid)).map((a) => skillKey(a.skill)));
+  const openQuestions = new Map<string, number>();
+  for (const job of jobs) {
+    const parsed = QuestionsSchema.safeParse(job.questions);
+    if (!parsed.success) continue;
+    const open = parsed.data.filter((q) => !answeredKeys.has(skillKey(q.skill))).length;
+    if (open > 0) openQuestions.set(job.id, open);
+  }
 
   return (
     <div className="wrap">
@@ -59,6 +71,16 @@ export default async function JobsPage({
         >
           {error}
         </div>
+      )}
+
+      {answered && (
+        <p
+          className="note"
+          style={{ maxWidth: 680, marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--ok)' }}
+        >
+          Saved {answered} {Number(answered) === 1 ? 'answer' : 'answers'}. These apply to every
+          job you tailor to from now on — tailor again to use them.
+        </p>
       )}
 
       {!master && (
@@ -134,6 +156,29 @@ export default async function JobsPage({
                         </span>
                       ))}
                     </div>
+                  )}
+
+                  {openQuestions.has(job.id) && (
+                    <Link
+                      href={`/jobs/${job.id}/questions`}
+                      style={{
+                        display: 'block',
+                        border: '1px solid var(--accent)',
+                        borderRadius: 4,
+                        padding: 'var(--s-3)',
+                        background: 'var(--accent-subtle)',
+                        color: 'var(--accent)',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <strong style={{ display: 'block', fontSize: 'var(--text-sm)' }}>
+                        {openQuestions.get(job.id)} questions about your experience
+                      </strong>
+                      <span style={{ fontSize: 'var(--text-xs)', opacity: 0.85 }}>
+                        This posting asks for things your résumé does not mention. Answer them
+                        and the tailored version can use the real ones.
+                      </span>
+                    </Link>
                   )}
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
