@@ -8,6 +8,7 @@ import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
 import TailoringAuditPanel from '@/components/TailoringAudit';
 import type { TailoringAudit } from '@/lib/verify-tailoring';
+import { countMarkers } from '@/lib/metric-schema';
 
 /**
  * A tailored row stores {note, audit} as JSON in source_text. Rows written before
@@ -28,8 +29,15 @@ function readNote(raw: string | null): { note: string; audit: TailoringAudit | n
 
 export const dynamic = 'force-dynamic';
 
-export default async function ResumePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ResumePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ filled?: string; left?: string; error?: string }>;
+}) {
   const { id } = await params;
+  const { filled, left, error } = await searchParams;
   const sid = await currentSid();
   if (!sid) return null;
 
@@ -44,6 +52,7 @@ export default async function ResumePage({ params }: { params: Promise<{ id: str
   const parsed = ResumeSchema.safeParse(row.content);
   const resume = parsed.success ? parsed.data : null;
   const isTailored = Boolean(row.parent_id);
+  const markers = resume ? countMarkers(resume) : 0;
 
   // For the review panel: the structured version reads better than raw text.
   const forReview = resume
@@ -69,6 +78,11 @@ export default async function ResumePage({ params }: { params: Promise<{ id: str
           </div>
           <div className="rail">
             {isTailored && <Link href="/jobs" className="btn">All jobs</Link>}
+            {markers > 0 && (
+              <Link href={`/resume/${row.id}/metrics`} className="btn">
+                Fill in {markers} {markers === 1 ? 'number' : 'numbers'}
+              </Link>
+            )}
             <PrintButton />
           </div>
         </div>
@@ -117,6 +131,42 @@ export default async function ResumePage({ params }: { params: Promise<{ id: str
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
+          {error && (
+            <p role="alert" className="note" style={{ borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+              {error}
+            </p>
+          )}
+
+          {filled && (
+            <p className="note" style={{ borderLeft: '3px solid var(--ok)' }}>
+              Filled in {filled} {Number(filled) === 1 ? 'number' : 'numbers'} from what you told
+              us.{' '}
+              {Number(left) > 0
+                ? `${left} still missing — you can come back to them.`
+                : 'Nothing is missing now.'}
+            </p>
+          )}
+
+          {markers > 0 && (
+            <div className="panel">
+              <div className="panel-head">
+                <h2 className="tnum">
+                  {markers} {markers === 1 ? 'bullet is' : 'bullets are'} missing a number
+                </h2>
+              </div>
+              <div className="panel-body">
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  Nothing was invented to fill these, which is why they have holes. A bullet
+                  without a number reads as a claim rather than a result — but a made-up number
+                  is worse, so we asked instead of guessing.
+                </p>
+                <Link href={`/resume/${row.id}/metrics`} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                  Tell us the numbers
+                </Link>
+              </div>
+            </div>
+          )}
+
           {!resume && (
             <p className="note">
               This one could not be read into sections, so it is shown as plain text. The

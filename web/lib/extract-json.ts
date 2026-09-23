@@ -27,6 +27,31 @@ export function extractJsonObject(text: string): unknown | null {
   return null;
 }
 
+/**
+ * Same, for prompts whose answer is a list. Kept separate from the object version
+ * so a caller expecting one shape never silently receives the other.
+ */
+export function extractJsonArray(text: string): unknown[] | null {
+  const candidates: string[] = [];
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenced) candidates.push(fenced[1]);
+
+  const first = text.indexOf('[');
+  const last = text.lastIndexOf(']');
+  if (first >= 0 && last > first) candidates.push(text.slice(first, last + 1));
+
+  for (const c of candidates) {
+    try {
+      const parsed = JSON.parse(c.trim());
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // try the next candidate
+    }
+  }
+  return null;
+}
+
 /** The prose part, with any fenced block removed. */
 export function proseBefore(text: string): string {
   const fence = text.indexOf('```');
