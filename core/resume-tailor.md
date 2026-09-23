@@ -61,7 +61,19 @@ field. If the résumé gives no date for a role, use empty strings rather than g
 4. **Rewrite bullets** in the posting's vocabulary, keeping
    `[verb] + [scope] + [outcome] + [impact]`.
 5. **Surface buried experience** that is genuinely relevant to this role.
-6. **Add true keywords to Skills** — only ones the person's résumé supports.
+6. **Skills: only what the résumé already contains.** You may reword a skill to match the
+   posting's vocabulary when the résumé clearly shows it — "K8s" becomes "Kubernetes". You
+   may **not** add a skill because the posting asks for it. If the posting wants
+   CloudFormation, ServiceNow or Azure DevOps and the résumé never mentions them, they go in
+   `missing`, not in `skills`. A skill on a résumé is a claim the person has to defend in an
+   interview.
+
+   *Every skill you output is checked against the source résumé, and anything it does not
+   support is removed before the person sees it. Adding posting keywords wastes the slot.*
+
+7. **Keep every bullet.** Rewrite and reorder them, but do not delete them. Dropping a
+   bullet throws away real experience the person earned. If a bullet is genuinely irrelevant
+   to this role, move it last — do not remove it.
 
 ## What you must not do
 
