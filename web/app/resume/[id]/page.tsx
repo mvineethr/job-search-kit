@@ -6,6 +6,25 @@ import { ResumeSchema } from '@/lib/resume-schema';
 import ResumeDocument from '@/components/ResumeDocument';
 import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
+import TailoringAuditPanel from '@/components/TailoringAudit';
+import type { TailoringAudit } from '@/lib/verify-tailoring';
+
+/**
+ * A tailored row stores {note, audit} as JSON in source_text. Rows written before
+ * the audit existed hold plain prose, so fall back to treating it as the note.
+ */
+function readNote(raw: string | null): { note: string; audit: TailoringAudit | null } {
+  if (!raw) return { note: '', audit: null };
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'note' in parsed) {
+      return { note: String(parsed.note ?? ''), audit: (parsed.audit as TailoringAudit) ?? null };
+    }
+  } catch {
+    // older row: plain text
+  }
+  return { note: raw, audit: null };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -105,19 +124,28 @@ export default async function ResumePage({ params }: { params: Promise<{ id: str
               version.
             </p>
           )}
-          {isTailored && row.source_text && (
-            <div className="panel">
-              <div className="panel-head">
-                <h2>What changed</h2>
-              </div>
-              <div className="panel-body">
-                <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{row.source_text}</p>
-                <p className="note">
-                  Your master résumé is untouched. This is a separate copy for this job.
-                </p>
-              </div>
-            </div>
-          )}
+          {isTailored &&
+            (() => {
+              const { note, audit } = readNote(row.source_text);
+              return (
+                <>
+                  {audit && <TailoringAuditPanel audit={audit} />}
+                  {note && (
+                    <div className="panel">
+                      <div className="panel-head">
+                        <h2>What it says it changed</h2>
+                      </div>
+                      <div className="panel-body">
+                        <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{note}</p>
+                        <p className="note">
+                          Your master résumé is untouched. This is a separate copy for this job.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           <AssistantPanel resumeText={forReview} />
         </div>
       </main>

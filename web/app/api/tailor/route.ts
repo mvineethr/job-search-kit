@@ -6,6 +6,7 @@ import { completeText } from '@/lib/provider';
 import { extractJsonObject, proseBefore } from '@/lib/extract-json';
 import { ResumeSchema, type Resume } from '@/lib/resume-schema';
 import { backWithError, redirectTo } from '@/lib/redirect';
+import { verifyTailoring } from '@/lib/verify-tailoring';
 
 export const runtime = 'nodejs';
 // Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3, plus
@@ -114,11 +115,26 @@ export async function POST(req: Request) {
 
   const analysis = (raw?.tailoring as JobRow['analysis']) ?? null;
 
+  // Enforce the no-fabrication rule in code, not only in the prompt.
+  const { cleaned, audit } = verifyTailoring(parsed.data, structured, master.source_text);
+  if (audit.removedSkills.length || audit.unsupportedNumbers.length || audit.unsupportedEmployers.length) {
+    console.warn('[tailor] audit', {
+      removedSkills: audit.removedSkills,
+      unsupportedNumbers: audit.unsupportedNumbers,
+      unsupportedEmployers: audit.unsupportedEmployers,
+      bulletsDropped: audit.bulletsDropped,
+    });
+  }
+
+  // The prose note and the audit travel together: the note says what the model
+  // claims it did, the audit says what it actually did.
+  const note = JSON.stringify({ note: proseBefore(reply), audit });
+
   const id = randomUUID();
   await q`
     INSERT INTO resumes (id, sid, title, content, parent_id, job_id, source_text)
     VALUES (${id}, ${sid}, ${`${job.company} — ${job.role}`},
-            ${JSON.stringify(parsed.data)}, ${master.id}, ${job.id}, ${proseBefore(reply)})`;
+            ${JSON.stringify(cleaned)}, ${master.id}, ${job.id}, ${note})`;
 
   if (analysis) {
     await q`UPDATE jobs SET analysis = ${JSON.stringify(analysis)} WHERE id = ${job.id} AND sid = ${sid}`;
