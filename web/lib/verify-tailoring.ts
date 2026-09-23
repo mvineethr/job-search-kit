@@ -56,13 +56,21 @@ export function verifyTailoring(
   tailored: Resume,
   original: Resume | null,
   originalRaw?: string | null,
+  /**
+   * Skills the person confirmed they can defend, in answer to a question. These
+   * are legitimate even though the written résumé never mentions them — recovering
+   * them is exactly why we ask.
+   */
+  confirmedSkills: string[] = [],
 ): { cleaned: Resume; audit: TailoringAudit } {
   const source = sourceText(original, originalRaw);
+  const confirmed = new Set(confirmedSkills.map((s) => s.toLowerCase().trim()));
 
   const removedSkills: string[] = [];
   const keptSkills = tailored.skills.filter((skill) => {
     const s = skill.toLowerCase().trim();
     if (!s) return false;
+    if (confirmed.has(s)) return true;
     if (source.includes(s)) return true;
     removedSkills.push(skill);
     return false;

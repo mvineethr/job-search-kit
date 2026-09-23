@@ -19,7 +19,15 @@ export type JobRow = {
   role: string;
   description: string;
   analysis: { matched?: string[]; missing?: string[]; requirements?: number } | null;
+  questions?: unknown;
   created_at: string;
+};
+
+export type SkillAnswerRow = {
+  skill_key: string;
+  skill: string;
+  level: string;
+  detail: string;
 };
 
 export type LetterRow = {
@@ -88,6 +96,25 @@ export async function ensureSchema(): Promise<void> {
       content     JSONB NOT NULL,
       created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
     )`;
+
+  /**
+   * Answers belong to the person, not the job. If someone confirms they have run
+   * Istio, that is true for every job they tailor to — asking again per posting
+   * would be tedious and would collect contradictory answers.
+   */
+  await q`
+    CREATE TABLE IF NOT EXISTS skill_answers (
+      sid        TEXT NOT NULL,
+      skill_key  TEXT NOT NULL,
+      skill      TEXT NOT NULL,
+      level      TEXT NOT NULL,
+      detail     TEXT NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (sid, skill_key)
+    )`;
+
+  // Questions are per job, since they come from that posting's requirements.
+  await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;
 
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;
