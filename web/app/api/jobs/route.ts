@@ -3,7 +3,7 @@ import { requireSid } from '@/lib/auth';
 import { ensureSchema, sql, type ResumeRow } from '@/lib/db';
 import { loadPrompt } from '@/lib/prompts';
 import { completeText } from '@/lib/provider';
-import { extractJsonObject } from '@/lib/extract-json';
+import { extractJsonArray } from '@/lib/extract-json';
 import { QuestionsSchema } from '@/lib/question-schema';
 import { loadAnswers, skillKey } from '@/lib/answers';
 import { backWithError, redirectTo } from '@/lib/redirect';
@@ -46,9 +46,7 @@ async function generateQuestions(
       tier: 'fast',
     });
 
-    const parsed = QuestionsSchema.safeParse(extractJsonObject(text) ?? JSON.parse(
-      (text.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] ?? '[]').trim(),
-    ));
+    const parsed = QuestionsSchema.safeParse(extractJsonArray(text) ?? []);
     if (!parsed.success) return null;
 
     // Drop anything already answered — nobody should be asked twice.
