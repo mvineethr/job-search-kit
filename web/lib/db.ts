@@ -20,6 +20,7 @@ export type JobRow = {
   description: string;
   analysis: { matched?: string[]; missing?: string[]; requirements?: number } | null;
   questions?: unknown;
+  applied_at?: string | null;
   created_at: string;
 };
 
@@ -115,6 +116,8 @@ export async function ensureSchema(): Promise<void> {
 
   // Questions are per job, since they come from that posting's requirements.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;
+  // Null until the person marks the job applied: a yes/no with the date it became yes.
+  await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS applied_at TIMESTAMPTZ`;
 
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;

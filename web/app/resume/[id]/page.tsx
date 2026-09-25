@@ -6,6 +6,7 @@ import { ResumeSchema } from '@/lib/resume-schema';
 import ResumeDocument from '@/components/ResumeDocument';
 import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
+import ConfirmButton from '@/components/ConfirmButton';
 import TailoringAuditPanel from '@/components/TailoringAudit';
 import type { TailoringAudit } from '@/lib/verify-tailoring';
 import { countMarkers } from '@/lib/metric-schema';
@@ -84,6 +85,13 @@ export default async function ResumePage({
               </Link>
             )}
             <PrintButton />
+            {isTailored && (
+              <ConfirmButton
+                action={`/api/resumes/${row.id}`}
+                label="Delete this copy"
+                confirm="Delete this tailored copy? Your master résumé and the job stay, so you can tailor again."
+              />
+            )}
           </div>
         </div>
       </div>

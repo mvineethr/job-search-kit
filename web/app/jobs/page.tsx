@@ -3,6 +3,7 @@ import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow, type ResumeRow, type LetterRow } from '@/lib/db';
 import AddJobForm from '@/components/AddJobForm';
 import GenerateButton from '@/components/GenerateButton';
+import ConfirmButton from '@/components/ConfirmButton';
 import { QuestionsSchema } from '@/lib/question-schema';
 import { loadAnswers, skillKey } from '@/lib/answers';
 
@@ -21,7 +22,7 @@ export default async function JobsPage({
   const q = sql();
 
   const jobs = (await q`
-    SELECT id, company, role, description, analysis, created_at
+    SELECT id, company, role, description, analysis, questions, applied_at, created_at
     FROM jobs WHERE sid = ${sid} ORDER BY created_at DESC`) as unknown as JobRow[];
   const resumes = (await q`
     SELECT id, title, content, parent_id, job_id, created_at, updated_at, source_text
@@ -130,6 +131,11 @@ export default async function JobsPage({
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', alignItems: 'baseline' }}>
                     <strong style={{ fontSize: 'var(--text-base)' }}>{job.role}</strong>
                     <span style={{ color: 'var(--text-muted)' }}>{job.company}</span>
+                    {job.applied_at && (
+                      <span className="pill tnum" style={{ color: 'var(--ok)' }}>
+                        Applied {new Date(job.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
 
                   {total > 0 && (
@@ -211,6 +217,20 @@ export default async function JobsPage({
                         busyLabel="Writing… about a minute"
                       />
                     ) : null}
+
+                    <form method="post" action={`/api/jobs/${job.id}`}>
+                      <input type="hidden" name="op" value="applied" />
+                      <button type="submit" className="btn">
+                        {job.applied_at ? 'Mark not applied' : 'Mark as applied'}
+                      </button>
+                    </form>
+
+                    <ConfirmButton
+                      action={`/api/jobs/${job.id}`}
+                      fields={{ op: 'delete' }}
+                      label="Delete job"
+                      confirm={`Delete ${job.role} at ${job.company}? Its tailored résumé and cover letter go with it. Your master résumé is not affected.`}
+                    />
                   </div>
 
                   {!tailored && !letter && master && (
