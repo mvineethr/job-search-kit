@@ -4,7 +4,7 @@ Context for anyone (human or AI agent) picking this project up later. This file 
 **public** — no personal data lives here. Personal job-search specifics are kept in a
 local, gitignored notes file (see "Local notes" below).
 
-_Last updated: 2026-09-22._ The standing dev brief (module map, hard rules, gotchas) is
+_Last updated: 2026-09-24._ The standing dev brief (module map, hard rules, gotchas) is
 `CLAUDE.md`; this file is the narrative.
 
 ## What this repo is
@@ -16,6 +16,120 @@ capability is both an auto-triggered **skill** (`skills/<name>/SKILL.md`) and an
 Since September 2026 it is also a **web app** (`web/`, Next.js on Vercel + Neon + Kimi),
 password-gated for testing, so people without a terminal-based AI agent can use it. The
 plugin and the web app read the same prompts from `core/`.
+
+---
+
+## Session 2026-09-24: market research, no guarantees, and a fit score built from verified evidence
+
+Extends the 2026-09-19 → 09-22 session below: the anti-fabrication verifier, gap questions
+and tailoring audit built there are what this session's fit score and fixes build on.
+**Everything here is on branch `claude/resume-platform-analysis-35bb9c` (8 commits,
+`9661417`…`3161c38`), not pushed to `main`, not deployed.**
+
+### What was asked
+
+Research competitors and the target audience, and suggest improvements. The maintainer's
+goals: tailored résumés and cover letters with AI and no faking, the AI "screening" users
+for the information it needs, users knowing they are using AI, an ATS résumé maker with an
+"80% guarantee" of being picked, and a match-score meter before tailoring. Later: delete
+buttons for résumés and jobs, and a way to mark a job as applied.
+
+### Research and decisions
+
+- Market research by a Sonnet subagent (sources it cited were not independently
+  re-checked): competitors (Jobscan, Teal, Rezi, Kickresume, Enhancv, Resume Worded,
+  Resume.io, Zety, auto-apply tools, TopResume) all sell an unvalidated score; none
+  enforces anti-fabrication, which is the category's most-cited complaint. The "75% of
+  résumés auto-rejected by ATS" figure traces to a 2012 Preptel sales pitch; surveyed
+  recruiters mostly say their ATS doesn't auto-reject; the real screens are hard
+  requirements and humans or AI rejecting generic text. The FTC has acted on inflated
+  job-placement claims.
+- **Decided:** no "80% guarantee" or any outcome claim; no auto-apply for now; pricing on
+  hold until real accounts exist; **master résumés are never deleted** (only tailored
+  copies and jobs); applied is a yes/no with a date (a full status pipeline was offered and
+  declined); quick wins first.
+- Match-score spec: `docs/superpowers/specs/2026-09-24-match-score.md` (now marked built,
+  with acceptance results). Decisions on it: replace gap questions; bands 75/50
+  ("Strong fit" / "Partial fit" / "Big gaps"); must-have weight 3, nice-to-have 1.
+
+### What was built
+
+- **Delete + applied** (`9661417`): `POST /api/jobs/[id]` with `op=applied|delete|match`
+  (replaced an unused `DELETE` handler); job delete removes its tailored résumés in a
+  transaction (letters cascade); `POST /api/resumes/[id]` deletes tailored copies only
+  (`parent_id IS NOT NULL`); `jobs.applied_at`; `components/ConfirmButton.tsx`.
+- **AI disclosure** (`6ebfffa`): sign-in box + required `ai_ack` checkbox, checked
+  server-side before the password; `components/AiNotice.tsx` on tailored résumés and
+  letters (outside `#printable`).
+- **Filler phrases** (`32ad5d7`): `lib/generic-phrases.ts` parses the `## Banned` list in
+  `core/ats-rules.md` (list extended by ~20 words); skips words the posting uses; whole-word
+  matching; `components/GenericPhrases.tsx` on résumé and letter pages. `loadAtsRules()`
+  exported from `prompts.ts`.
+- **Fit score** (`1d28905` spec, `218541a` build): `core/job-match.md` replaces
+  `core/gap-questions.md` (deleted; old jobs still render their stored `questions`).
+  `lib/match.ts` — `verifyEvidence`, `viewMatch`, `band`, `readMatch`; `lib/run-match.ts`
+  — primary tier, `TODAY:` line, stores `jobs.match`. New page `app/jobs/[id]/page.tsx`,
+  `components/FitMeter.tsx`; the questions page reads `openQuestions` from the match; the
+  answers route redirects to the job page with `?was=<score>` to show the change.
+- **Three roadmap fixes** (`66f8dc4`): `restoreDroppedBullets` in `verify-tailoring.ts`
+  (originals least like any surviving bullet are re-appended verbatim; missing roles
+  re-inserted in place; roles match on company + title, or company + start date);
+  `unsupportedNumbers` highlighted in `ResumeDocument` (screen only);
+  `components/Elapsed.tsx` counter in `GenerateButton` and `AddJobForm`.
+- **ATS check** (`b0df26e`): `/ats-check` page, `components/AtsUpload.tsx` (reuses
+  `/api/extract`), `lib/ats-check.ts` (readable text, garbled chars, email, phone,
+  headings, dates).
+- **Word export** (`3161c38`): `lib/docx.ts` writes the .docx by hand (zip via
+  `node:zlib` `crc32` + `deflateRawSync`, no dependency); `GET /api/resumes/[id]/docx`.
+
+### Bugs found live, and how
+
+- **Questions card never shown on /jobs**: the page never selected `questions`. Found
+  while adding the applied flag.
+- **Filler-phrase parser read nothing**: first test run. Causes: CRLF line endings, and the
+  heading is `## Banned (these tank…)`, not `## Banned`.
+- **Fit score unstable (86/83/73 on the same inputs)**: live runs with the real model,
+  3× per posting on `test/fixtures/priya.json`. Round 1: "Prometheus and Grafana" split in
+  one run only, so the prompt now says "and" splits, "or" doesn't. Round 2 (73/73/81):
+  "7+ years" flipped partial/met because the model doesn't know the date, so `TODAY:` went
+  into the message. Round 3 (67/81/69): a debug column showed the evidence
+  "Jun 2019 – Present" (a span over two roles) failing `verifyEvidence`, so `years` spans
+  are now accepted when both dates are on the résumé. Round 4: **81/79/79 and 17/17/17**,
+  zero unverified evidence reaching the UI, 19–25s.
+- **ATS check failed our own export**: a real PDF (app renderer → headless Chromium via
+  Playwright → `unpdf`) reported all headings missing, because CSS uppercases them. Made
+  case-insensitive. (This uppercase behaviour was already noted for the plugin template
+  under "Design decisions worth remembering".)
+- **Role duplication risk** in the first `restoreDroppedBullets`: a reworded title would
+  have re-inserted the role. Caught in review before testing; covered by a test.
+
+### Verified
+
+- 108 Vitest tests passing (from 81); `tsc` and `next build` clean; build traces include
+  `core/ats-rules.md` for the pages that now read it.
+- Delete/applied SQL run against Neon under a throwaway `sid`, then cleaned up.
+- Sign-in checkbox: `curl.exe` POST without it → `303 /login?ack=1`; with it → password
+  check. Sign-in page viewed in the browser pane.
+- Fit score: 4 rounds of live model runs as above (temporary test file, deleted).
+- ATS check: a real PDF from the app's renderer passes all six checks (788 letters).
+- .docx: Python `zipfile.testzip()` clean, 20 paragraphs; opened in Microsoft Word via COM
+  (1 page, 131 words); Word's own PDF of it passes all six ATS checks.
+- **Not verified:** no signed-in page (job page, meter, delete buttons, flagged numbers,
+  filler panel, Word button) has been viewed in a browser, because the agent does not
+  enter the test password.
+
+### Pending
+
+- Push to `main` and click through every feature above on the live site.
+- Existing sessions won't see the disclosure checkbox until their 30-day cookie expires
+  (forcing re-sign-in was offered, not done). The disclosure doesn't name Moonshot.
+- Several masters are allowed and none can be deleted, so a mistaken one stays.
+- No inline editing: flagged numbers, filler phrases and restored bullets can't be fixed
+  in-app. Restored bullets go at the end of their role.
+- Keyword coverage for tailored documents (separate from fit); cold email; LinkedIn;
+  real accounts (needed before any pricing).
+- Still open from the previous session: `MODEL_FAST_NAME` in Vercel, spend cap,
+  friends' testing round, `web/README.md` boilerplate.
 
 ---
 
@@ -191,7 +305,7 @@ layer, ATS keywords parse, `[METRIC NEEDED]` placeholders survive until filled.
 - [ ] **Sponsor-friendly job-filtering note** — guidance on checking H-1B/LCA history
       before applying, for users who need visa sponsorship. Status: proposed.
 - [ ] **Non-tech field variants** — current examples lean SRE/DevOps/PM.
-- [x] **Hosted web app** (2026-09) — see the session entry above and `CLAUDE.md`.
+- [x] **Hosted web app** (2026-09) — see the session entries above and `CLAUDE.md`.
 - [ ] **`core/` extraction for the remaining plugin skills** — only `resume-review` has been
       moved; the other skills still hold their own copies of their prompts.
 - [ ] **MCP server** reading `core/` (free; distribution rather than revenue).

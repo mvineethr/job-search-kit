@@ -81,6 +81,9 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 - **`core/` is the source of truth.** Change prompts there, never in a route. New capability = new `core/<name>.md` + add to `KNOWN` in `prompts.ts`.
 - **Fabrication is enforced in code, not just prompts.** Tailored output must go through `verifyTailoring`. Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.
 - **Prompts never suggest a number** to the user.
+- **The fit score is arithmetic in `match.ts`, never a model output.** Evidence quotes must pass `verifyEvidence`; answers may raise a requirement, never lower it; no score is shown for tailored copies.
+- **Master résumés are never deleted.** Delete routes filter `parent_id IS NOT NULL` in SQL.
+- **No outcome guarantees** in copy ("X% interviews", "beats the ATS"): not deliverable, and an FTC risk.
 - **Secrets only in `web/.env.local`** (gitignored) and the Vercel dashboard. Never print a key; scripts that need one read it and report lengths only.
 - **Scan commits for key-shaped strings and `postgresql://user:pass@` before every push.**
 - **Form posts redirect with `backWithError`,** never return raw JSON to a browser form.
@@ -128,16 +131,23 @@ cd web && npm run build                    # prebuild copies ../core first
 - User-typed answer details must count as source (`answerDetailText`), or their own numbers get flagged as invented.
 - The model does not know today's date: "Jun 2019 – Present" flip-flopped between under and over 7 years until `TODAY:` went into the match message.
 - "Prometheus and Grafana" was split in one run and merged in others, a 13-point score swing. The match prompt now fixes the rule: "and" splits, "or" doesn't.
+- The match check rejected a true years quote ("Jun 2019 – Present" spanning two roles) because it isn't one line of the résumé; `years` spans are verified end-to-end instead. Don't loosen the literal check for other categories.
+- The PDF export uppercases headings via CSS, so extracted text says "EXPERIENCE"; anything checking headings in extracted text must be case-insensitive.
+- A page that never SELECTs a column renders nothing and throws nothing: the jobs-page questions card never appeared because `questions` wasn't selected.
 - `core/ats-rules.md` headings carry text after the name (`## Banned (these tank…)`) and the file is CRLF on Windows. Parsers of it must allow both.
 
 ## Status
 
-**Live (test build):** login, add résumé (paste/PDF → parsed), streaming review with anchored
-findings, jobs hub, fit score with evidence and hard-filter warnings (`/jobs/[id]`), questions
-from the match, tailoring with audit panel, cover letters with facts/gaps, metric questions,
-filler-phrase check, AI disclosure at sign-in, delete jobs/tailored copies, applied flag,
-print-to-PDF, Word (.docx) download, "what an ATS sees" PDF check (`/ats-check`),
-dropped bullets restored word for word, unsupported numbers marked inline, elapsed-time counters.
+**Live (test build, deployed from `main`):** login, add résumé (paste/PDF → parsed), streaming
+review with anchored findings, jobs hub, gap questions, tailoring with audit panel, cover
+letters with facts/gaps, metric questions, print-to-PDF.
+
+**Built, not yet deployed (S2, branch `claude/resume-platform-analysis-35bb9c`, 8 commits):**
+fit score with verified evidence and hard-filter warnings (`/jobs/[id]`) replacing gap
+questions, AI disclosure at sign-in, delete jobs/tailored copies, applied flag, filler-phrase
+check, Word (.docx) download, "what an ATS sees" PDF check (`/ats-check`), dropped bullets
+restored word for word, unsupported numbers marked inline, elapsed-time counters. None of it
+has been clicked through in a signed-in browser yet.
 
 **Not built:** cold email, LinkedIn (two modes designed), interview prep (mocked up), inline
 résumé editing, real accounts, MCP server. Pages exist as honest "Not built yet" placeholders.
@@ -149,7 +159,7 @@ ATSs vary.
 
 ## Next
 
-1. Click-through test of everything above on the live site (not yet seen in a signed-in browser).
+1. Push S2 to `main`, then click through every S2 feature signed-in on the live site.
 2. Inline résumé editing: every check we add points at text the person cannot yet change.
 3. Keyword coverage on the tailored document (literal posting terms present), as a separate number from fit.
 4. Cold email, then LinkedIn.
@@ -160,3 +170,4 @@ ATSs vary.
 
 - **Pre-log** (up to 2026-06-27, commits `b6f309f`…`7b44846`) - Built the plugin: eight skills + commands, ATS rules, themeable HTML template, WeasyPrint PDF pipeline, plugin packaging, `INSTRUCTIONS.md`. Not recorded as dated sessions; see HANDOVER "Current state" and "Roadmap".
 - **S1** (2026-09-19 → 09-22) - Built and deployed the web app: specs + mockup, `core/` extraction, Next.js/Neon/Kimi, test login, jobs, tailoring, cover letters; code-enforced anti-fabrication after an audit found 8 skills stuffed from a JD; gap and metric questions.
+- **S2** (2026-09-24) - Market research (no competitor enforces anti-fabrication; "75% auto-rejected by ATS" is a 2012 sales pitch) → dropped the planned "80% guarantee", no auto-apply, pricing on hold. Built: fit score from verified evidence (`core/job-match.md` replaces gap-questions; spread 13 → 2 pts over 4 live rounds), AI disclosure, delete/applied, filler-phrase check, restored bullets, inline number flags, elapsed counters, `/ats-check`, hand-written .docx. 81 → 108 tests; not pushed.
