@@ -8,6 +8,8 @@ import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
 import ConfirmButton from '@/components/ConfirmButton';
 import AiNotice from '@/components/AiNotice';
+import GenericPhrases from '@/components/GenericPhrases';
+import { resumeParts } from '@/lib/generic-phrases';
 import TailoringAuditPanel from '@/components/TailoringAudit';
 import type { TailoringAudit } from '@/lib/verify-tailoring';
 import { countMarkers } from '@/lib/metric-schema';
@@ -55,6 +57,13 @@ export default async function ResumePage({
   const resume = parsed.success ? parsed.data : null;
   const isTailored = Boolean(row.parent_id);
   const markers = resume ? countMarkers(resume) : 0;
+
+  // A tailored copy is checked against its posting, so the posting's own words are not flagged.
+  const posting = row.job_id
+    ? ((await sql()`SELECT description FROM jobs WHERE id = ${row.job_id} AND sid = ${sid}`) as unknown as {
+        description: string;
+      }[])[0]?.description
+    : undefined;
 
   // For the review panel: the structured version reads better than raw text.
   const forReview = resume
@@ -177,6 +186,8 @@ export default async function ResumePage({
               </div>
             </div>
           )}
+
+          {resume && <GenericPhrases parts={resumeParts(resume)} posting={posting} />}
 
           {!resume && (
             <p className="note">

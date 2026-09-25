@@ -41,6 +41,13 @@ selectable text, no tables/columns/images, standard fonts. Theme the *look*, nev
 ## Banned (these tank parse quality or read as filler)
 
 - Multi-column / Canva-style templates, graphics, skill "rating" bars, photos.
-- Verbs: spearheaded, championed, drove alignment, leveraged synergies,
-  owned the vision, delivered on.
-- Words: passionate, results-driven, transformational, dynamic, seasoned, strategic.
+- Verbs: spearheaded, championed, drove alignment, leveraged, leveraging,
+  owned the vision, delivered on, utilized, orchestrated.
+- Words: passionate, results-driven, results-oriented, detail-oriented, transformational,
+  dynamic, seasoned, strategic, synergy, synergies, cutting-edge, seamless, seamlessly,
+  robust, go-getter, self-starter, team player, proven track record, fast-paced,
+  think outside the box, thought leader.
+
+Recruiters read these as filler, and many now read them as a sign the text was written by AI.
+The app flags any that appear in a finished document (unless the posting itself uses the word),
+so keep this list as comma-separated `Verbs:` and `Words:` lines.

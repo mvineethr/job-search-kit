@@ -22,6 +22,11 @@ const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-tailor', 'cover-
 
 const cache = new Map<string, string>();
 
+/** The shared ATS rules on their own — also read by code that enforces them. */
+export function loadAtsRules(): string {
+  return readFileSync(join(resolveCoreDir(), 'ats-rules.md'), 'utf8');
+}
+
 export function loadPrompt(name: string): string {
   if (!KNOWN.has(name)) {
     throw new Error(`Unknown capability: ${name}`);
@@ -29,9 +34,8 @@ export function loadPrompt(name: string): string {
   const cached = cache.get(name);
   if (cached) return cached;
 
-  const coreDir = resolveCoreDir();
-  const body = readFileSync(join(coreDir, `${name}.md`), 'utf8');
-  const rules = readFileSync(join(coreDir, 'ats-rules.md'), 'utf8');
+  const body = readFileSync(join(resolveCoreDir(), `${name}.md`), 'utf8');
+  const rules = loadAtsRules();
   const resolved = body.split('{{ATS_RULES}}').join(rules);
 
   cache.set(name, resolved);

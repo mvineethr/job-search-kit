@@ -7,6 +7,7 @@ import { METRIC_NEEDED } from '@/lib/resume-schema';
 import PrintButton from '@/components/PrintButton';
 import CopyButton from '@/components/CopyButton';
 import AiNotice from '@/components/AiNotice';
+import GenericPhrases from '@/components/GenericPhrases';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,9 +56,9 @@ export default async function LetterPage({ params }: { params: Promise<{ id: str
   const letter = parsed.data;
 
   const jobs = row.job_id
-    ? ((await sql()`SELECT company, role FROM jobs WHERE id = ${row.job_id} AND sid = ${sid}`) as unknown as Pick<
+    ? ((await sql()`SELECT company, role, description FROM jobs WHERE id = ${row.job_id} AND sid = ${sid}`) as unknown as Pick<
         JobRow,
-        'company' | 'role'
+        'company' | 'role' | 'description'
       >[])
     : [];
   const job = jobs[0];
@@ -173,6 +174,12 @@ export default async function LetterPage({ params }: { params: Promise<{ id: str
                 </p>
               </div>
             )}
+
+            <GenericPhrases
+              parts={letter.paragraphs.map((text, i) => ({ where: `paragraph ${i + 1}`, text }))}
+              posting={job?.description}
+              inline
+            />
 
             {letter.gaps.length > 0 && (
               <div
