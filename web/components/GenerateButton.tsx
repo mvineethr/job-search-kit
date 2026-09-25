@@ -10,10 +10,12 @@ export default function GenerateButton({
   label,
   busyLabel,
   primary = false,
+  op,
 }: {
   action: string;
   jobId: string;
   resumeId?: string;
+  op?: string;
   label: string;
   busyLabel: string;
   primary?: boolean;
@@ -24,6 +26,7 @@ export default function GenerateButton({
     <form method="post" action={action} onSubmit={() => setBusy(true)}>
       <input type="hidden" name="jobId" value={jobId} />
       {resumeId && <input type="hidden" name="resumeId" value={resumeId} />}
+      {op && <input type="hidden" name="op" value={op} />}
       <button type="submit" className={primary ? 'btn btn-primary' : 'btn'} disabled={busy}>
         {busy ? busyLabel : label}
       </button>

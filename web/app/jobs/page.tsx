@@ -6,6 +6,8 @@ import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
 import { QuestionsSchema } from '@/lib/question-schema';
 import { loadAnswers, skillKey } from '@/lib/answers';
+import { readMatch, viewMatch, type MatchView } from '@/lib/match';
+import FitMeter from '@/components/FitMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +24,7 @@ export default async function JobsPage({
   const q = sql();
 
   const jobs = (await q`
-    SELECT id, company, role, description, analysis, questions, applied_at, created_at
+    SELECT id, company, role, description, analysis, questions, match, applied_at, created_at
     FROM jobs WHERE sid = ${sid} ORDER BY created_at DESC`) as unknown as JobRow[];
   const resumes = (await q`
     SELECT id, title, content, parent_id, job_id, created_at, updated_at, source_text
@@ -38,9 +40,19 @@ export default async function JobsPage({
   for (const l of letters) if (l.job_id && !letterByJob.has(l.job_id)) letterByJob.set(l.job_id, l);
 
   // Questions already answered are not worth showing again.
-  const answeredKeys = new Set((await loadAnswers(sid)).map((a) => skillKey(a.skill)));
+  const answers = await loadAnswers(sid);
+  const answeredKeys = new Set(answers.map((a) => skillKey(a.skill)));
   const openQuestions = new Map<string, number>();
+  const views = new Map<string, MatchView>();
   for (const job of jobs) {
+    const match = readMatch(job.match);
+    if (match) {
+      const view = viewMatch(match, answers);
+      views.set(job.id, view);
+      if (view.openQuestions.length > 0) openQuestions.set(job.id, Math.min(view.openQuestions.length, 8));
+      continue;
+    }
+    // Jobs added before matching existed keep their stored gap questions.
     const parsed = QuestionsSchema.safeParse(job.questions);
     if (!parsed.success) continue;
     const open = parsed.data.filter((q) => !answeredKeys.has(skillKey(q.skill))).length;
@@ -111,8 +123,10 @@ export default async function JobsPage({
             {jobs.map((job) => {
               const tailored = tailoredByJob.get(job.id);
               const letter = letterByJob.get(job.id);
-              const matched = job.analysis?.matched?.length ?? 0;
-              const missing = job.analysis?.missing?.length ?? 0;
+              const view = views.get(job.id);
+              // The tailoring's own matched/missing is shown only for jobs without a fit check.
+              const matched = view ? 0 : (job.analysis?.matched?.length ?? 0);
+              const missing = view ? 0 : (job.analysis?.missing?.length ?? 0);
               const total = matched + missing;
 
               return (
@@ -129,7 +143,9 @@ export default async function JobsPage({
                   }}
                 >
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', alignItems: 'baseline' }}>
-                    <strong style={{ fontSize: 'var(--text-base)' }}>{job.role}</strong>
+                    <Link href={`/jobs/${job.id}`} style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}>
+                      {job.role}
+                    </Link>
                     <span style={{ color: 'var(--text-muted)' }}>{job.company}</span>
                     {job.applied_at && (
                       <span className="pill tnum" style={{ color: 'var(--ok)' }}>
@@ -138,6 +154,16 @@ export default async function JobsPage({
                     )}
                   </div>
 
+                  {view ? (
+                    <FitMeter view={view} />
+                  ) : (
+                    master && (
+                      <Link href={`/jobs/${job.id}`} style={{ fontSize: 'var(--text-xs)' }}>
+                        Check how well your résumé fits this job
+                      </Link>
+                    )
+                  )}
+
                   {total > 0 && (
                     <p className="tnum" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                       {matched} of {total} requirements matched
@@ -145,7 +171,7 @@ export default async function JobsPage({
                     </p>
                   )}
 
-                  {job.analysis?.missing && job.analysis.missing.length > 0 && (
+                  {!view && job.analysis?.missing && job.analysis.missing.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {job.analysis.missing.map((m) => (
                         <span

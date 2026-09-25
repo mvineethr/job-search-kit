@@ -1,64 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { requireSid } from '@/lib/auth';
-import { ensureSchema, sql, type ResumeRow } from '@/lib/db';
-import { loadPrompt } from '@/lib/prompts';
-import { completeText } from '@/lib/provider';
-import { extractJsonArray } from '@/lib/extract-json';
-import { QuestionsSchema } from '@/lib/question-schema';
-import { loadAnswers, skillKey } from '@/lib/answers';
+import { ensureSchema, sql } from '@/lib/db';
+import { loadAnswers } from '@/lib/answers';
+import { viewMatch } from '@/lib/match';
+import { runMatch } from '@/lib/run-match';
 import { backWithError, redirectTo } from '@/lib/redirect';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+// The match runs on the primary model; 180 matches the other model routes.
+export const maxDuration = 180;
 
 /**
- * Works out what this posting asks for that the résumé does not show, so the
- * person can fill the gaps in their own words before tailoring runs. Best effort:
- * a job is still saved if this fails, because the questions are an improvement to
- * tailoring rather than a precondition for it.
+ * Saves a posting and matches the master résumé against it. The match is best
+ * effort: if it fails the job is still saved, and the job page offers to run it
+ * again. Open questions go first, because answering them is what moves the score.
  */
-async function generateQuestions(
-  sid: string,
-  description: string,
-  company: string,
-  role: string,
-): Promise<unknown | null> {
-  const resumes = (await sql()`
-    SELECT content, source_text FROM resumes
-    WHERE sid = ${sid} AND parent_id IS NULL
-    ORDER BY updated_at DESC LIMIT 1`) as unknown as ResumeRow[];
-  const resume = resumes[0];
-  if (!resume) return null; // nothing to compare the posting against yet
-
-  const resumeText = resume.content
-    ? JSON.stringify(resume.content, null, 2)
-    : (resume.source_text ?? '');
-
-  try {
-    const { text } = await completeText({
-      system: loadPrompt('gap-questions'),
-      messages: [
-        {
-          role: 'user',
-          content: `MY RESUME:\n${resumeText}\n\nTHE JOB (${company} — ${role}):\n${description}`,
-        },
-      ],
-      tier: 'fast',
-    });
-
-    const parsed = QuestionsSchema.safeParse(extractJsonArray(text) ?? []);
-    if (!parsed.success) return null;
-
-    // Drop anything already answered — nobody should be asked twice.
-    const answered = new Set((await loadAnswers(sid)).map((a) => skillKey(a.skill)));
-    const fresh = parsed.data.filter((q) => !answered.has(skillKey(q.skill)));
-    return fresh.length > 0 ? fresh : null;
-  } catch (err) {
-    console.error('[jobs] question generation failed', err);
-    return null;
-  }
-}
-
 export async function POST(req: Request) {
   let sid: string;
   try {
@@ -82,11 +38,9 @@ export async function POST(req: Request) {
     INSERT INTO jobs (id, sid, company, role, description)
     VALUES (${id}, ${sid}, ${company}, ${role}, ${description})`;
 
-  const questions = await generateQuestions(sid, description, company, role);
-  if (questions) {
-    await sql()`UPDATE jobs SET questions = ${JSON.stringify(questions)} WHERE id = ${id} AND sid = ${sid}`;
+  const match = await runMatch(sid, { id, company, role, description });
+  if (match && viewMatch(match, await loadAnswers(sid)).openQuestions.length > 0) {
     return redirectTo(req, `/jobs/${id}/questions`);
   }
-
-  return redirectTo(req, '/jobs');
+  return redirectTo(req, `/jobs/${id}`);
 }

@@ -3,22 +3,36 @@ import { notFound } from 'next/navigation';
 import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow } from '@/lib/db';
 import { QuestionsSchema, LEVELS, LEVEL_LABEL, LEVEL_HELP } from '@/lib/question-schema';
+import { readMatch, viewMatch } from '@/lib/match';
+import { loadAnswers } from '@/lib/answers';
 
 export const dynamic = 'force-dynamic';
 
-export default async function QuestionsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestionsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   const sid = await currentSid();
   if (!sid) return null;
 
   await ensureSchema();
   const rows = (await sql()`
-    SELECT id, company, role, description, analysis, questions, created_at
+    SELECT id, company, role, description, analysis, questions, match, created_at
     FROM jobs WHERE id = ${id} AND sid = ${sid}`) as unknown as JobRow[];
   const job = rows[0];
   if (!job) notFound();
 
-  const parsed = QuestionsSchema.safeParse(job.questions);
+  // Jobs matched against the résumé ask about exactly the gaps being scored.
+  // Jobs added before matching existed still have their stored gap questions.
+  const match = readMatch(job.match);
+  const parsed = match
+    ? QuestionsSchema.safeParse(viewMatch(match, await loadAnswers(sid)).openQuestions.slice(0, 8))
+    : QuestionsSchema.safeParse(job.questions);
   if (!parsed.success) {
     return (
       <div className="wrap" style={{ maxWidth: 720 }}>
@@ -29,8 +43,8 @@ export default async function QuestionsPage({ params }: { params: Promise<{ id: 
             be worked out. Either way, you can tailor straight away.
           </p>
         </div>
-        <Link href="/jobs" className="btn btn-primary">
-          Back to jobs
+        <Link href={`/jobs/${job.id}`} className="btn btn-primary">
+          Back to the job
         </Link>
       </div>
     );
@@ -48,6 +62,12 @@ export default async function QuestionsPage({ params }: { params: Promise<{ id: 
           can use the real ones.
         </p>
       </div>
+
+      {error && (
+        <p role="alert" className="note" style={{ maxWidth: 680, marginBottom: 'var(--s-4)', borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+          {error}
+        </p>
+      )}
 
       <div
         className="note"
@@ -154,7 +174,7 @@ export default async function QuestionsPage({ params }: { params: Promise<{ id: 
           <button type="submit" className="btn btn-primary">
             Save these answers
           </button>
-          <Link href="/jobs" className="btn">
+          <Link href={`/jobs/${job.id}`} className="btn">
             Skip for now
           </Link>
         </div>

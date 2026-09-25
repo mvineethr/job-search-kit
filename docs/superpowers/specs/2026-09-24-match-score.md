@@ -1,6 +1,19 @@
 # Match score — spec
 
-**Status:** draft for review · 2026-09-24
+**Status:** built · 2026-09-24. Decisions: gap questions replaced; bands and weights as below.
+
+**Acceptance run** (`kimi-k3` low, `priya.json`, 3 runs each, after the fixes noted):
+
+| Posting | Scores | Unverified evidence reaching UI | Time |
+|---|---|---|---|
+| Staff SRE (strong fit) | 81, 79, 79 | 0 | 19–21s |
+| Senior Data Engineer (weak fit) | 17, 17, 17 | 0 | 23–25s |
+
+The first runs spread 73–86. Two causes, both fixed: "Prometheus and Grafana" was split in
+some runs and merged in others (the prompt now fixes the rule: "and" splits, "or" doesn't),
+and the model didn't know today's date, so "Present" was counted inconsistently (`TODAY:` is
+now in the message). Years evidence across several roles ("Jun 2019 – Present") is accepted
+when both ends of the span are on the résumé.
 
 ## What it is
 

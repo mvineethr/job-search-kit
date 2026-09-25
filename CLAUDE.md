@@ -28,7 +28,7 @@ core/                    agent-agnostic prompts — THE source of truth
   resume-parse.md        pasted text → résumé JSON (transcription only, never improves)
   resume-tailor.md       résumé + JD → tailored JSON + {matched,missing,requirements}
   cover-letter.md        → {greeting,paragraphs,signoff,name,facts,gaps}
-  gap-questions.md       JD vs résumé → questions about unshown experience (array)
+  job-match.md           JD vs résumé → requirements {kind,category,status,evidence,question}; replaced gap-questions
   metric-questions.md    [METRIC NEEDED] bullets → questions (array)
   metric-fill.md         answers → résumé with holes filled
 skills/ commands/        plugin; skills/resume-review/SKILL.md now points at core/
@@ -52,6 +52,9 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 | `ndjson.ts` | wire format for streamed events; buffers lines split across chunks |
 | `extract-json.ts` | `extractJsonObject`, `extractJsonArray`, `proseBefore` — use the one matching the prompt's output shape |
 | `verify-tailoring.ts` | **anti-fabrication**: strips skills absent from source, flags numbers/employers, counts dropped bullets |
+| `match.ts` | **fit score**: `verifyEvidence` (quote must be in résumé; years spans checked end-to-end), `viewMatch` (answers raise, never lower; score = must 3 / nice 1, partial ½, unknown excluded), `band` |
+| `run-match.ts` | calls `job-match` on primary with `TODAY:` in the message, verifies, stores `jobs.match` |
+| `generic-phrases.ts` | flags the `## Banned` words from `ats-rules.md` in résumés/letters, skipping words the posting uses |
 | `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
 | `db.ts` | Neon via plain SQL; `ensureSchema()` creates tables on demand |
@@ -60,7 +63,9 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 
 ## Data model (Neon)
 
-- `jobs(id, sid, company, role, description, analysis jsonb, questions jsonb)`
+- `jobs(id, sid, company, role, description, analysis jsonb, questions jsonb, match jsonb, applied_at)`
+  - `match` = verified requirements; the score is computed on render, never stored. `questions` is legacy (pre-match jobs only).
+  - Deleting a job deletes its tailored résumés and letters. Masters can never be deleted.
 - `resumes(id, sid, title, source_text, content jsonb, parent_id → resumes, job_id → jobs)`
   - master: `parent_id` null. Tailored: points at **both** master and job; master never modified.
   - For tailored rows, `source_text` holds JSON `{note, audit}`; older rows hold plain prose.
@@ -83,8 +88,8 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 
 | Tier | Env | Model | Used for |
 |---|---|---|---|
-| primary | `MODEL_PRIMARY_*` | `kimi-k3`, `MODEL_PRIMARY_EFFORT=low` | review, tailoring, cover letter |
-| fast | `MODEL_FAST_NAME` (shares primary URL/key) | `kimi-k2.7-code-highspeed` | parse, gap questions, metric questions/fill |
+| primary | `MODEL_PRIMARY_*` | `kimi-k3`, `MODEL_PRIMARY_EFFORT=low` | review, job match, tailoring, cover letter |
+| fast | `MODEL_FAST_NAME` (shares primary URL/key) | `kimi-k2.7-code-highspeed` | parse, metric questions/fill |
 | fallback | `MODEL_FALLBACK_*` | `kimi-k2.7-code-highspeed` | only on 429/5xx from primary |
 
 Unset fast tier silently uses primary. Tailoring stays on primary: the fast model over-claimed
@@ -97,13 +102,13 @@ Other env: `DATABASE_URL` (Neon **pooled** string), `APP_PASSWORD`.
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 81 tests
+cd web && npm test                         # Vitest, 97 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
 - **Vercel:** Root Directory **`web`**, preset Next.js, default build command (a custom one skips `prebuild`). `main` deploys to production.
 - `main` is checked out in the primary worktree, so from this worktree merge via a detached temp worktree: `git worktree add --detach <tmp> origin/main`, merge, `git push origin HEAD:main`, remove it.
-- Timings (k3 low): review ~24s, parse ~17s (fast), tailor ~50s (~95s if it must parse first), cover letter ~30s.
+- Timings (k3 low): review ~24s, parse ~17s (fast), tailor ~50s (~95s if it must parse first), cover letter ~30s, job match ~20–25s.
 
 ## Gotchas (found live)
 
@@ -119,12 +124,17 @@ cd web && npm run build                    # prebuild copies ../core first
 - PowerShell `curl` is `Invoke-WebRequest`; use `curl.exe`.
 - The verifier matches skills by literal text; it can strip a skill described differently. Gap questions + `claimableSkills` are the escape hatch.
 - User-typed answer details must count as source (`answerDetailText`), or their own numbers get flagged as invented.
+- The model does not know today's date: "Jun 2019 – Present" flip-flopped between under and over 7 years until `TODAY:` went into the match message.
+- "Prometheus and Grafana" was split in one run and merged in others, a 13-point score swing. The match prompt now fixes the rule: "and" splits, "or" doesn't.
+- `core/ats-rules.md` headings carry text after the name (`## Banned (these tank…)`) and the file is CRLF on Windows. Parsers of it must allow both.
 
 ## Status
 
 **Live (test build):** login, add résumé (paste/PDF → parsed), streaming review with anchored
-findings, jobs hub, gap questions, tailoring with audit panel, cover letters with facts/gaps,
-metric questions, print-to-PDF.
+findings, jobs hub, fit score with evidence and hard-filter warnings (`/jobs/[id]`), questions
+from the match, tailoring with audit panel, cover letters with facts/gaps, metric questions,
+filler-phrase check, AI disclosure at sign-in, delete jobs/tailored copies, applied flag,
+print-to-PDF.
 
 **Not built:** cold email, LinkedIn (two modes designed), interview prep (mocked up), inline
 résumé editing, real accounts, MCP server. Pages exist as honest "Not built yet" placeholders.

@@ -1,6 +1,7 @@
 import { requireSid } from '@/lib/auth';
-import { ensureSchema } from '@/lib/db';
-import { saveAnswer } from '@/lib/answers';
+import { ensureSchema, sql, type JobRow } from '@/lib/db';
+import { loadAnswers, saveAnswer } from '@/lib/answers';
+import { readMatch, viewMatch } from '@/lib/match';
 import { AnswerSchema } from '@/lib/question-schema';
 import { backWithError, redirectTo } from '@/lib/redirect';
 
@@ -27,6 +28,13 @@ export async function POST(req: Request) {
 
   await ensureSchema();
 
+  // Score before the answers land, so the job page can show what they changed.
+  const jobs = jobId
+    ? ((await sql()`SELECT match FROM jobs WHERE id = ${jobId} AND sid = ${sid}`) as unknown as JobRow[])
+    : [];
+  const match = readMatch(jobs[0]?.match);
+  const before = match ? viewMatch(match, await loadAnswers(sid)).score : null;
+
   const ids = [...form.keys()]
     .filter((k) => k.startsWith('level__'))
     .map((k) => k.slice('level__'.length));
@@ -48,8 +56,9 @@ export async function POST(req: Request) {
   }
 
   if (saved === 0) {
-    return backWithError(req, '/jobs', 'Nothing was saved — no questions were answered.');
+    return backWithError(req, jobId ? `/jobs/${jobId}/questions` : '/jobs', 'Nothing was saved — no questions were answered.');
   }
 
-  return redirectTo(req, jobId ? `/jobs?answered=${saved}` : '/jobs');
+  if (!jobId) return redirectTo(req, '/jobs');
+  return redirectTo(req, `/jobs/${jobId}?answered=${saved}${before !== null ? `&was=${before}` : ''}`);
 }

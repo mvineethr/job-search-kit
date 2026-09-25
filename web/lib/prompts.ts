@@ -18,7 +18,7 @@ function resolveCoreDir(): string {
 }
 
 /** Capabilities the web app can run. Adding one means adding a core/<name>.md file. */
-const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-tailor', 'cover-letter', 'gap-questions', 'metric-questions', 'metric-fill']);
+const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-tailor', 'cover-letter', 'job-match', 'metric-questions', 'metric-fill']);
 
 const cache = new Map<string, string>();
 

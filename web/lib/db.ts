@@ -21,6 +21,7 @@ export type JobRow = {
   analysis: { matched?: string[]; missing?: string[]; requirements?: number } | null;
   questions?: unknown;
   applied_at?: string | null;
+  match?: unknown;
   created_at: string;
 };
 
@@ -118,6 +119,8 @@ export async function ensureSchema(): Promise<void> {
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;
   // Null until the person marks the job applied: a yes/no with the date it became yes.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS applied_at TIMESTAMPTZ`;
+  // The verified requirement list from core/job-match.md. The score is computed from it on render.
+  await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS match JSONB`;
 
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;
