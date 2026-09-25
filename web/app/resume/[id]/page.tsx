@@ -96,6 +96,9 @@ export default async function ResumePage({
               </Link>
             )}
             <PrintButton />
+            <Link href="/ats-check" className="btn">
+              Check what an ATS sees
+            </Link>
             {isTailored && (
               <ConfirmButton
                 action={`/api/resumes/${row.id}`}

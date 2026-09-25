@@ -68,6 +68,11 @@ export default async function Home() {
             <span>Add a posting and aim a copy of your résumé at it, keyword for keyword.</span>
           </Link>
 
+          <Link href="/ats-check" className="entry">
+            <strong>Check what an ATS sees</strong>
+            <span>Upload a résumé PDF and see the plain text a tracking system pulls out of it.</span>
+          </Link>
+
           <Link href="/email" className="entry entry-soon">
             <strong>Write a cold email</strong>
             <span>A short, specific note to a hiring manager or someone who could refer you.</span>
