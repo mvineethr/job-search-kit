@@ -51,9 +51,11 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 | `provider.ts` | OpenAI-compatible client; tiers `primary`/`fast`/`fallback`; `streamCompletion`, `completeText`; emits `{type:'reasoning'|'content'}` events |
 | `ndjson.ts` | wire format for streamed events; buffers lines split across chunks |
 | `extract-json.ts` | `extractJsonObject`, `extractJsonArray`, `proseBefore` — use the one matching the prompt's output shape |
-| `verify-tailoring.ts` | **anti-fabrication**: strips skills absent from source, flags numbers/employers, counts dropped bullets |
+| `verify-tailoring.ts` | **anti-fabrication**: strips skills absent from source, flags numbers/employers, restores dropped bullets/roles word for word (`restoreDroppedBullets`) |
 | `match.ts` | **fit score**: `verifyEvidence` (quote must be in résumé; years spans checked end-to-end), `viewMatch` (answers raise, never lower; score = must 3 / nice 1, partial ½, unknown excluded), `band` |
 | `run-match.ts` | calls `job-match` on primary with `TODAY:` in the message, verifies, stores `jobs.match` |
+| `docx.ts` | hand-written .docx (zip via `node:zlib` crc32/deflate, no dependency); single-column paragraphs, same section order as the PDF |
+| `ats-check.ts` | checks on extracted PDF text: readable, no font garbage, email/phone, headings (case-insensitive), dates |
 | `generic-phrases.ts` | flags the `## Banned` words from `ats-rules.md` in résumés/letters, skipping words the posting uses |
 | `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
@@ -102,7 +104,7 @@ Other env: `DATABASE_URL` (Neon **pooled** string), `APP_PASSWORD`.
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 97 tests
+cd web && npm test                         # Vitest, 108 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
@@ -134,20 +136,22 @@ cd web && npm run build                    # prebuild copies ../core first
 findings, jobs hub, fit score with evidence and hard-filter warnings (`/jobs/[id]`), questions
 from the match, tailoring with audit panel, cover letters with facts/gaps, metric questions,
 filler-phrase check, AI disclosure at sign-in, delete jobs/tailored copies, applied flag,
-print-to-PDF.
+print-to-PDF, Word (.docx) download, "what an ATS sees" PDF check (`/ats-check`),
+dropped bullets restored word for word, unsupported numbers marked inline, elapsed-time counters.
 
 **Not built:** cold email, LinkedIn (two modes designed), interview prep (mocked up), inline
 résumé editing, real accounts, MCP server. Pages exist as honest "Not built yet" placeholders.
 
-**Known weaknesses:** tailoring still drops some bullets (flagged, not prevented); flagged
-unsupported numbers stay in the document (only shown in the side panel); ~50s tailoring wait
-has no progress UI.
+**Known weaknesses:** no in-app editing, so flagged numbers, filler phrases and restored
+bullets can only be fixed by re-tailoring or after export; restored bullets go at the end of
+their role, not in their original position; the ATS check uses one extractor (unpdf), and real
+ATSs vary.
 
 ## Next
 
-1. Highlight unsupported numbers inline in the document.
-2. Prevent dropped bullets in tailoring.
-3. Progress feedback during tailoring.
+1. Click-through test of everything above on the live site (not yet seen in a signed-in browser).
+2. Inline résumé editing: every check we add points at text the person cannot yet change.
+3. Keyword coverage on the tailored document (literal posting terms present), as a separate number from fit.
 4. Cold email, then LinkedIn.
 5. Real accounts (Google sign-in) to replace the shared password.
 6. Consider PRs + Vercel preview deploys instead of merging straight to `main`.

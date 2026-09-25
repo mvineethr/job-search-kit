@@ -96,6 +96,11 @@ export default async function ResumePage({
               </Link>
             )}
             <PrintButton />
+            {resume && (
+              <a href={`/api/resumes/${row.id}/docx`} className="btn">
+                Download Word
+              </a>
+            )}
             <Link href="/ats-check" className="btn">
               Check what an ATS sees
             </Link>
