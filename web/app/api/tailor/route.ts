@@ -136,6 +136,7 @@ export async function POST(req: Request) {
       unsupportedNumbers: audit.unsupportedNumbers,
       unsupportedEmployers: audit.unsupportedEmployers,
       bulletsDropped: audit.bulletsDropped,
+      bulletsRestored: audit.bulletsRestored,
     });
   }
 

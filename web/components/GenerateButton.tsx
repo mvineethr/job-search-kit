@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Elapsed from './Elapsed';
 
 /** A form-post button that says what is happening while a slow model call runs. */
 export default function GenerateButton({
@@ -28,7 +29,14 @@ export default function GenerateButton({
       {resumeId && <input type="hidden" name="resumeId" value={resumeId} />}
       {op && <input type="hidden" name="op" value={op} />}
       <button type="submit" className={primary ? 'btn btn-primary' : 'btn'} disabled={busy}>
-        {busy ? busyLabel : label}
+        {busy ? (
+          <>
+            {busyLabel}
+            <Elapsed />
+          </>
+        ) : (
+          label
+        )}
       </button>
     </form>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Elapsed from './Elapsed';
 
 export default function AddJobForm() {
   const [open, setOpen] = useState(false);
@@ -58,7 +59,14 @@ export default function AddJobForm() {
 
       <div style={{ display: 'flex', gap: 'var(--s-2)' }}>
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? 'Saving and checking your fit… about 30 seconds' : 'Save the job'}
+          {busy ? (
+            <>
+              Saving and checking your fit… about 30 seconds
+              <Elapsed />
+            </>
+          ) : (
+            'Save the job'
+          )}
         </button>
         <button type="button" className="btn" onClick={() => setOpen(false)} disabled={busy}>
           Cancel

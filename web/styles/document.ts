@@ -29,6 +29,10 @@ export const DOCUMENT_CSS = `
 .resume .metric-needed{
   background:#fdf4e0; color:#8a6410; padding:0 3pt; border-radius:2pt; font-weight:600;
 }
+.resume .unsupported-number{
+  background:#fbe9e9; color:#9b3030; padding:0 2pt; border-radius:2pt;
+  text-decoration:underline wavy #9b3030; text-underline-offset:2pt;
+}
 
 /* Screen only: the half-inch print margin costs a quarter of a phone screen. */
 @media screen and (max-width:640px){
@@ -39,6 +43,7 @@ export const DOCUMENT_CSS = `
   @page{margin:0.5in}
   .resume{padding:0; max-width:none}
   .resume .metric-needed{background:none; color:#1c1b19; font-weight:400}
+  .resume .unsupported-number{background:none; color:inherit; text-decoration:none}
   .resume .role{break-inside:avoid}
   .resume h2{break-after:avoid}
 }

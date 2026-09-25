@@ -97,15 +97,36 @@ describe('verifyTailoring — numbers and employers', () => {
 });
 
 describe('verifyTailoring — dropped bullets', () => {
-  it('counts bullets the rewrite silently removed', () => {
+  it('puts a dropped bullet back word for word, and picks the right one', () => {
     const t = structuredClone(original);
-    t.experience[0].bullets = [t.experience[0].bullets[0]];
-    const { audit } = verifyTailoring(t, original);
-    expect(audit.bulletsDropped).toBe(1);
+    const [keep, drop] = original.experience[0].bullets;
+    // A reworded version of the first bullet survives; the second is gone.
+    t.experience[0].bullets = [keep.replace(/^\w+/, 'Rewrote:')];
+    const { cleaned, audit } = verifyTailoring(t, original);
+    expect(cleaned.experience[0].bullets).toEqual([t.experience[0].bullets[0], drop]);
+    expect(audit.bulletsRestored).toBe(1);
+    expect(audit.bulletsDropped).toBe(0);
+  });
+
+  it('puts a whole dropped role back in its original place', () => {
+    const t = structuredClone(original);
+    t.experience = [t.experience[0]];
+    const { cleaned, audit } = verifyTailoring(t, original);
+    expect(cleaned.experience.map((r) => r.company)).toEqual(original.experience.map((r) => r.company));
+    expect(audit.bulletsRestored).toBe(original.experience[1].bullets.length);
+  });
+
+  it('does not duplicate a role whose title the rewrite reworded', () => {
+    const t = structuredClone(original);
+    t.experience[0].title = 'Senior SRE';
+    const { cleaned } = verifyTailoring(t, original);
+    expect(cleaned.experience).toHaveLength(original.experience.length);
   });
 
   it('reports zero when nothing was dropped', () => {
-    expect(verifyTailoring(structuredClone(original), original).audit.bulletsDropped).toBe(0);
+    const { audit } = verifyTailoring(structuredClone(original), original);
+    expect(audit.bulletsDropped).toBe(0);
+    expect(audit.bulletsRestored).toBe(0);
   });
 });
 

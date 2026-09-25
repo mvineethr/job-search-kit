@@ -57,6 +57,7 @@ export default async function ResumePage({
   const resume = parsed.success ? parsed.data : null;
   const isTailored = Boolean(row.parent_id);
   const markers = resume ? countMarkers(resume) : 0;
+  const { note, audit } = isTailored ? readNote(row.source_text) : { note: '', audit: null };
 
   // A tailored copy is checked against its posting, so the posting's own words are not flagged.
   const posting = row.job_id
@@ -128,7 +129,7 @@ export default async function ResumePage({
                 overflow: 'hidden',
               }}
             >
-              <ResumeDocument resume={resume} />
+              <ResumeDocument resume={resume} unsupportedNumbers={audit?.unsupportedNumbers ?? []} />
             </div>
           ) : (
             <article
@@ -196,28 +197,20 @@ export default async function ResumePage({
               version.
             </p>
           )}
-          {isTailored &&
-            (() => {
-              const { note, audit } = readNote(row.source_text);
-              return (
-                <>
-                  {audit && <TailoringAuditPanel audit={audit} />}
-                  {note && (
-                    <div className="panel">
-                      <div className="panel-head">
-                        <h2>What it says it changed</h2>
-                      </div>
-                      <div className="panel-body">
-                        <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{note}</p>
-                        <p className="note">
-                          Your master résumé is untouched. This is a separate copy for this job.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+          {audit && <TailoringAuditPanel audit={audit} />}
+          {note && (
+            <div className="panel">
+              <div className="panel-head">
+                <h2>What it says it changed</h2>
+              </div>
+              <div className="panel-body">
+                <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{note}</p>
+                <p className="note">
+                  Your master résumé is untouched. This is a separate copy for this job.
+                </p>
+              </div>
+            </div>
+          )}
           <AssistantPanel resumeText={forReview} />
         </div>
       </main>

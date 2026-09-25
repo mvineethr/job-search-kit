@@ -80,8 +80,9 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
               Check these numbers
             </p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 6 }}>
-              These do not appear in your original résumé. Verify each one before you send
-              this — they were left in place rather than edited, so you can see them.
+              These do not appear in your original résumé, and are marked in red in the
+              document. Verify each one before you send this — they were left in place rather
+              than edited, so you can see them.
             </p>
             <p style={{ fontSize: 'var(--text-sm)' }}>{audit.unsupportedNumbers.join(', ')}</p>
           </div>
@@ -101,6 +102,13 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
             </p>
             <p style={{ fontSize: 'var(--text-sm)' }}>{audit.unsupportedEmployers.join(', ')}</p>
           </div>
+        )}
+
+        {(audit.bulletsRestored ?? 0) > 0 && (
+          <p className="note">
+            The rewrite left out {audit.bulletsRestored} of your original bullets. They have
+            been put back word for word at the end of their role, so no real experience is lost.
+          </p>
         )}
 
         {audit.bulletsDropped > 0 && (

@@ -2,13 +2,37 @@ import { METRIC_NEEDED, type Resume, type Role } from '@/lib/resume-schema';
 import { DOCUMENT_CSS } from '@/styles/document';
 import { dateRange } from '@/lib/render-resume';
 
-function Bullet({ children }: { children: string }) {
+/**
+ * Marks numbers the audit could not find in the original, where they sit, so they
+ * cannot be missed in a side panel. Whole numbers only: flagging "40" must not
+ * mark the "40" inside "400".
+ */
+function Flagged({ text, numbers }: { text: string; numbers: string[] }) {
+  if (numbers.length === 0) return <>{text}</>;
+  const escaped = numbers.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp(`(?<![\\d.,])(${escaped.join('|')})(?![\\d])`, 'g');
+  return (
+    <>
+      {text.split(re).map((part, i) =>
+        i % 2 === 1 ? (
+          <mark key={i} className="unsupported-number" title="Not in your original résumé. Check it before sending.">
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+function Bullet({ children, numbers }: { children: string; numbers: string[] }) {
   const parts = children.split(METRIC_NEEDED);
   return (
     <li>
       {parts.map((part, i) => (
         <span key={i}>
-          {part}
+          <Flagged text={part} numbers={numbers} />
           {i < parts.length - 1 && <span className="metric-needed">{METRIC_NEEDED}</span>}
         </span>
       ))}
@@ -16,7 +40,7 @@ function Bullet({ children }: { children: string }) {
   );
 }
 
-function RoleBlock({ role }: { role: Role }) {
+function RoleBlock({ role, numbers }: { role: Role; numbers: string[] }) {
   return (
     <div className="role">
       <div className="role-line">
@@ -29,7 +53,9 @@ function RoleBlock({ role }: { role: Role }) {
       </div>
       <ul>
         {role.bullets.map((b, i) => (
-          <Bullet key={i}>{b}</Bullet>
+          <Bullet key={i} numbers={numbers}>
+            {b}
+          </Bullet>
         ))}
       </ul>
     </div>
@@ -44,9 +70,12 @@ function RoleBlock({ role }: { role: Role }) {
 export default function ResumeDocument({
   resume,
   pendingSections = [],
+  unsupportedNumbers = [],
 }: {
   resume: Resume;
   pendingSections?: string[];
+  /** From the tailoring audit: highlighted on screen, plain in print. */
+  unsupportedNumbers?: string[];
 }) {
   const pending = (name: string) =>
     pendingSections.includes(name) ? { opacity: 0.38 } : undefined;
@@ -64,7 +93,9 @@ export default function ResumeDocument({
       {resume.summary && (
         <section id="sec-summary" style={pending('Summary')}>
           <h2>Summary</h2>
-          <p>{resume.summary}</p>
+          <p>
+            <Flagged text={resume.summary} numbers={unsupportedNumbers} />
+          </p>
         </section>
       )}
 
@@ -76,7 +107,7 @@ export default function ResumeDocument({
       <section id="sec-experience" style={pending('Experience')}>
         <h2>Experience</h2>
         {resume.experience.map((role, i) => (
-          <RoleBlock key={i} role={role} />
+          <RoleBlock key={i} role={role} numbers={unsupportedNumbers} />
         ))}
       </section>
 
