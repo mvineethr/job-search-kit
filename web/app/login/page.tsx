@@ -1,9 +1,9 @@
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ wrong?: string }>;
+  searchParams: Promise<{ wrong?: string; ack?: string }>;
 }) {
-  const { wrong } = await searchParams;
+  const { wrong, ack } = await searchParams;
 
   return (
     <div className="wrap" style={{ maxWidth: 440 }}>
@@ -25,9 +25,32 @@ export default async function LoginPage({
           <input id="password" name="password" type="password" autoFocus required />
         </div>
 
+        <div className="note" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
+          <strong>This tool uses AI</strong>
+          <span>
+            Reviews, tailored résumés and cover letters are written by an AI model from what you
+            give it. It is told never to invent experience or numbers, and skills your résumé
+            does not support are removed in code — but it can still get things wrong.
+          </span>
+          <span>
+            Your résumé is stored so you can come back to it, and sent to the model provider to
+            be processed. Do not put anything here you would mind a test build holding.
+          </span>
+          <label style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-start' }}>
+            <input type="checkbox" name="ai_ack" value="1" required style={{ marginTop: 3 }} />
+            <span>I understand the documents are drafted by AI and I will check them before I send them.</span>
+          </label>
+        </div>
+
         {wrong && (
           <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)' }}>
             That password is not right. Ask whoever sent you the link.
+          </p>
+        )}
+
+        {ack && (
+          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)' }}>
+            Tick the box above to continue.
           </p>
         )}
 
@@ -35,11 +58,6 @@ export default async function LoginPage({
           Let me in
         </button>
       </form>
-
-      <p className="note" style={{ marginTop: 'var(--s-6)' }}>
-        Your résumé is stored so you can come back to it, and it is sent to a model provider to
-        be reviewed. Do not put anything here you would mind a test build holding.
-      </p>
     </div>
   );
 }

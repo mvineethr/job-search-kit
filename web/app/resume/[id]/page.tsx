@@ -7,6 +7,7 @@ import ResumeDocument from '@/components/ResumeDocument';
 import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
 import ConfirmButton from '@/components/ConfirmButton';
+import AiNotice from '@/components/AiNotice';
 import TailoringAuditPanel from '@/components/TailoringAudit';
 import type { TailoringAudit } from '@/lib/verify-tailoring';
 import { countMarkers } from '@/lib/metric-schema';
@@ -139,6 +140,8 @@ export default async function ResumePage({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
+          {isTailored && <AiNotice />}
+
           {error && (
             <p role="alert" className="note" style={{ borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
               {error}

@@ -6,6 +6,7 @@ import { LetterSchema, wordCount } from '@/lib/letter-schema';
 import { METRIC_NEEDED } from '@/lib/resume-schema';
 import PrintButton from '@/components/PrintButton';
 import CopyButton from '@/components/CopyButton';
+import AiNotice from '@/components/AiNotice';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,6 +143,7 @@ export default async function LetterPage({ params }: { params: Promise<{ id: str
             <h2>Cover letter</h2>
           </div>
           <div className="panel-body">
+            <AiNotice />
             <p className="note">
               Written from the posting you saved{job ? ` for ${job.company}` : ''} and your
               résumé. You did not have to paste anything again.

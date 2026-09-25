@@ -16,6 +16,11 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const given = String(form.get('password') ?? '');
 
+  // The checkbox is `required` in the form; this catches posts that skip the browser.
+  if (form.get('ai_ack') !== '1') {
+    return redirect('/login?ack=1', req);
+  }
+
   if (!passwordMatches(given)) {
     return redirect('/login?wrong=1', req);
   }
