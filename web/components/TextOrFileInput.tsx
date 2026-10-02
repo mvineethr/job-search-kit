@@ -1,10 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 const MIN_CHARS = 50;
 
-export default function TextOrFileInput({ onConfirm }: { onConfirm: (text: string) => void }) {
+export default function TextOrFileInput({
+  onConfirm,
+  label = 'Upload your résumé',
+  accept = 'application/pdf,text/plain,text/markdown,.md,.txt',
+  buttonLabel = 'Review this résumé',
+}: {
+  onConfirm: (text: string) => void;
+  label?: string;
+  accept?: string;
+  buttonLabel?: string;
+}) {
+  const id = useId();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,24 +46,24 @@ export default function TextOrFileInput({ onConfirm }: { onConfirm: (text: strin
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
-      <label htmlFor="resume-file" style={{ fontWeight: 500 }}>
-        Upload your résumé
+      <label htmlFor={`${id}-file`} style={{ fontWeight: 500 }}>
+        {label}
       </label>
       <input
-        id="resume-file"
+        id={`${id}-file`}
         type="file"
-        accept="application/pdf,text/plain,text/markdown,.md,.txt"
+        accept={accept}
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) void handleFile(f);
         }}
       />
 
-      <label htmlFor="resume-text" style={{ fontWeight: 500, marginTop: 'var(--s-2)' }}>
+      <label htmlFor={`${id}-text`} style={{ fontWeight: 500, marginTop: 'var(--s-2)' }}>
         Or paste it
       </label>
       <textarea
-        id="resume-text"
+        id={`${id}-text`}
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={14}
@@ -105,7 +116,7 @@ export default function TextOrFileInput({ onConfirm }: { onConfirm: (text: strin
           opacity: busy || tooShort ? 0.5 : 1,
         }}
       >
-        {busy ? 'Reading your file…' : 'Review this résumé'}
+        {busy ? 'Reading your file…' : buttonLabel}
       </button>
     </div>
   );

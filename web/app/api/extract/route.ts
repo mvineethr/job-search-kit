@@ -1,4 +1,5 @@
 import { extractText, getDocumentProxy } from 'unpdf';
+import { linkedinZipToText, NOT_LINKEDIN } from '@/lib/linkedin-zip';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -29,9 +30,26 @@ export async function POST(req: Request) {
     return Response.json({ text: new TextDecoder().decode(buffer), pages: 1 });
   }
 
+  const isZip =
+    file.type === 'application/zip' ||
+    file.type === 'application/x-zip-compressed' ||
+    file.name.toLowerCase().endsWith('.zip');
+  if (isZip) {
+    try {
+      return Response.json({ text: linkedinZipToText(Buffer.from(buffer)), pages: 1 });
+    } catch (err) {
+      const known = err instanceof Error && (err.message === NOT_LINKEDIN || err.message.startsWith('That '));
+      if (!known) console.error('[extract] zip failed', err);
+      return Response.json(
+        { error: known ? (err as Error).message : 'That zip could not be read. Try the profile PDF instead.' },
+        { status: 422 },
+      );
+    }
+  }
+
   if (file.type !== 'application/pdf') {
     return Response.json(
-      { error: 'Upload a PDF or a text file, or paste the text instead.' },
+      { error: 'Upload a PDF, a text file or a LinkedIn zip, or paste the text instead.' },
       { status: 415 },
     );
   }
