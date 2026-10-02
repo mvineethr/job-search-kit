@@ -8,9 +8,10 @@ import { authClient } from '@/lib/auth-client';
 type Mode = 'login' | 'signup';
 
 /**
- * Sign-in and sign-up share one form. Sign-up asks for a name and the AI
- * acknowledgement; every button, social ones included, waits for that box,
- * because a first social sign-in creates the account too.
+ * Sign-in and sign-up share one form. The binding agreement (Terms, Privacy, AI
+ * use, age) is the /agree page, which the proxy shows to every new account —
+ * including one created by a first social sign-in from the login page — before
+ * anything else works.
  */
 export default function AuthForm({
   mode,
@@ -23,7 +24,6 @@ export default function AuthForm({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [ack, setAck] = useState(mode === 'login');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,24 +54,21 @@ export default function AuthForm({
     router.refresh();
   }
 
-  const blocked = busy || !ack;
+  const blocked = busy;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
-      {mode === 'signup' ? (
-        <label className="note" style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-start' }}>
-          <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} style={{ marginTop: 3 }} />
-          <span>
-            I understand the documents are drafted by AI from what I give it, and I will check them before I
-            send them. My résumé is stored for me and sent to the model provider to be processed.
-          </span>
-        </label>
-      ) : (
-        <p className="note">
-          Reviews, tailored résumés and cover letters are drafted by AI. It is told never to invent
-          experience or numbers, but check everything before you send it.
-        </p>
-      )}
+      <p className="note">
+        Reviews, tailored résumés and cover letters are drafted by AI. It is told never to invent
+        experience or numbers, but check everything before you send it.
+        {mode === 'signup' && (
+          <>
+            {' '}
+            After you sign up you will be asked to accept the <Link href="/terms">Terms of Service</Link> and{' '}
+            <Link href="/privacy">Privacy Policy</Link>.
+          </>
+        )}
+      </p>
 
       {(providers.google || providers.linkedin) && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>

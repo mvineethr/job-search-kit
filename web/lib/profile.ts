@@ -39,6 +39,21 @@ export async function saveAbout(sid: string, a: About): Promise<void> {
       heard_from = EXCLUDED.heard_from`;
 }
 
+/** Records that this person agreed to the given Terms/Privacy version, now. */
+export async function acceptTerms(sid: string, name: string, version: string): Promise<void> {
+  await ensureSchema();
+  await sql()`
+    INSERT INTO profiles (sid, name, terms_version, terms_accepted_at)
+    VALUES (${sid}, ${name}, ${version}, now())
+    ON CONFLICT (sid) DO UPDATE SET terms_version = EXCLUDED.terms_version, terms_accepted_at = now()`;
+}
+
+export async function acceptedTermsVersion(sid: string): Promise<string | null> {
+  await ensureSchema();
+  const rows = (await sql()`SELECT terms_version FROM profiles WHERE sid = ${sid}`) as { terms_version: string | null }[];
+  return rows[0]?.terms_version ?? null;
+}
+
 export async function getProfile(sid: string): Promise<Profile | null> {
   await ensureSchema();
   const rows = (await sql()`

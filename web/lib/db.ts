@@ -146,6 +146,9 @@ async function createSchema(): Promise<void> {
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location TEXT`;
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS search_status TEXT`;
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS heard_from TEXT`;
+  // Record of agreement: which Terms/Privacy version, and when. Kept for as long as the account exists.
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_version TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ`;
 
   // Questions are per job, since they come from that posting's requirements.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;

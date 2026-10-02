@@ -88,7 +88,8 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 - **Fabrication is enforced in code, not just prompts.** Tailored and guided-builder output must go through `verifyTailoring` (the builder passes its answers text as the source). Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.
 - **Prompts never suggest a number** to the user.
 - **The fit score is arithmetic in `match.ts`, never a model output.** Evidence quotes must pass `verifyEvidence`; answers may raise a requirement, never lower it; no score is shown for tailored copies.
-- **Master résumés are never deleted.** Delete routes filter `parent_id IS NOT NULL` in SQL.
+- **Master résumés are never deleted** — except by deleting the whole account (`/api/account/delete`, everything for that `sid` in one transaction). Other delete routes filter `parent_id IS NOT NULL` in SQL.
+- **Terms gate:** every signed-in request needs the current `TERMS_VERSION` accepted (`lib/consent.ts`, enforced in `proxy.ts`, recorded in `profiles.terms_version/terms_accepted_at`). Change the Terms or Privacy Policy in substance → bump `TERMS_VERSION` and `TERMS_UPDATED` in `lib/site.ts`. New stored data or a new processor → update `/privacy` and `/api/account/export` in the same change.
 - **No outcome guarantees** in copy ("X% interviews", "beats the ATS"): not deliverable, and an FTC risk.
 - **Secrets only in `web/.env.local`** (gitignored) and the Vercel dashboard. Never print a key; scripts that need one read it and report lengths only.
 - **Scan commits for key-shaped strings and `postgresql://user:pass@` before every push.**

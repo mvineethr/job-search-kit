@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
-import { isAdmin } from '@/lib/admin';
-import SignOutButton from '@/components/SignOutButton';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -60,12 +58,9 @@ export default async function Home() {
         <Link href="/start" className="btn">
           Profile
         </Link>
-        {isAdmin(user.email) && (
-          <Link href="/admin" className="btn">
-            Admin
-          </Link>
-        )}
-        <SignOutButton />
+        <Link href="/settings" className="btn">
+          Settings
+        </Link>
       </div>
 
       <div className="sec">
