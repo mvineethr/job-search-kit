@@ -47,6 +47,24 @@ export function renderResumeBody(resume: Resume): string {
     .map((v) => text(String(v)))
     .join(' | ');
 
+  // Empty sections are skipped: a bare heading reads as a missing section.
+  const skills = resume.skills.length
+    ? `  <h2>Skills</h2>\n  <p>${resume.skills.map(text).join(', ')}</p>\n\n`
+    : '';
+
+  const education = resume.education.length
+    ? `
+  <h2>Education</h2>
+${resume.education
+  .map(
+    (e) =>
+      `  <p><strong>${text(e.degree)}</strong>, ${text(e.school)}${
+        e.year ? `, ${text(e.year)}` : ''
+      }</p>`,
+  )
+  .join('\n')}`
+    : '';
+
   const certs =
     resume.certifications && resume.certifications.length > 0
       ? `
@@ -61,22 +79,10 @@ ${resume.certifications.map((x) => `    <li>${text(x)}</li>`).join('\n')}
   ${resume.targetTitle ? `<p class="target">${text(resume.targetTitle)}</p>` : ''}
   <p class="contact">${contactLine}</p>
 
-${resume.summary ? `  <h2>Summary</h2>\n  <p>${text(resume.summary)}</p>\n` : ''}
-  <h2>Skills</h2>
-  <p>${resume.skills.map(text).join(', ')}</p>
-
+${resume.summary.trim() ? `  <h2>Summary</h2>\n  <p>${text(resume.summary)}</p>\n` : ''}${skills}
   <h2>Experience</h2>
 ${resume.experience.map(renderRole).join('\n')}
-
-  <h2>Education</h2>
-${resume.education
-  .map(
-    (e) =>
-      `  <p><strong>${text(e.degree)}</strong>, ${text(e.school)}${
-        e.year ? `, ${text(e.year)}` : ''
-      }</p>`,
-  )
-  .join('\n')}${certs}
+${education}${certs}
 </div>`;
 }
 

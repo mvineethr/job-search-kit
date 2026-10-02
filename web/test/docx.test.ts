@@ -47,4 +47,10 @@ describe('resumeDocx', () => {
   it('uses no tables, text boxes or headers', () => {
     expect(resumeDocumentXml(resume)).not.toMatch(/<w:tbl|<w:txbxContent|<w:headerReference/);
   });
+
+  it('skips sections with no content', () => {
+    const xml = resumeDocumentXml({ ...resume, summary: '', skills: [], education: [], certifications: [] });
+    for (const h of ['Summary', 'Skills', 'Education', 'Certifications']) expect(xml).not.toContain(`>${h}<`);
+    expect(xml).toContain('>Experience<');
+  });
 });

@@ -90,7 +90,7 @@ export default function ResumeDocument({
       {resume.targetTitle && <p className="target">{resume.targetTitle}</p>}
       <p className="contact">{contact}</p>
 
-      {resume.summary && (
+      {resume.summary.trim() && (
         <section id="sec-summary" style={pending('Summary')}>
           <h2>Summary</h2>
           <p>
@@ -99,10 +99,12 @@ export default function ResumeDocument({
         </section>
       )}
 
-      <section id="sec-skills" style={pending('Skills')}>
-        <h2>Skills</h2>
-        <p>{resume.skills.join(', ')}</p>
-      </section>
+      {resume.skills.length > 0 && (
+        <section id="sec-skills" style={pending('Skills')}>
+          <h2>Skills</h2>
+          <p>{resume.skills.join(', ')}</p>
+        </section>
+      )}
 
       <section id="sec-experience" style={pending('Experience')}>
         <h2>Experience</h2>
@@ -111,15 +113,17 @@ export default function ResumeDocument({
         ))}
       </section>
 
-      <section id="sec-education" style={pending('Education')}>
-        <h2>Education</h2>
-        {resume.education.map((e, i) => (
-          <p key={i}>
-            <strong>{e.degree}</strong>, {e.school}
-            {e.year ? `, ${e.year}` : ''}
-          </p>
-        ))}
-      </section>
+      {resume.education.length > 0 && (
+        <section id="sec-education" style={pending('Education')}>
+          <h2>Education</h2>
+          {resume.education.map((e, i) => (
+            <p key={i}>
+              <strong>{e.degree}</strong>, {e.school}
+              {e.year ? `, ${e.year}` : ''}
+            </p>
+          ))}
+        </section>
+      )}
 
       {resume.certifications && resume.certifications.length > 0 && (
         <section id="sec-certifications" style={pending('Certifications')}>
