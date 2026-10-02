@@ -1,23 +1,12 @@
-import { randomUUID } from 'node:crypto';
 import { requireSid } from '@/lib/auth';
-import { ensureSchema, sql } from '@/lib/db';
-import { loadPrompt } from '@/lib/prompts';
-import { completeText } from '@/lib/provider';
-import { extractJsonObject } from '@/lib/extract-json';
-import { ResumeSchema } from '@/lib/resume-schema';
+import { saveMaster } from '@/lib/save-master';
 
 export const runtime = 'nodejs';
 // Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3;
 // 180 leaves headroom for long résumés while still stopping a runaway request.
 export const maxDuration = 180;
 
-/**
- * Saves a résumé. The pasted text is stored as-is, and a model turns it into
- * structured JSON so the document view and tailoring can work with it.
- *
- * Parsing failure is not fatal: the text is kept either way, so the review flow
- * still works and the person does not lose what they pasted.
- */
+/** Saves a pasted or uploaded résumé as a master. */
 export async function POST(req: Request) {
   let sid: string;
   try {
@@ -34,26 +23,6 @@ export async function POST(req: Request) {
     return Response.json({ error: 'That looks too short to be a résumé.' }, { status: 400 });
   }
 
-  let content: unknown = null;
-  try {
-    const { text: reply } = await completeText({
-      system: loadPrompt('resume-parse'),
-      tier: 'fast', // transcription needs no deliberation
-      messages: [{ role: 'user', content: text }],
-    });
-    const raw = extractJsonObject(reply);
-    const parsed = ResumeSchema.safeParse(raw);
-    if (parsed.success) content = parsed.data;
-    else console.error('[resumes] parsed JSON did not match the schema');
-  } catch (err) {
-    console.error('[resumes] parse failed', err);
-  }
-
-  await ensureSchema();
-  const id = randomUUID();
-  await sql()`
-    INSERT INTO resumes (id, sid, title, source_text, content)
-    VALUES (${id}, ${sid}, ${title}, ${text}, ${content ? JSON.stringify(content) : null})`;
-
+  const { id } = await saveMaster(sid, text, title);
   return new Response(null, { status: 303, headers: { location: new URL(`/resume/${id}`, req.url).toString() } });
 }

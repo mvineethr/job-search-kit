@@ -115,6 +115,15 @@ export async function ensureSchema(): Promise<void> {
       PRIMARY KEY (sid, skill_key)
     )`;
 
+  // One row per session: who this is, and the LinkedIn text kept for the LinkedIn feature.
+  await q`
+    CREATE TABLE IF NOT EXISTS profiles (
+      sid           TEXT PRIMARY KEY,
+      name          TEXT NOT NULL DEFAULT '',
+      linkedin_text TEXT,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+
   // Questions are per job, since they come from that posting's requirements.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;
   // Null until the person marks the job applied: a yes/no with the date it became yes.
