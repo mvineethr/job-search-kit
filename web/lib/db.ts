@@ -57,12 +57,28 @@ export type ResumeRow = {
  * step, because a build step cannot run against a database that is provisioned
  * after the build. Cheap: CREATE TABLE IF NOT EXISTS on an existing schema is
  * a no-op, and the guard below means it runs once per process.
+ *
+ * Concurrent first requests share one run: Better Auth's migrations issue plain
+ * CREATE TABLE, which would fail if two requests raced. A failed run is retried.
  */
-let ensured = false;
+let ensuring: Promise<void> | null = null;
 
-export async function ensureSchema(): Promise<void> {
-  if (ensured) return;
+export function ensureSchema(): Promise<void> {
+  ensuring ??= createSchema().catch((err) => {
+    ensuring = null;
+    throw err;
+  });
+  return ensuring;
+}
+
+async function createSchema(): Promise<void> {
   const q = sql();
+
+  // Better Auth's own tables (user, session, account, verification). Imported
+  // lazily so code that only needs sql() does not load the auth stack.
+  const { getMigrations } = await import('better-auth/db/migration');
+  const { authOptions } = await import('./auth-server');
+  await (await getMigrations(authOptions)).runMigrations();
 
   await q`
     CREATE TABLE IF NOT EXISTS jobs (
@@ -115,6 +131,25 @@ export async function ensureSchema(): Promise<void> {
       PRIMARY KEY (sid, skill_key)
     )`;
 
+  // One row per session: who this is, and the LinkedIn text kept for the LinkedIn feature.
+  await q`
+    CREATE TABLE IF NOT EXISTS profiles (
+      sid           TEXT PRIMARY KEY,
+      name          TEXT NOT NULL DEFAULT '',
+      linkedin_text TEXT,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+
+  // Career basics, all optional, asked once on /start.
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS target_role TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS years_experience TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS search_status TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS heard_from TEXT`;
+  // Record of agreement: which Terms/Privacy version, and when. Kept for as long as the account exists.
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_version TEXT`;
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ`;
+
   // Questions are per job, since they come from that posting's requirements.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS questions JSONB`;
   // Null until the person marks the job applied: a yes/no with the date it became yes.
@@ -125,6 +160,4 @@ export async function ensureSchema(): Promise<void> {
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;
   await q`CREATE INDEX IF NOT EXISTS resumes_sid_idx ON resumes (sid, updated_at DESC)`;
-
-  ensured = true;
 }

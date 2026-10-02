@@ -4,7 +4,7 @@ Context for anyone (human or AI agent) picking this project up later. This file 
 **public** — no personal data lives here. Personal job-search specifics are kept in a
 local, gitignored notes file (see "Local notes" below).
 
-_Last updated: 2026-09-24._ The standing dev brief (module map, hard rules, gotchas) is
+_Last updated: 2026-10-01._ The standing dev brief (module map, hard rules, gotchas) is
 `CLAUDE.md`; this file is the narrative.
 
 ## What this repo is
@@ -14,8 +14,239 @@ capability is both an auto-triggered **skill** (`skills/<name>/SKILL.md`) and an
 **slash command** (`commands/<name>.md`). Works in Claude Code / Cowork.
 
 Since September 2026 it is also a **web app** (`web/`, Next.js on Vercel + Neon + Kimi),
-password-gated for testing, so people without a terminal-based AI agent can use it. The
-plugin and the web app read the same prompts from `core/`.
+password-gated for testing (real accounts are built on a branch; see the 2026-09-27 → 10-01
+session), so people without a terminal-based AI agent can use it. The plugin and the web app
+read the same prompts from `core/`.
+
+---
+
+## Session 2026-10-01: the PR, Google sign-in, and the legal layer
+
+Continues the 2026-09-27 → 10-01 session below on the same branch, same day: accounts were
+built there; this session shipped them to a PR, got Google sign-in working, and added the
+legal and account-management pieces. **Branch `claude/user-profile-linkedin-resume-b26e2b`,
+PR [mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3).
+`a7d4b48` is committed but not pushed; nothing is deployed.**
+
+### What was asked
+
+1. Push and open a PR.
+2. A walkthrough of Google OAuth setup (and of `BETTER_AUTH_URL`, and of where Vercel env vars
+   go).
+3. After Google sign-in worked: a "remove profile" option; a dropdown on the profile initials
+   with settings and help pages; a privacy page, a ToS page, a proper user agreement at
+   registration, and "anything legal I'm missing, just not to be sued over this website".
+
+### Decisions
+
+- PR rather than a direct merge (sign-in changes for everyone; previews first).
+- Google OAuth: External, scopes `openid email profile` only, no logo (avoids review); redirect
+  URIs for production and `localhost:3000`/`3001`; Google sign-in not tested on previews (random
+  URLs). Vercel: everything Production + Preview except `BETTER_AUTH_URL` (Production only).
+- "Remove profile" = **delete account and all data**, plus "Download my data".
+- Operator: "Job Search Kit, a personal open-source project by Vineeth". **Contact email held
+  until the project is renamed. Governing-law state not given** (clause omitted until set).
+- Agreement is a proxy-enforced page every account hits, not a sign-up checkbox, because a
+  first "Continue with Google" from `/login` also creates accounts.
+- Minimum age 16; liability cap US$50; explicit "be honest" clause; no cookie banner (only
+  necessary cookies); fonts self-hosted.
+
+### What was built
+
+- **Branch sync and PR**: `main` merged via the app's sync tool (`6b6e5b5`, brings `1ea5450`);
+  112 tests, clean build and secret scan; pushed; PR #3 opened with a "Before merging"
+  checklist.
+- **Legal layer** (`a7d4b48`):
+  - `lib/site.ts` — site facts (`SITE_NAME`, `OPERATOR`, `CONTACT_EMAIL` and
+    `GOVERNING_STATE` from `NEXT_PUBLIC_*` env, `TERMS_VERSION` `2026-10-02`, `MIN_AGE` 16).
+  - Terms gate: `lib/consent.ts` (`consentCookieValue` = version + first 16 hex of
+    SHA-256(session token), `isExempt`, `safeNext`), `lib/consent-cookie.ts`, `proxy.ts` (signed
+    in + stale cookie → 303 `/api/consent/sync`), `GET /api/consent/sync` (DB check once per
+    session → cookie or `/agree`), `POST /api/consent` (three boxes required; records
+    `profiles.terms_version`/`terms_accepted_at`), `app/agree/page.tsx` (summary + boxes +
+    "I don't agree — sign out"). The sign-up form's AI checkbox moved here.
+  - `/privacy`, `/terms` (16 sections), `/help` (9 Q&As), `components/LegalContact.tsx`
+    (contact address when set; otherwise Settings + GitHub issues, with a "don't post personal
+    details" warning); footer on every page; these three are public in the proxy matcher.
+  - Profile menu: `components/TopBar.tsx` takes `me` from the root layout; native `<details>`
+    with Profile, Settings, Help, Admin (admins), Sign out; closes on navigation, outside click,
+    Escape. Signed-out visitors get a Sign in button and no nav.
+  - `/settings`: account details, agreed terms version and date; `GET /api/account/export`
+    (JSON of everything except password hashes and session tokens); `POST /api/account/delete`
+    (typed "delete", checked client and server; signs out first, then one
+    `sql.transaction` deleting letters, résumés, jobs, skill answers, profile, pending reset
+    tokens and the user row — sessions/accounts cascade) → `/login?deleted=1`.
+    `components/DeleteAccountForm.tsx`.
+  - Fonts: `next/font` (`Inter`, `Source_Serif_4`) replaces the Google Fonts stylesheet;
+    `--sans`/`--serif` read `--font-sans`/`--font-serif`.
+  - Home card: Admin/Sign out replaced by a Settings link. `SignOutButton` takes
+    `label`/`className`. `web/.env.example` gains `NEXT_PUBLIC_CONTACT_EMAIL`,
+    `NEXT_PUBLIC_GOVERNING_STATE`. `CLAUDE.md` hard rules updated (account deletion is the one
+    way masters are deleted; the Terms gate).
+  - `test/consent.test.ts`: 5 tests.
+
+### Found along the way
+
+- **Phantom redirect bugs from the shell**: `curl.exe` from Git Bash lost one leading slash per
+  argument (`next=/jobs` → `/`; `//evil.com` → `/evil.com`). MSYS path conversion; with
+  `MSYS_NO_PATHCONV=1` the code behaved correctly.
+- **Google Fonts** were loaded from Google on every page (visitor IPs to Google); moved to
+  `next/font`.
+- A browser-pane click failed because the pane hadn't drawn (app window behind another);
+  the Google redirect was checked through `POST /api/auth/sign-in/social` instead.
+- The pane lost the owner's Google session at some point during testing; the tests used a
+  separate cookie jar and only throwaway accounts were deleted. Cause not pinned down.
+- Privacy page opened "Job Search Kit is run by Job Search Kit, a personal…"; reworded.
+
+### Verified (local server, port 3001)
+
+- `.env.local` Google values present (lengths only: id 72, secret 35). "Continue with Google"
+  shown; the auth API's Google URL has `redirect_uri=http://localhost:3001/api/auth/callback/google`
+  and `scope=email profile openid`. **The owner signed in with Google and landed on `/start`.**
+- Gate via `curl` with a throwaway account: sign-up → `/` → sync → `/agree`; blocked
+  `POST /api/jobs` → sync; two boxes → error, `next` kept; three → recorded, `next=/jobs`
+  honoured and `//evil.com` → `/`; sign out and back in → passes without `/agree`; export
+  shows `terms_version 2026-10-02`; delete with "nope" → error; with "delete" →
+  `/login?deleted=1`, export then redirects to sign-in, and sign-in returns 401.
+- Browser pane with a second throwaway account: `/agree`, the profile menu, `/settings`, and
+  deletion through the real form. `/privacy`: body font Inter, only stylesheet host the site,
+  0 requests to Google.
+- `tsc` and `next build` clean; **117 tests** (112 + 5).
+- **Not verified:** anything on the PR preview or production; LinkedIn sign-in; Google sign-in
+  outside localhost; the legal text by a lawyer.
+
+### Pending
+
+- Push `a7d4b48` to PR #3; try it on the preview; merge (remove `APP_PASSWORD` then).
+- Publish the Google OAuth app out of Testing; create the LinkedIn app (needs a Company Page).
+- Rename the project (`SITE_NAME`); then `NEXT_PUBLIC_CONTACT_EMAIL`; give the governing-law
+  state (`NEXT_PUBLIC_GOVERNING_STATE`).
+- Verify Moonshot's API terms (server location, retention, training on API data) and Neon's
+  region against `/privacy`. A short lawyer review before promoting widely.
+- `TERMS_VERSION` is `2026-10-02` (UTC) while the owner's local date was 1 October; harmless.
+- Still open from the previous entry: domain + Resend, telling testers they start fresh, test
+  rows in the database (`admin-test@example.com`, `normal-test@example.com`, two onboarding
+  résumés), Moonshot spend cap.
+
+---
+
+## Session 2026-09-27 → 10-01: onboarding from what you have, a builder that can't invent, and real accounts
+
+Extends both earlier sessions: the guided builder reuses the `verifyTailoring` check from
+2026-09-19 → 09-22, and the LinkedIn zip reader mirrors the hand-written zip writer from
+2026-09-24. **Everything here is on branch `claude/user-profile-linkedin-resume-b26e2b`
+(17 commits, `bafe3e7`…`f3a41c4`), not pushed, not deployed.** Meanwhile `origin/main` gained
+S2 and `1ea5450` (empty résumé sections skipped, done in a separate session spun off from this
+one), so the branch is one commit behind `main` and needs it merged before a PR.
+
+### What was asked
+
+1. A user profile: same page structure, but a new user starts by giving their LinkedIn
+   export and/or résumé, and if they have neither, the app helps them create one.
+2. Then, after that worked: "having one user profile is a big problem now, people started to
+   use it" — real profiles/accounts, so we know more about users and can build on it.
+
+### Decisions (asked one at a time)
+
+- Onboarding sits on the existing session first; accounts came second.
+- No résumé and no LinkedIn → guided questions; the model rephrases the person's own words.
+- LinkedIn: both the profile PDF and the data-export zip.
+- Both given → résumé is the master; LinkedIn text stored on the profile, never merged.
+- Plan executed inline, not one subagent per task.
+- Sign-in: Google, email + password, and LinkedIn (maintainer's call: all three).
+- Email: Resend, in a separate account (a second team is paid). Self-hosting with BunMail was
+  evaluated and rejected: needs a VPS and outbound port 25, and a fresh IP's mail lands in
+  spam. **No domain yet**, so emailed resets wait; until then, admins generate reset links.
+- Existing testers: **start fresh** (old session data stays in the database, unreachable).
+- Sign-up: **anyone, no limits**.
+- Learn about users: career basics, "how did you find us", per-user usage, an admin page.
+- Library: Better Auth 1.7.7, read from its installed source before designing (Next 16
+  support, `getMigrations()`, the reset-link shape).
+
+Specs: `docs/superpowers/specs/2026-09-27-profile-onboarding-design.md`,
+`docs/superpowers/specs/2026-10-01-accounts-design.md`. Plan:
+`docs/superpowers/plans/2026-09-27-profile-onboarding.md`.
+
+### What was built
+
+- **LinkedIn zip** (`0d310c9`): `lib/linkedin-zip.ts` — `unzip` (central directory +
+  `inflateRawSync`, only wanted entries, 5 MB cap each), `parseCsv`, `linkedinZipToText`
+  (Profile, Positions, Education, Skills, Email Addresses CSVs → résumé-like text;
+  `NOT_LINKEDIN` error otherwise).
+- **Uploads** (`529e9b6`): `/api/extract` routes `.zip`; `TextOrFileInput` takes
+  `label`/`accept`/`buttonLabel` and uses `useId()` (two on one page).
+- **Profiles + shared save** (`9ee52e6`): `profiles` table; `lib/save-master.ts` (parse +
+  insert, used by `/api/resumes` and `/api/profile`); `lib/profile.ts`.
+- **`/start`** (`5f8d6ea`): `components/StartForm.tsx`; home redirects new users there.
+- **Guided builder** (`d2e246e`, `311f297`): `lib/build-answers.ts` (`BuildAnswersSchema`,
+  `answersToText`), `core/resume-build.md` (in `KNOWN`), `POST /api/profile/build` (primary
+  tier → `ResumeSchema` → `verifyTailoring(built, null, answersText)` → master with
+  `source_text` = answers; JSON response so failures keep the answers on screen),
+  `/start/build` with `components/BuildForm.tsx` (3 steps).
+- **Accounts** (`859a335`): `lib/auth-server.ts` (Better Auth on a Neon `Pool`; Google/LinkedIn
+  only when configured; account linking; `sendResetPassword` emails when configured, else
+  parks the URL in `pendingResetLinks`), `/api/auth/[...all]`, `lib/auth.ts`
+  (`currentUser`, `currentSid`/`requireSid` = user id), `lib/email.ts`, `lib/admin.ts`.
+  `ensureSchema()` runs Better Auth's `getMigrations()` and now shares one in-flight promise.
+  Removed `session.ts`, `cookie.ts`, `/api/login`, `test/session.test.ts`, `APP_PASSWORD`.
+- **Pages** (`3509b0d`): `/login`, `/signup`, `/reset`, `components/AuthForm.tsx` (sign-up
+  buttons, social included, disabled until the AI box is ticked), `ResetForm.tsx`,
+  `SignOutButton.tsx`, `lib/auth-client.ts`; home card shows name/email, Sign out, Admin.
+- **Career basics** (`a60bc9b`): `profiles` columns, `POST /api/profile/about` (choice fields
+  allow-listed, text capped at 200), `components/AboutForm.tsx` on `/start`. Home redirect
+  changed to "no résumé yet" (About-you creates a profile row).
+- **Admin** (`9b47d77`): `/admin` (404 for non-admins; the one cross-`sid` query),
+  `POST /api/admin/reset-link` (403 for non-admins; link returned in the body only),
+  `components/ResetLinkButton.tsx`. Replaced the planned `npm run reset-link` script.
+- **Proxy** (`b9df6fc`): `middleware.ts` → `proxy.ts` for Next 16; `.claude/launch.json`
+  `web-localtest` server.
+- Env placeholders in `web/.env.example` (`d25f249`, `859a335`); `CLAUDE.md` (`f3a41c4`).
+
+### Found along the way
+
+- The real `APP_PASSWORD` also signs production cookies, so it was never typed into local
+  tests; a throwaway-password server was used instead (later repurposed for accounts with a
+  test admin email).
+- `ensureSchema()`'s run-once flag would race on Better Auth's plain `CREATE TABLE`.
+- The old home redirect ("no profile and no résumé") would have broken once About-you
+  created profile rows.
+- Better Auth logs "Database schema mismatch — missing tables" once before the first request
+  creates them; harmless.
+- Next 16 deprecation warning for `middleware.ts`; a transient "must export a function"
+  error appeared mid-rename.
+- A scripted edit missed on a CRLF file; redone as exact-match edits.
+- Empty "EDUCATION" heading on résumés without education (all three renderers): pre-existing,
+  spun off; fixed on `main` as `1ea5450`.
+- The desktop app quit mid-commit; edits were intact and committed after restart.
+
+### Verified (local server, port 3001)
+
+- Tests 108 → 116 (onboarding) → 110 (accounts: session tests removed, 4 added); `tsc` and
+  `next build` clean; branch scanned for connection strings and key-shaped strings: none.
+- Onboarding: new session → `/start`; a fake LinkedIn export through the real upload →
+  clean text → master "From LinkedIn", all sections parsed; home showed the name.
+- Builder: one café role in plain words → 5 bullets, the person's "4" kept, one
+  `[METRIC NEEDED]` picked up by "Tell us the numbers"; finished within the first 10-second
+  check. Empty `/start` post → back with error; bad builder JSON → 400.
+- Accounts: signed out → `/login`; social buttons hidden without keys; sign-up blocked until
+  the AI box is ticked; first sign-up created the auth tables and landed on `/start`;
+  About-you saved and reloaded; `/admin` row correct; reset link → new password (old 401,
+  new 200); non-admin: `/admin` 404, reset API 403; signed-out data route → sign-in.
+- **Not verified:** Google and LinkedIn sign-in (no OAuth apps yet); a real LinkedIn export or
+  profile PDF; résumé + LinkedIn together; anything on the live site.
+
+### Pending
+
+- Merge `main` into the branch; PR with preview deploy (recommended) or merge to `main`.
+- Vercel env: new `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` = live origin, `ADMIN_EMAILS`;
+  remove `APP_PASSWORD`. Google OAuth client and LinkedIn app (needs a Company Page).
+- Domain → Resend verification → `EMAIL_FROM` for emailed resets.
+- Tell current testers they'll start with empty accounts.
+- Test data written to the database in `.env.local`: accounts `admin-test@example.com`,
+  `normal-test@example.com` and two onboarding test résumés (under old session ids). Remove
+  if that is production.
+- Admin button only shows once an admin has a résumé (`/admin` always works).
+- Moonshot spend cap is more pressing with open sign-up.
 
 ---
 

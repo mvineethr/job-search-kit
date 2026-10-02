@@ -7,6 +7,14 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "cwd": "web"
+    },
+    {
+      "name": "web-localtest",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3001"],
+      "port": 3001,
+      "cwd": "web",
+      "env": { "BETTER_AUTH_URL": "http://localhost:3001", "ADMIN_EMAILS": "admin-test@example.com" }
     }
   ]
 }

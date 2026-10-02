@@ -1,12 +1,14 @@
 import Link from 'next/link';
-import { currentSid } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { currentUser } from '@/lib/auth';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const sid = await currentSid();
-  if (!sid) return null;
+  const user = await currentUser();
+  if (!user) return null;
+  const sid = user.id;
 
   await ensureSchema();
   const q = sql();
@@ -17,6 +19,18 @@ export default async function Home() {
   const jobs = (await q`
     SELECT id, company, role, description, analysis, created_at
     FROM jobs WHERE sid = ${sid}`) as unknown as JobRow[];
+
+  // Nothing to show without a résumé, so new accounts start with onboarding.
+  if (resumes.length === 0) redirect('/start');
+
+  const displayName = user.name || user.email;
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
 
   const hasResume = resumes.length > 0;
 
@@ -32,21 +46,21 @@ export default async function Home() {
 
       <div className="identity">
         <div className="identity-avatar" aria-hidden="true">
-          JS
+          {initials}
         </div>
         <div className="identity-main">
-          <strong>Test build</strong>
+          <strong>{displayName}</strong>
           <span className="tnum">
             {resumes.length} {resumes.length === 1 ? 'résumé' : 'résumés'} · {jobs.length}{' '}
-            {jobs.length === 1 ? 'job' : 'jobs'} · kept to this browser
+            {jobs.length === 1 ? 'job' : 'jobs'} · {user.email}
           </span>
         </div>
-        <form method="post" action="/api/login">
-          <input type="hidden" name="_method" value="delete" />
-          <Link href="/login" className="btn">
-            Switch session
-          </Link>
-        </form>
+        <Link href="/start" className="btn">
+          Profile
+        </Link>
+        <Link href="/settings" className="btn">
+          Settings
+        </Link>
       </div>
 
       <div className="sec">
