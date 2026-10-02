@@ -20,6 +20,116 @@ read the same prompts from `core/`.
 
 ---
 
+## Session 2026-10-01: the PR, Google sign-in, and the legal layer
+
+Continues the 2026-09-27 → 10-01 session below on the same branch, same day: accounts were
+built there; this session shipped them to a PR, got Google sign-in working, and added the
+legal and account-management pieces. **Branch `claude/user-profile-linkedin-resume-b26e2b`,
+PR [mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3).
+`a7d4b48` is committed but not pushed; nothing is deployed.**
+
+### What was asked
+
+1. Push and open a PR.
+2. A walkthrough of Google OAuth setup (and of `BETTER_AUTH_URL`, and of where Vercel env vars
+   go).
+3. After Google sign-in worked: a "remove profile" option; a dropdown on the profile initials
+   with settings and help pages; a privacy page, a ToS page, a proper user agreement at
+   registration, and "anything legal I'm missing, just not to be sued over this website".
+
+### Decisions
+
+- PR rather than a direct merge (sign-in changes for everyone; previews first).
+- Google OAuth: External, scopes `openid email profile` only, no logo (avoids review); redirect
+  URIs for production and `localhost:3000`/`3001`; Google sign-in not tested on previews (random
+  URLs). Vercel: everything Production + Preview except `BETTER_AUTH_URL` (Production only).
+- "Remove profile" = **delete account and all data**, plus "Download my data".
+- Operator: "Job Search Kit, a personal open-source project by Vineeth". **Contact email held
+  until the project is renamed. Governing-law state not given** (clause omitted until set).
+- Agreement is a proxy-enforced page every account hits, not a sign-up checkbox, because a
+  first "Continue with Google" from `/login` also creates accounts.
+- Minimum age 16; liability cap US$50; explicit "be honest" clause; no cookie banner (only
+  necessary cookies); fonts self-hosted.
+
+### What was built
+
+- **Branch sync and PR**: `main` merged via the app's sync tool (`6b6e5b5`, brings `1ea5450`);
+  112 tests, clean build and secret scan; pushed; PR #3 opened with a "Before merging"
+  checklist.
+- **Legal layer** (`a7d4b48`):
+  - `lib/site.ts` — site facts (`SITE_NAME`, `OPERATOR`, `CONTACT_EMAIL` and
+    `GOVERNING_STATE` from `NEXT_PUBLIC_*` env, `TERMS_VERSION` `2026-10-02`, `MIN_AGE` 16).
+  - Terms gate: `lib/consent.ts` (`consentCookieValue` = version + first 16 hex of
+    SHA-256(session token), `isExempt`, `safeNext`), `lib/consent-cookie.ts`, `proxy.ts` (signed
+    in + stale cookie → 303 `/api/consent/sync`), `GET /api/consent/sync` (DB check once per
+    session → cookie or `/agree`), `POST /api/consent` (three boxes required; records
+    `profiles.terms_version`/`terms_accepted_at`), `app/agree/page.tsx` (summary + boxes +
+    "I don't agree — sign out"). The sign-up form's AI checkbox moved here.
+  - `/privacy`, `/terms` (16 sections), `/help` (9 Q&As), `components/LegalContact.tsx`
+    (contact address when set; otherwise Settings + GitHub issues, with a "don't post personal
+    details" warning); footer on every page; these three are public in the proxy matcher.
+  - Profile menu: `components/TopBar.tsx` takes `me` from the root layout; native `<details>`
+    with Profile, Settings, Help, Admin (admins), Sign out; closes on navigation, outside click,
+    Escape. Signed-out visitors get a Sign in button and no nav.
+  - `/settings`: account details, agreed terms version and date; `GET /api/account/export`
+    (JSON of everything except password hashes and session tokens); `POST /api/account/delete`
+    (typed "delete", checked client and server; signs out first, then one
+    `sql.transaction` deleting letters, résumés, jobs, skill answers, profile, pending reset
+    tokens and the user row — sessions/accounts cascade) → `/login?deleted=1`.
+    `components/DeleteAccountForm.tsx`.
+  - Fonts: `next/font` (`Inter`, `Source_Serif_4`) replaces the Google Fonts stylesheet;
+    `--sans`/`--serif` read `--font-sans`/`--font-serif`.
+  - Home card: Admin/Sign out replaced by a Settings link. `SignOutButton` takes
+    `label`/`className`. `web/.env.example` gains `NEXT_PUBLIC_CONTACT_EMAIL`,
+    `NEXT_PUBLIC_GOVERNING_STATE`. `CLAUDE.md` hard rules updated (account deletion is the one
+    way masters are deleted; the Terms gate).
+  - `test/consent.test.ts`: 5 tests.
+
+### Found along the way
+
+- **Phantom redirect bugs from the shell**: `curl.exe` from Git Bash lost one leading slash per
+  argument (`next=/jobs` → `/`; `//evil.com` → `/evil.com`). MSYS path conversion; with
+  `MSYS_NO_PATHCONV=1` the code behaved correctly.
+- **Google Fonts** were loaded from Google on every page (visitor IPs to Google); moved to
+  `next/font`.
+- A browser-pane click failed because the pane hadn't drawn (app window behind another);
+  the Google redirect was checked through `POST /api/auth/sign-in/social` instead.
+- The pane lost the owner's Google session at some point during testing; the tests used a
+  separate cookie jar and only throwaway accounts were deleted. Cause not pinned down.
+- Privacy page opened "Job Search Kit is run by Job Search Kit, a personal…"; reworded.
+
+### Verified (local server, port 3001)
+
+- `.env.local` Google values present (lengths only: id 72, secret 35). "Continue with Google"
+  shown; the auth API's Google URL has `redirect_uri=http://localhost:3001/api/auth/callback/google`
+  and `scope=email profile openid`. **The owner signed in with Google and landed on `/start`.**
+- Gate via `curl` with a throwaway account: sign-up → `/` → sync → `/agree`; blocked
+  `POST /api/jobs` → sync; two boxes → error, `next` kept; three → recorded, `next=/jobs`
+  honoured and `//evil.com` → `/`; sign out and back in → passes without `/agree`; export
+  shows `terms_version 2026-10-02`; delete with "nope" → error; with "delete" →
+  `/login?deleted=1`, export then redirects to sign-in, and sign-in returns 401.
+- Browser pane with a second throwaway account: `/agree`, the profile menu, `/settings`, and
+  deletion through the real form. `/privacy`: body font Inter, only stylesheet host the site,
+  0 requests to Google.
+- `tsc` and `next build` clean; **117 tests** (112 + 5).
+- **Not verified:** anything on the PR preview or production; LinkedIn sign-in; Google sign-in
+  outside localhost; the legal text by a lawyer.
+
+### Pending
+
+- Push `a7d4b48` to PR #3; try it on the preview; merge (remove `APP_PASSWORD` then).
+- Publish the Google OAuth app out of Testing; create the LinkedIn app (needs a Company Page).
+- Rename the project (`SITE_NAME`); then `NEXT_PUBLIC_CONTACT_EMAIL`; give the governing-law
+  state (`NEXT_PUBLIC_GOVERNING_STATE`).
+- Verify Moonshot's API terms (server location, retention, training on API data) and Neon's
+  region against `/privacy`. A short lawyer review before promoting widely.
+- `TERMS_VERSION` is `2026-10-02` (UTC) while the owner's local date was 1 October; harmless.
+- Still open from the previous entry: domain + Resend, telling testers they start fresh, test
+  rows in the database (`admin-test@example.com`, `normal-test@example.com`, two onboarding
+  résumés), Moonshot spend cap.
+
+---
+
 ## Session 2026-09-27 → 10-01: onboarding from what you have, a builder that can't invent, and real accounts
 
 Extends both earlier sessions: the guided builder reuses the `verifyTailoring` check from

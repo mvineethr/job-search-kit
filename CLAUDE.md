@@ -64,7 +64,11 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `auth-server.ts` / `auth.ts` / `auth-client.ts` | Better Auth config; `currentUser()`, `requireSid()` (= user id); browser client |
 | `admin.ts` / `email.ts` | `isAdmin` (`ADMIN_EMAILS`); Resend via fetch, off unless `RESEND_API_KEY` and `EMAIL_FROM` are both set |
 | `profile.ts` / `save-master.ts` / `build-answers.ts` / `linkedin-zip.ts` | onboarding: profile + career basics; parse-and-save a master; guided-builder answers; LinkedIn export zip → text |
+| `site.ts` | site facts quoted by the legal pages and chrome: `SITE_NAME`, `OPERATOR`, `CONTACT_EMAIL`, `GOVERNING_STATE`, `TERMS_VERSION`/`TERMS_UPDATED`, `MIN_AGE` (16) |
+| `consent.ts` / `consent-cookie.ts` | Terms gate: `consentCookieValue` (version + hash of session token), `isExempt`, `safeNext` (same-site paths only); `consentSetCookie` |
 | `redirect.ts` | `redirectTo`, `backWithError` for form posts |
+
+Account pages: `/agree` (clickwrap), `/settings` (export, delete), `/privacy`, `/terms`, `/help` (last three public). API: `/api/consent`, `/api/consent/sync`, `/api/account/export`, `/api/account/delete`.
 
 ## Data model (Neon)
 
@@ -77,7 +81,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
   - Masters from the guided builder hold the flattened answers (`answersToText`) in `source_text`: the person's words are the original.
 - `letters(id, sid, kind, job_id, resume_id, content jsonb)`
 - `skill_answers(sid, skill_key, skill, level, detail)` — **per person, not per job**
-- `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from)` — LinkedIn text is stored, never merged into the résumé
+- `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from, terms_version, terms_accepted_at)` — LinkedIn text is stored, never merged into the résumé; the terms columns are the record of agreement
 - Better Auth's `user`, `session`, `account`, `verification` (camelCase quoted columns: `"userId"`, `"providerId"`, `"createdAt"`). `sid` everywhere = `user.id`. Rows from the old shared-password sessions remain, unreachable.
 
 ## Hard rules
@@ -94,6 +98,8 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 - **Secrets only in `web/.env.local`** (gitignored) and the Vercel dashboard. Never print a key; scripts that need one read it and report lengths only.
 - **Scan commits for key-shaped strings and `postgresql://user:pass@` before every push.**
 - **Never use real credentials in local browser tests.** Use the `web-localtest` server in `.claude/launch.json` (port 3001, own `BETTER_AUTH_URL`, test `ADMIN_EMAILS`) and `@example.com` accounts; `.env.local` may point at the production database.
+- **Never accept terms or delete data on the owner's signed-in session** while testing; use throwaway accounts (a separate `curl` cookie jar works).
+- **Legal copy states only what the code does.** No guessed facts about providers (location, retention): flag them for the owner to verify.
 - **Password-reset links travel only in response bodies** — never in URLs, query strings or logs; whoever holds one can set the password.
 - **Form posts redirect with `backWithError`,** never return raw JSON to a browser form.
 - Design tokens in `web/app/globals.css` are fixed by the UX spec; spacing 4/8/12/16/24/32/48/64, type 12–28px, no gradients/emoji/"AI-powered" copy, no exclamation marks.
@@ -119,7 +125,7 @@ reset links come from the Reset link button on `/admin`).
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 110 tests
+cd web && npm test                         # Vitest, 117 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
@@ -135,6 +141,11 @@ cd web && npm run build                    # prebuild copies ../core first
 - "Sign in with LinkedIn" returns name, email and photo only — never work history. A LinkedIn developer app needs a Company Page.
 - Resend sends only to the account owner until a domain is verified; a `vercel.app` address can't be. Email is off unless `RESEND_API_KEY` and `EMAIL_FROM` are both set.
 - Many repo files are CRLF; scripted string replacement with `\n` silently misses. Use exact-match edits.
+- Git Bash rewrites arguments that look like paths (`next=/jobs` → lost slash, `//evil.com` → `/evil.com`) before `curl.exe` sees them. Set `MSYS_NO_PATHCONV=1` when testing redirects, or you'll chase phantom bugs.
+- A sign-up checkbox doesn't bind social sign-ups: "Continue with Google" on `/login` creates accounts too. That's why agreement is the proxy-enforced `/agree` page.
+- `redirect_uri_mismatch` = `BETTER_AUTH_URL` + `/api/auth/callback/google` isn't character-for-character in the Google client's list. Vercel previews get random URLs, so test Google locally or on production. Google OAuth apps in Testing mode admit only listed users, for 7 days.
+- Loading Google Fonts from Google sends visitors' IPs to Google; fonts are self-hosted via `next/font` (`--font-sans`/`--font-serif` set on `<html>`).
+- The root layout calls `currentUser()` on every page (for the menu), so every page is dynamic.
 - Reasoning models stream thinking on `delta.reasoning_content`; reading only `content` shows a blank screen for 80s+.
 - `kimi-k3` defaults to `max` effort: 107s → 33s at `low`, with more findings. Always set effort.
 - Vercel Hobby + Fluid Compute allows **300s**; `export const maxDuration = 60` *lowers* it. Model routes use 180.
@@ -161,12 +172,19 @@ check, `/ats-check`, Word download, print-to-PDF — plus empty résumé section
 three renderers (`1ea5450`). Whether S2 was clicked through signed-in on the live site isn't
 recorded here.
 
-**Built, not yet deployed (S3, branch `claude/user-profile-linkedin-resume-b26e2b`, 17 commits,
-one commit behind `main`):** `/start` onboarding (résumé and/or LinkedIn PDF or export zip),
-guided builder `/start/build`, real accounts (`/login`, `/signup`, `/reset`, Better Auth),
-optional career basics, `/admin` with usage and reset links. Clicked through on the local test
-server with email accounts; **Google and LinkedIn sign-in untested** (no OAuth apps yet).
-Deploying it signs everyone out and starts them on empty accounts (decided).
+**Built, not yet deployed (S3 + S4, branch `claude/user-profile-linkedin-resume-b26e2b`, PR
+[mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3); `main`
+merged in; `a7d4b48` committed but not pushed):** `/start` onboarding (résumé and/or LinkedIn
+PDF or export zip), guided builder `/start/build`, real accounts (`/login`, `/signup`, `/reset`,
+Better Auth), career basics, `/admin`; then the `/agree` terms gate, `/privacy`, `/terms`,
+`/help`, profile menu, `/settings` with data export and account deletion, self-hosted fonts.
+**Google sign-in works locally**; LinkedIn untested (no app yet). Vercel env set (Google keys,
+`BETTER_AUTH_*`, `ADMIN_EMAILS`). Deploying signs everyone out and starts them on empty
+accounts (decided).
+
+**Legal gaps:** no contact email yet (waits on the project rename; pages fall back to Settings +
+GitHub), no governing-law state, Moonshot and Neon facts in `/privacy` unverified, no lawyer
+review.
 
 **Not built:** cold email, LinkedIn fixer (two modes designed; `profiles.linkedin_text` is
 waiting for it), interview prep (mocked up), inline résumé editing, MCP server. Pages exist as
@@ -179,12 +197,13 @@ ATSs vary.
 
 ## Next
 
-1. Ship S3: merge `main` into the branch, open a PR (preview deploy), set Vercel env (`BETTER_AUTH_SECRET` new, `BETTER_AUTH_URL` = live origin, `ADMIN_EMAILS`; remove `APP_PASSWORD`), create the Google and LinkedIn OAuth apps (callbacks `/api/auth/callback/google|linkedin`) and test both sign-ins.
-2. Moonshot spend cap — sign-up is open with no limits.
-3. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
-4. Inline résumé editing: every check we add points at text the person cannot yet change.
-5. Keyword coverage on the tailored document, as a separate number from fit.
-6. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
+1. Push `a7d4b48` to PR #3, try the preview (email sign-up, `/agree`, settings, delete), then merge; remove `APP_PASSWORD` at merge. Publish the Google OAuth app out of Testing. LinkedIn app (needs a Company Page).
+2. Rename the project (`SITE_NAME` in `lib/site.ts`), then set `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_GOVERNING_STATE`; verify Moonshot (location, retention, training) and Neon region against `/privacy`.
+3. Moonshot spend cap — sign-up is open with no limits.
+4. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
+5. Inline résumé editing: every check we add points at text the person cannot yet change.
+6. Keyword coverage on the tailored document, as a separate number from fit.
+7. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
 
 ## Session History
 
@@ -192,3 +211,4 @@ ATSs vary.
 - **S1** (2026-09-19 → 09-22) - Built and deployed the web app: specs + mockup, `core/` extraction, Next.js/Neon/Kimi, test login, jobs, tailoring, cover letters; code-enforced anti-fabrication after an audit found 8 skills stuffed from a JD; gap and metric questions.
 - **S2** (2026-09-24) - Market research (no competitor enforces anti-fabrication; "75% auto-rejected by ATS" is a 2012 sales pitch) → dropped the planned "80% guarantee", no auto-apply, pricing on hold. Built: fit score from verified evidence (`core/job-match.md` replaces gap-questions; spread 13 → 2 pts over 4 live rounds), AI disclosure, delete/applied, filler-phrase check, restored bullets, inline number flags, elapsed counters, `/ats-check`, hand-written .docx. 81 → 108 tests; not pushed.
 - **S3** (2026-09-27 → 10-01) - Onboarding at `/start` from a résumé and/or LinkedIn (PDF or export zip via a hand-written zip/CSV reader); guided builder for people with neither (`core/resume-build.md`, answers as source, checked by `verifyTailoring`); then real accounts on Better Auth (email + password, Google, LinkedIn; user id fills `sid`), career basics, `/admin` with reset links (no domain yet for email; self-hosted BunMail rejected). 108 → 110 tests; 17 commits, not pushed.
+- **S4** (2026-10-01) - Merged `main`, pushed, opened PR #3; Google OAuth client + Vercel env, Google sign-in working locally. Legal layer: proxy-enforced `/agree` clickwrap (Terms + Privacy, AI, 16+; version recorded), `/privacy` written against the code, `/terms`, `/help`, profile menu, `/settings` with data export and one-transaction account deletion, fonts self-hosted. Contact email and state wait on a rename. 110 → 117 tests; `a7d4b48` not pushed.
