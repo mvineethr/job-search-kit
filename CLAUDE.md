@@ -26,6 +26,7 @@ core/                    agent-agnostic prompts — THE source of truth
   ats-rules.md           ATS rules (from shared/ats-rules.md minus Python mechanics)
   resume-review.md       diagnostic → prose + {section,severity,finding} JSON
   resume-parse.md        pasted text → résumé JSON (transcription only, never improves)
+  resume-build.md        guided-builder answers → résumé JSON (rephrase only; [METRIC NEEDED], never a number)
   resume-tailor.md       résumé + JD → tailored JSON + {matched,missing,requirements}
   cover-letter.md        → {greeting,paragraphs,signoff,name,facts,gaps}
   job-match.md           JD vs résumé → requirements {kind,category,status,evidence,question}; replaced gap-questions
@@ -38,7 +39,7 @@ web/
   components/            UI pieces
   scripts/copy-core.mjs  prebuild: copies ../core → web/core
   test/                  Vitest; fixtures/priya.json is a fictional person
-docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
+docs/superpowers/        specs (design, UX, match score, onboarding, accounts) and plans
 ```
 
 ## Web module map (`web/lib`)
@@ -73,21 +74,26 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 - `resumes(id, sid, title, source_text, content jsonb, parent_id → resumes, job_id → jobs)`
   - master: `parent_id` null. Tailored: points at **both** master and job; master never modified.
   - For tailored rows, `source_text` holds JSON `{note, audit}`; older rows hold plain prose.
+  - Masters from the guided builder hold the flattened answers (`answersToText`) in `source_text`: the person's words are the original.
 - `letters(id, sid, kind, job_id, resume_id, content jsonb)`
 - `skill_answers(sid, skill_key, skill, level, detail)` — **per person, not per job**
+- `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from)` — LinkedIn text is stored, never merged into the résumé
+- Better Auth's `user`, `session`, `account`, `verification` (camelCase quoted columns: `"userId"`, `"providerId"`, `"createdAt"`). `sid` everywhere = `user.id`. Rows from the old shared-password sessions remain, unreachable.
 
 ## Hard rules
 
 - **Every query filters by `sid`** (the account's user id). It is the only thing separating people's data. The one exception is `/admin`, gated by `isAdmin`.
 - **No tool calling.** Models return text/JSON; the server renders.
 - **`core/` is the source of truth.** Change prompts there, never in a route. New capability = new `core/<name>.md` + add to `KNOWN` in `prompts.ts`.
-- **Fabrication is enforced in code, not just prompts.** Tailored output must go through `verifyTailoring`. Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.
+- **Fabrication is enforced in code, not just prompts.** Tailored and guided-builder output must go through `verifyTailoring` (the builder passes its answers text as the source). Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.
 - **Prompts never suggest a number** to the user.
 - **The fit score is arithmetic in `match.ts`, never a model output.** Evidence quotes must pass `verifyEvidence`; answers may raise a requirement, never lower it; no score is shown for tailored copies.
 - **Master résumés are never deleted.** Delete routes filter `parent_id IS NOT NULL` in SQL.
 - **No outcome guarantees** in copy ("X% interviews", "beats the ATS"): not deliverable, and an FTC risk.
 - **Secrets only in `web/.env.local`** (gitignored) and the Vercel dashboard. Never print a key; scripts that need one read it and report lengths only.
 - **Scan commits for key-shaped strings and `postgresql://user:pass@` before every push.**
+- **Never use real credentials in local browser tests.** Use the `web-localtest` server in `.claude/launch.json` (port 3001, own `BETTER_AUTH_URL`, test `ADMIN_EMAILS`) and `@example.com` accounts; `.env.local` may point at the production database.
+- **Password-reset links travel only in response bodies** — never in URLs, query strings or logs; whoever holds one can set the password.
 - **Form posts redirect with `backWithError`,** never return raw JSON to a browser form.
 - Design tokens in `web/app/globals.css` are fixed by the UX spec; spacing 4/8/12/16/24/32/48/64, type 12–28px, no gradients/emoji/"AI-powered" copy, no exclamation marks.
 
@@ -112,7 +118,7 @@ reset links come from the Reset link button on `/admin`).
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 108 tests
+cd web && npm test                         # Vitest, 110 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
@@ -123,7 +129,11 @@ cd web && npm run build                    # prebuild copies ../core first
 ## Gotchas (found live)
 
 - `Response.redirect()` returns **immutable headers** — can't add `Set-Cookie`. Build the 303 by hand (`redirect.ts`).
-- Edge middleware can't import anything that pulls in `node:crypto`; keep `COOKIE_NAME` alone in `cookie.ts`.
+- Next 16 renamed `middleware.ts` → `proxy.ts` (export `proxy`), and proxy runs on Node by default. It only checks the session cookie exists; `requireSid()` validates.
+- Better Auth's migrations issue plain `CREATE TABLE`, so `ensureSchema()` shares one in-flight promise; a run-once flag set at the end let concurrent first requests race. Its "Database schema mismatch — missing tables" log on first boot is its check running before the tables exist.
+- "Sign in with LinkedIn" returns name, email and photo only — never work history. A LinkedIn developer app needs a Company Page.
+- Resend sends only to the account owner until a domain is verified; a `vercel.app` address can't be. Email is off unless `RESEND_API_KEY` and `EMAIL_FROM` are both set.
+- Many repo files are CRLF; scripted string replacement with `\n` silently misses. Use exact-match edits.
 - Reasoning models stream thinking on `delta.reasoning_content`; reading only `content` shows a blank screen for 80s+.
 - `kimi-k3` defaults to `max` effort: 107s → 33s at `low`, with more findings. Always set effort.
 - Vercel Hobby + Fluid Compute allows **300s**; `export const maxDuration = 60` *lowers* it. Model routes use 180.
@@ -143,19 +153,23 @@ cd web && npm run build                    # prebuild copies ../core first
 
 ## Status
 
-**Live (test build, deployed from `main`):** login, add résumé (paste/PDF → parsed), streaming
-review with anchored findings, jobs hub, gap questions, tailoring with audit panel, cover
-letters with facts/gaps, metric questions, print-to-PDF.
+**On `main` (deploys to production), still behind the shared test password:** S1 and S2 — add
+résumé, streaming review, jobs hub, fit score with verified evidence (`/jobs/[id]`), tailoring
+with audit panel, cover letters, metric questions, AI disclosure, delete/applied, filler-phrase
+check, `/ats-check`, Word download, print-to-PDF — plus empty résumé sections skipped in all
+three renderers (`1ea5450`). Whether S2 was clicked through signed-in on the live site isn't
+recorded here.
 
-**Built, not yet deployed (S2, branch `claude/resume-platform-analysis-35bb9c`, 8 commits):**
-fit score with verified evidence and hard-filter warnings (`/jobs/[id]`) replacing gap
-questions, AI disclosure at sign-in, delete jobs/tailored copies, applied flag, filler-phrase
-check, Word (.docx) download, "what an ATS sees" PDF check (`/ats-check`), dropped bullets
-restored word for word, unsupported numbers marked inline, elapsed-time counters. None of it
-has been clicked through in a signed-in browser yet.
+**Built, not yet deployed (S3, branch `claude/user-profile-linkedin-resume-b26e2b`, 17 commits,
+one commit behind `main`):** `/start` onboarding (résumé and/or LinkedIn PDF or export zip),
+guided builder `/start/build`, real accounts (`/login`, `/signup`, `/reset`, Better Auth),
+optional career basics, `/admin` with usage and reset links. Clicked through on the local test
+server with email accounts; **Google and LinkedIn sign-in untested** (no OAuth apps yet).
+Deploying it signs everyone out and starts them on empty accounts (decided).
 
-**Not built:** cold email, LinkedIn (two modes designed), interview prep (mocked up), inline
-résumé editing, real accounts, MCP server. Pages exist as honest "Not built yet" placeholders.
+**Not built:** cold email, LinkedIn fixer (two modes designed; `profiles.linkedin_text` is
+waiting for it), interview prep (mocked up), inline résumé editing, MCP server. Pages exist as
+honest "Not built yet" placeholders.
 
 **Known weaknesses:** no in-app editing, so flagged numbers, filler phrases and restored
 bullets can only be fixed by re-tailoring or after export; restored bullets go at the end of
@@ -164,15 +178,16 @@ ATSs vary.
 
 ## Next
 
-1. Push S2 to `main`, then click through every S2 feature signed-in on the live site.
-2. Inline résumé editing: every check we add points at text the person cannot yet change.
-3. Keyword coverage on the tailored document (literal posting terms present), as a separate number from fit.
-4. Cold email, then LinkedIn.
-5. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
-6. Consider PRs + Vercel preview deploys instead of merging straight to `main`.
+1. Ship S3: merge `main` into the branch, open a PR (preview deploy), set Vercel env (`BETTER_AUTH_SECRET` new, `BETTER_AUTH_URL` = live origin, `ADMIN_EMAILS`; remove `APP_PASSWORD`), create the Google and LinkedIn OAuth apps (callbacks `/api/auth/callback/google|linkedin`) and test both sign-ins.
+2. Moonshot spend cap — sign-up is open with no limits.
+3. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
+4. Inline résumé editing: every check we add points at text the person cannot yet change.
+5. Keyword coverage on the tailored document, as a separate number from fit.
+6. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
 
 ## Session History
 
 - **Pre-log** (up to 2026-06-27, commits `b6f309f`…`7b44846`) - Built the plugin: eight skills + commands, ATS rules, themeable HTML template, WeasyPrint PDF pipeline, plugin packaging, `INSTRUCTIONS.md`. Not recorded as dated sessions; see HANDOVER "Current state" and "Roadmap".
 - **S1** (2026-09-19 → 09-22) - Built and deployed the web app: specs + mockup, `core/` extraction, Next.js/Neon/Kimi, test login, jobs, tailoring, cover letters; code-enforced anti-fabrication after an audit found 8 skills stuffed from a JD; gap and metric questions.
 - **S2** (2026-09-24) - Market research (no competitor enforces anti-fabrication; "75% auto-rejected by ATS" is a 2012 sales pitch) → dropped the planned "80% guarantee", no auto-apply, pricing on hold. Built: fit score from verified evidence (`core/job-match.md` replaces gap-questions; spread 13 → 2 pts over 4 live rounds), AI disclosure, delete/applied, filler-phrase check, restored bullets, inline number flags, elapsed counters, `/ats-check`, hand-written .docx. 81 → 108 tests; not pushed.
+- **S3** (2026-09-27 → 10-01) - Onboarding at `/start` from a résumé and/or LinkedIn (PDF or export zip via a hand-written zip/CSV reader); guided builder for people with neither (`core/resume-build.md`, answers as source, checked by `verifyTailoring`); then real accounts on Better Auth (email + password, Google, LinkedIn; user id fills `sid`), career basics, `/admin` with reset links (no domain yet for email; self-hosted BunMail rejected). 108 → 110 tests; 17 commits, not pushed.

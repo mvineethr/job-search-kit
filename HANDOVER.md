@@ -4,7 +4,7 @@ Context for anyone (human or AI agent) picking this project up later. This file 
 **public** — no personal data lives here. Personal job-search specifics are kept in a
 local, gitignored notes file (see "Local notes" below).
 
-_Last updated: 2026-09-24._ The standing dev brief (module map, hard rules, gotchas) is
+_Last updated: 2026-10-01._ The standing dev brief (module map, hard rules, gotchas) is
 `CLAUDE.md`; this file is the narrative.
 
 ## What this repo is
@@ -14,8 +14,129 @@ capability is both an auto-triggered **skill** (`skills/<name>/SKILL.md`) and an
 **slash command** (`commands/<name>.md`). Works in Claude Code / Cowork.
 
 Since September 2026 it is also a **web app** (`web/`, Next.js on Vercel + Neon + Kimi),
-password-gated for testing, so people without a terminal-based AI agent can use it. The
-plugin and the web app read the same prompts from `core/`.
+password-gated for testing (real accounts are built on a branch; see the 2026-09-27 → 10-01
+session), so people without a terminal-based AI agent can use it. The plugin and the web app
+read the same prompts from `core/`.
+
+---
+
+## Session 2026-09-27 → 10-01: onboarding from what you have, a builder that can't invent, and real accounts
+
+Extends both earlier sessions: the guided builder reuses the `verifyTailoring` check from
+2026-09-19 → 09-22, and the LinkedIn zip reader mirrors the hand-written zip writer from
+2026-09-24. **Everything here is on branch `claude/user-profile-linkedin-resume-b26e2b`
+(17 commits, `bafe3e7`…`f3a41c4`), not pushed, not deployed.** Meanwhile `origin/main` gained
+S2 and `1ea5450` (empty résumé sections skipped, done in a separate session spun off from this
+one), so the branch is one commit behind `main` and needs it merged before a PR.
+
+### What was asked
+
+1. A user profile: same page structure, but a new user starts by giving their LinkedIn
+   export and/or résumé, and if they have neither, the app helps them create one.
+2. Then, after that worked: "having one user profile is a big problem now, people started to
+   use it" — real profiles/accounts, so we know more about users and can build on it.
+
+### Decisions (asked one at a time)
+
+- Onboarding sits on the existing session first; accounts came second.
+- No résumé and no LinkedIn → guided questions; the model rephrases the person's own words.
+- LinkedIn: both the profile PDF and the data-export zip.
+- Both given → résumé is the master; LinkedIn text stored on the profile, never merged.
+- Plan executed inline, not one subagent per task.
+- Sign-in: Google, email + password, and LinkedIn (maintainer's call: all three).
+- Email: Resend, in a separate account (a second team is paid). Self-hosting with BunMail was
+  evaluated and rejected: needs a VPS and outbound port 25, and a fresh IP's mail lands in
+  spam. **No domain yet**, so emailed resets wait; until then, admins generate reset links.
+- Existing testers: **start fresh** (old session data stays in the database, unreachable).
+- Sign-up: **anyone, no limits**.
+- Learn about users: career basics, "how did you find us", per-user usage, an admin page.
+- Library: Better Auth 1.7.7, read from its installed source before designing (Next 16
+  support, `getMigrations()`, the reset-link shape).
+
+Specs: `docs/superpowers/specs/2026-09-27-profile-onboarding-design.md`,
+`docs/superpowers/specs/2026-10-01-accounts-design.md`. Plan:
+`docs/superpowers/plans/2026-09-27-profile-onboarding.md`.
+
+### What was built
+
+- **LinkedIn zip** (`0d310c9`): `lib/linkedin-zip.ts` — `unzip` (central directory +
+  `inflateRawSync`, only wanted entries, 5 MB cap each), `parseCsv`, `linkedinZipToText`
+  (Profile, Positions, Education, Skills, Email Addresses CSVs → résumé-like text;
+  `NOT_LINKEDIN` error otherwise).
+- **Uploads** (`529e9b6`): `/api/extract` routes `.zip`; `TextOrFileInput` takes
+  `label`/`accept`/`buttonLabel` and uses `useId()` (two on one page).
+- **Profiles + shared save** (`9ee52e6`): `profiles` table; `lib/save-master.ts` (parse +
+  insert, used by `/api/resumes` and `/api/profile`); `lib/profile.ts`.
+- **`/start`** (`5f8d6ea`): `components/StartForm.tsx`; home redirects new users there.
+- **Guided builder** (`d2e246e`, `311f297`): `lib/build-answers.ts` (`BuildAnswersSchema`,
+  `answersToText`), `core/resume-build.md` (in `KNOWN`), `POST /api/profile/build` (primary
+  tier → `ResumeSchema` → `verifyTailoring(built, null, answersText)` → master with
+  `source_text` = answers; JSON response so failures keep the answers on screen),
+  `/start/build` with `components/BuildForm.tsx` (3 steps).
+- **Accounts** (`859a335`): `lib/auth-server.ts` (Better Auth on a Neon `Pool`; Google/LinkedIn
+  only when configured; account linking; `sendResetPassword` emails when configured, else
+  parks the URL in `pendingResetLinks`), `/api/auth/[...all]`, `lib/auth.ts`
+  (`currentUser`, `currentSid`/`requireSid` = user id), `lib/email.ts`, `lib/admin.ts`.
+  `ensureSchema()` runs Better Auth's `getMigrations()` and now shares one in-flight promise.
+  Removed `session.ts`, `cookie.ts`, `/api/login`, `test/session.test.ts`, `APP_PASSWORD`.
+- **Pages** (`3509b0d`): `/login`, `/signup`, `/reset`, `components/AuthForm.tsx` (sign-up
+  buttons, social included, disabled until the AI box is ticked), `ResetForm.tsx`,
+  `SignOutButton.tsx`, `lib/auth-client.ts`; home card shows name/email, Sign out, Admin.
+- **Career basics** (`a60bc9b`): `profiles` columns, `POST /api/profile/about` (choice fields
+  allow-listed, text capped at 200), `components/AboutForm.tsx` on `/start`. Home redirect
+  changed to "no résumé yet" (About-you creates a profile row).
+- **Admin** (`9b47d77`): `/admin` (404 for non-admins; the one cross-`sid` query),
+  `POST /api/admin/reset-link` (403 for non-admins; link returned in the body only),
+  `components/ResetLinkButton.tsx`. Replaced the planned `npm run reset-link` script.
+- **Proxy** (`b9df6fc`): `middleware.ts` → `proxy.ts` for Next 16; `.claude/launch.json`
+  `web-localtest` server.
+- Env placeholders in `web/.env.example` (`d25f249`, `859a335`); `CLAUDE.md` (`f3a41c4`).
+
+### Found along the way
+
+- The real `APP_PASSWORD` also signs production cookies, so it was never typed into local
+  tests; a throwaway-password server was used instead (later repurposed for accounts with a
+  test admin email).
+- `ensureSchema()`'s run-once flag would race on Better Auth's plain `CREATE TABLE`.
+- The old home redirect ("no profile and no résumé") would have broken once About-you
+  created profile rows.
+- Better Auth logs "Database schema mismatch — missing tables" once before the first request
+  creates them; harmless.
+- Next 16 deprecation warning for `middleware.ts`; a transient "must export a function"
+  error appeared mid-rename.
+- A scripted edit missed on a CRLF file; redone as exact-match edits.
+- Empty "EDUCATION" heading on résumés without education (all three renderers): pre-existing,
+  spun off; fixed on `main` as `1ea5450`.
+- The desktop app quit mid-commit; edits were intact and committed after restart.
+
+### Verified (local server, port 3001)
+
+- Tests 108 → 116 (onboarding) → 110 (accounts: session tests removed, 4 added); `tsc` and
+  `next build` clean; branch scanned for connection strings and key-shaped strings: none.
+- Onboarding: new session → `/start`; a fake LinkedIn export through the real upload →
+  clean text → master "From LinkedIn", all sections parsed; home showed the name.
+- Builder: one café role in plain words → 5 bullets, the person's "4" kept, one
+  `[METRIC NEEDED]` picked up by "Tell us the numbers"; finished within the first 10-second
+  check. Empty `/start` post → back with error; bad builder JSON → 400.
+- Accounts: signed out → `/login`; social buttons hidden without keys; sign-up blocked until
+  the AI box is ticked; first sign-up created the auth tables and landed on `/start`;
+  About-you saved and reloaded; `/admin` row correct; reset link → new password (old 401,
+  new 200); non-admin: `/admin` 404, reset API 403; signed-out data route → sign-in.
+- **Not verified:** Google and LinkedIn sign-in (no OAuth apps yet); a real LinkedIn export or
+  profile PDF; résumé + LinkedIn together; anything on the live site.
+
+### Pending
+
+- Merge `main` into the branch; PR with preview deploy (recommended) or merge to `main`.
+- Vercel env: new `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` = live origin, `ADMIN_EMAILS`;
+  remove `APP_PASSWORD`. Google OAuth client and LinkedIn app (needs a Company Page).
+- Domain → Resend verification → `EMAIL_FROM` for emailed resets.
+- Tell current testers they'll start with empty accounts.
+- Test data written to the database in `.env.local`: accounts `admin-test@example.com`,
+  `normal-test@example.com` and two onboarding test résumés (under old session ids). Remove
+  if that is production.
+- Admin button only shows once an admin has a résumé (`/admin` always works).
+- Moonshot spend cap is more pressing with open sign-up.
 
 ---
 
