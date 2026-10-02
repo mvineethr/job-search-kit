@@ -2,7 +2,7 @@
 
 Standing brief for any AI agent working in this repo. Full history is in `HANDOVER.md`.
 This repo is **public** (MIT) — never commit personal data, résumés, keys, connection
-strings, or the test password.
+strings, or auth secrets.
 
 ## What this is
 
@@ -11,7 +11,7 @@ source:
 
 1. **Claude Code plugin** — `skills/`, `commands/`, `prompts/linkedin/`, `shared/`,
    `scripts/render_pdf.py`. Installable via `.claude-plugin/`.
-2. **Web app** — `web/` (Next.js), deployed on Vercel behind a shared test password.
+2. **Web app** — `web/` (Next.js), deployed on Vercel, with accounts (Better Auth: email + password, Google, LinkedIn).
 
 Both read their prompt substance from **`core/*.md`**. A future MCP server is planned as a
 third surface (free distribution, not revenue).
@@ -60,7 +60,9 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 | `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
 | `db.ts` | Neon via plain SQL; `ensureSchema()` creates tables on demand |
-| `session.ts` / `cookie.ts` / `auth.ts` | shared password + HMAC-signed session cookie; `requireSid()` |
+| `auth-server.ts` / `auth.ts` / `auth-client.ts` | Better Auth config; `currentUser()`, `requireSid()` (= user id); browser client |
+| `admin.ts` / `email.ts` | `isAdmin` (`ADMIN_EMAILS`); Resend via fetch, off unless `RESEND_API_KEY` and `EMAIL_FROM` are both set |
+| `profile.ts` / `save-master.ts` / `build-answers.ts` / `linkedin-zip.ts` | onboarding: profile + career basics; parse-and-save a master; guided-builder answers; LinkedIn export zip → text |
 | `redirect.ts` | `redirectTo`, `backWithError` for form posts |
 
 ## Data model (Neon)
@@ -76,7 +78,7 @@ docs/superpowers/        specs (design, UX architecture) and the Phase 1 plan
 
 ## Hard rules
 
-- **Every query filters by `sid`.** It is the only thing separating testers' data.
+- **Every query filters by `sid`** (the account's user id). It is the only thing separating people's data. The one exception is `/admin`, gated by `isAdmin`.
 - **No tool calling.** Models return text/JSON; the server renders.
 - **`core/` is the source of truth.** Change prompts there, never in a route. New capability = new `core/<name>.md` + add to `KNOWN` in `prompts.ts`.
 - **Fabrication is enforced in code, not just prompts.** Tailored output must go through `verifyTailoring`. Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.
@@ -101,7 +103,10 @@ Unset fast tier silently uses primary. Tailoring stays on primary: the fast mode
 matches (found 2 gaps where k3 found 4). Base URL `https://api.moonshot.ai/v1`; check model ids
 with `GET /v1/models` — `kimi-k3` reports `think_efforts` default `max`.
 
-Other env: `DATABASE_URL` (Neon **pooled** string), `APP_PASSWORD`.
+Other env: `DATABASE_URL` (Neon **pooled** string), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+(must be the deployed origin), `GOOGLE_CLIENT_ID/SECRET`, `LINKEDIN_CLIENT_ID/SECRET` (blank hides
+that button), `ADMIN_EMAILS`, `RESEND_API_KEY` + `EMAIL_FROM` (both needed; no domain yet, so
+reset links come from the Reset link button on `/admin`).
 
 ## Run / test / deploy
 
@@ -163,7 +168,7 @@ ATSs vary.
 2. Inline résumé editing: every check we add points at text the person cannot yet change.
 3. Keyword coverage on the tailored document (literal posting terms present), as a separate number from fit.
 4. Cold email, then LinkedIn.
-5. Real accounts (Google sign-in) to replace the shared password.
+5. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
 6. Consider PRs + Vercel preview deploys instead of merging straight to `main`.
 
 ## Session History
