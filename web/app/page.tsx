@@ -1,14 +1,17 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { currentSid } from '@/lib/auth';
+import { currentUser } from '@/lib/auth';
+import { isAdmin } from '@/lib/admin';
+import SignOutButton from '@/components/SignOutButton';
 import { getProfile } from '@/lib/profile';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const sid = await currentSid();
-  if (!sid) return null;
+  const user = await currentUser();
+  if (!user) return null;
+  const sid = user.id;
 
   await ensureSchema();
   const q = sql();
@@ -21,18 +24,17 @@ export default async function Home() {
     FROM jobs WHERE sid = ${sid}`) as unknown as JobRow[];
 
   const profile = await getProfile(sid);
-  // Brand-new session: onboarding first. Anyone who already has a résumé is left alone.
+  // New account: onboarding first. Anyone who already has a résumé is left alone.
   if (!profile && resumes.length === 0) redirect('/start');
 
-  const displayName = profile?.name || 'Test build';
-  const initials =
-    profile?.name
-      ?.split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join('')
-      .toUpperCase() || 'JS';
+  const displayName = user.name || profile?.name || user.email;
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
 
   const hasResume = resumes.length > 0;
 
@@ -54,18 +56,18 @@ export default async function Home() {
           <strong>{displayName}</strong>
           <span className="tnum">
             {resumes.length} {resumes.length === 1 ? 'résumé' : 'résumés'} · {jobs.length}{' '}
-            {jobs.length === 1 ? 'job' : 'jobs'} · kept to this browser
+            {jobs.length === 1 ? 'job' : 'jobs'} · {user.email}
           </span>
         </div>
         <Link href="/start" className="btn">
           Profile
         </Link>
-        <form method="post" action="/api/login">
-          <input type="hidden" name="_method" value="delete" />
-          <Link href="/login" className="btn">
-            Switch session
+        {isAdmin(user.email) && (
+          <Link href="/admin" className="btn">
+            Admin
           </Link>
-        </form>
+        )}
+        <SignOutButton />
       </div>
 
       <div className="sec">
