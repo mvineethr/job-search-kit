@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { isAdmin } from '@/lib/admin';
 import SignOutButton from '@/components/SignOutButton';
-import { getProfile } from '@/lib/profile';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -23,11 +22,10 @@ export default async function Home() {
     SELECT id, company, role, description, analysis, created_at
     FROM jobs WHERE sid = ${sid}`) as unknown as JobRow[];
 
-  const profile = await getProfile(sid);
-  // New account: onboarding first. Anyone who already has a résumé is left alone.
-  if (!profile && resumes.length === 0) redirect('/start');
+  // Nothing to show without a résumé, so new accounts start with onboarding.
+  if (resumes.length === 0) redirect('/start');
 
-  const displayName = user.name || profile?.name || user.email;
+  const displayName = user.name || user.email;
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)

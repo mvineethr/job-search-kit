@@ -1,8 +1,19 @@
 import Link from 'next/link';
 import StartForm from '@/components/StartForm';
+import AboutForm from '@/components/AboutForm';
+import { currentSid } from '@/lib/auth';
+import { getProfile } from '@/lib/profile';
 
-export default async function StartPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams;
+export const dynamic = 'force-dynamic';
+
+export default async function StartPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; saved?: string }>;
+}) {
+  const { error, saved } = await searchParams;
+  const sid = await currentSid();
+  const profile = sid ? await getProfile(sid) : null;
 
   return (
     <div className="wrap" style={{ maxWidth: 720 }}>
@@ -13,6 +24,8 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
           text and then discarded. Check the text before you continue.
         </p>
       </div>
+
+      <AboutForm profile={profile} saved={Boolean(saved)} />
 
       {error && (
         <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-4)' }}>
