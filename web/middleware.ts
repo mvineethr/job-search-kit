@@ -1,17 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { COOKIE_NAME } from '@/lib/cookie';
+import { getSessionCookie } from 'better-auth/cookies';
 
 /**
- * Gate the whole app behind the test password.
+ * Send signed-out visitors to the sign-in page.
  *
- * The signature is NOT verified here — middleware runs on the edge runtime,
- * where node:crypto is unavailable. This only checks a cookie is present, which
- * is enough to redirect strangers to the login page. Every route that reads or
- * writes data verifies the signature properly via requireSid(), so a forged
- * cookie gets past this and then fails where it matters.
+ * This only checks that a session cookie is present; it cannot validate it on
+ * the edge runtime without a database call. Every route that reads or writes
+ * data validates the session properly via requireSid(), so a forged cookie gets
+ * past this and then fails where it matters.
  */
 export function middleware(req: NextRequest) {
-  if (req.cookies.has(COOKIE_NAME)) return NextResponse.next();
+  if (getSessionCookie(req)) return NextResponse.next();
 
   const url = req.nextUrl.clone();
   url.pathname = '/login';
@@ -21,7 +20,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // everything except the login flow, Next internals, and static files
-    '/((?!login|api/login|_next/static|_next/image|favicon.ico).*)',
+    // everything except sign-in, sign-up, password reset, the auth API, Next internals and static files
+    '/((?!login|signup|reset|api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
 };
