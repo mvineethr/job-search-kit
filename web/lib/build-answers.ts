@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { METRIC_NEEDED, type Resume } from './resume-schema';
+import type { TailoringAudit } from './verify-tailoring';
 
 const text = z.string().trim();
 
@@ -59,4 +61,30 @@ export function answersToText(a: BuildAnswers): string {
 
   if (a.skills) lines.push('', `Skills: ${a.skills}`);
   return lines.join('\n');
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * For a built résumé the answers are the only source, so claims the verifier
+ * could not find in them are removed rather than reported: a master shows no
+ * audit, and anything left in becomes "the original" for every later tailoring.
+ * An unsupported number becomes the [METRIC NEEDED] marker (the metric questions
+ * then ask for the real one); an unsupported employer means an invented role,
+ * which is dropped. Throws if that leaves no role, so nothing invented is saved.
+ */
+export function stripUnsupportedClaims(resume: Resume, audit: TailoringAudit): Resume {
+  const numbers = audit.unsupportedNumbers.map(
+    // Whole tokens only: "40" must not mark the "40" inside "400".
+    (n) => new RegExp(`(?<![\\d.,])${escapeRe(n)}(?![\\d%])`, 'g'),
+  );
+  const mark = (text: string) => numbers.reduce((t, re) => t.replace(re, METRIC_NEEDED), text);
+  const invented = new Set(audit.unsupportedEmployers.map((c) => c.toLowerCase().trim()));
+
+  const experience = resume.experience
+    .filter((r) => !invented.has(r.company.toLowerCase().trim()))
+    .map((r) => ({ ...r, bullets: r.bullets.map(mark) }));
+  if (!experience.length) throw new Error('every role in the built résumé names an employer not in the answers');
+
+  return { ...resume, summary: mark(resume.summary), experience };
 }

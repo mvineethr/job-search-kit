@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BuildAnswersSchema, answersToText } from '@/lib/build-answers';
+import { BuildAnswersSchema, answersToText, stripUnsupportedClaims } from '@/lib/build-answers';
 import { verifyTailoring } from '@/lib/verify-tailoring';
 import type { Resume } from '@/lib/resume-schema';
 
@@ -57,5 +57,46 @@ describe('verifying a built résumé against the answers', () => {
     expect(cleaned.skills).toEqual(['Excel']);
     expect(audit.unsupportedNumbers).toContain('30%');
     expect(audit.unsupportedNumbers).not.toContain('4');
+  });
+});
+
+describe('stripUnsupportedClaims', () => {
+  // Codex review on PR #3: the builder saved a master with invented numbers and
+  // employers still in it, and masters show no audit. The answers are the only
+  // source for a built résumé, so unsupported claims are removed, not reported.
+  const built: Resume = {
+    name: 'Sam Okafor',
+    contact: {},
+    summary: 'Shift lead who cut waste by 30%.',
+    skills: ['Excel'],
+    experience: [
+      { title: 'Shift lead', company: 'Corner Café', start: '2022', end: 'Present', bullets: ['Trained 4 new staff', 'Cut waste by 30%', 'Served 300 customers a day'] },
+      { title: 'Barista', company: 'Starbucks', start: '2020', end: '2022', bullets: ['Made coffee'] },
+    ],
+    education: [],
+  };
+
+  it('replaces invented numbers with the marker, keeps the person’s own, and drops invented employers', () => {
+    const source = answersToText(answers);
+    const { audit } = verifyTailoring(built, null, source);
+    const out = stripUnsupportedClaims(built, audit);
+
+    expect(out.experience.map((r) => r.company)).toEqual(['Corner Café']);
+    expect(out.experience[0].bullets).toEqual([
+      'Trained 4 new staff',
+      'Cut waste by [METRIC NEEDED]',
+      'Served [METRIC NEEDED] customers a day',
+    ]);
+    expect(out.summary).toBe('Shift lead who cut waste by [METRIC NEEDED].');
+    // Nothing unsupported is left for the verifier to find.
+    const again = verifyTailoring(out, null, source).audit;
+    expect(again.unsupportedNumbers).toEqual([]);
+    expect(again.unsupportedEmployers).toEqual([]);
+  });
+
+  it('never leaves a résumé with no roles', () => {
+    const allInvented: Resume = { ...built, experience: [built.experience[1]] };
+    const { audit } = verifyTailoring(allInvented, null, answersToText(answers));
+    expect(() => stripUnsupportedClaims(allInvented, audit)).toThrow();
   });
 });

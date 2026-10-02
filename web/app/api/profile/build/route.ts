@@ -6,7 +6,7 @@ import { completeText } from '@/lib/provider';
 import { extractJsonObject } from '@/lib/extract-json';
 import { ResumeSchema } from '@/lib/resume-schema';
 import { verifyTailoring } from '@/lib/verify-tailoring';
-import { BuildAnswersSchema, answersToText } from '@/lib/build-answers';
+import { BuildAnswersSchema, answersToText, stripUnsupportedClaims } from '@/lib/build-answers';
 import { upsertProfile } from '@/lib/profile';
 
 export const runtime = 'nodejs';
@@ -44,8 +44,11 @@ export async function POST(req: Request) {
     const built = ResumeSchema.safeParse(extractJsonObject(reply));
     if (!built.success) throw new Error('built JSON did not match the schema');
 
-    // Anything the answers do not support is removed; the answers are the source.
-    const { cleaned } = verifyTailoring(built.data, null, source);
+    // The answers are the only source. Unsupported skills are removed by the
+    // verifier; unsupported numbers and employers are removed here too, because a
+    // master shows no audit and would pass them on to every later tailoring.
+    const { cleaned: noSkills, audit } = verifyTailoring(built.data, null, source);
+    const cleaned = stripUnsupportedClaims(noSkills, audit);
 
     await ensureSchema();
     const id = randomUUID();

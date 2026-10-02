@@ -145,7 +145,8 @@ cd web && npm run build                    # prebuild copies ../core first
 - A sign-up checkbox doesn't bind social sign-ups: "Continue with Google" on `/login` creates accounts too. That's why agreement is the proxy-enforced `/agree` page.
 - `redirect_uri_mismatch` = `BETTER_AUTH_URL` + `/api/auth/callback/google` isn't character-for-character in the Google client's list. Vercel previews get random URLs, so test Google locally or on production. Google OAuth apps in Testing mode admit only listed users, for 7 days.
 - Loading Google Fonts from Google sends visitors' IPs to Google; fonts are self-hosted via `next/font` (`--font-sans`/`--font-serif` set on `<html>`).
-- The root layout calls `currentUser()` on every page (for the menu), so every page is dynamic.
+- The root layout calls `currentUser()` on every page (for the menu), so every page is dynamic. `currentUser()` must call `headers()` **before** any DB access, or `next build` pre-renders static pages (`/_not-found`, `/ats-check`) against the database and the Vercel build fails. Reproduce with `DATABASE_URL=postgresql://x:x@127.0.0.1:1/x npm run build`.
+- Built résumés go through `stripUnsupportedClaims` after `verifyTailoring`: a master shows no audit, so invented numbers become `[METRIC NEEDED]` and invented employers' roles are dropped.
 - Reasoning models stream thinking on `delta.reasoning_content`; reading only `content` shows a blank screen for 80s+.
 - `kimi-k3` defaults to `max` effort: 107s → 33s at `low`, with more findings. Always set effort.
 - Vercel Hobby + Fluid Compute allows **300s**; `export const maxDuration = 60` *lowers* it. Model routes use 180.
