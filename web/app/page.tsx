@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { currentSid } from '@/lib/auth';
+import { getProfile } from '@/lib/profile';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +20,20 @@ export default async function Home() {
     SELECT id, company, role, description, analysis, created_at
     FROM jobs WHERE sid = ${sid}`) as unknown as JobRow[];
 
+  const profile = await getProfile(sid);
+  // Brand-new session: onboarding first. Anyone who already has a résumé is left alone.
+  if (!profile && resumes.length === 0) redirect('/start');
+
+  const displayName = profile?.name || 'Test build';
+  const initials =
+    profile?.name
+      ?.split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase() || 'JS';
+
   const hasResume = resumes.length > 0;
 
   return (
@@ -32,15 +48,18 @@ export default async function Home() {
 
       <div className="identity">
         <div className="identity-avatar" aria-hidden="true">
-          JS
+          {initials}
         </div>
         <div className="identity-main">
-          <strong>Test build</strong>
+          <strong>{displayName}</strong>
           <span className="tnum">
             {resumes.length} {resumes.length === 1 ? 'résumé' : 'résumés'} · {jobs.length}{' '}
             {jobs.length === 1 ? 'job' : 'jobs'} · kept to this browser
           </span>
         </div>
+        <Link href="/start" className="btn">
+          Profile
+        </Link>
         <form method="post" action="/api/login">
           <input type="hidden" name="_method" value="delete" />
           <Link href="/login" className="btn">
