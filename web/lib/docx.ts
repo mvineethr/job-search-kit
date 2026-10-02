@@ -42,8 +42,8 @@ export function resumeDocumentXml(r: Resume): string {
     para(run([c.location, c.phone, c.email, c.linkedin].filter(Boolean).join(' | ')), { after: 120 }),
   ];
 
-  if (r.summary) body.push(heading('Summary'), para(run(r.summary)));
-  body.push(heading('Skills'), para(run(r.skills.join(', '))));
+  if (r.summary.trim()) body.push(heading('Summary'), para(run(r.summary)));
+  if (r.skills.length) body.push(heading('Skills'), para(run(r.skills.join(', '))));
 
   body.push(heading('Experience'));
   for (const role of r.experience) {
@@ -54,7 +54,7 @@ export function resumeDocumentXml(r: Resume): string {
     );
   }
 
-  body.push(heading('Education'));
+  if (r.education.length) body.push(heading('Education'));
   for (const e of r.education) {
     body.push(para(run(e.degree, { bold: true }) + run(`, ${e.school}${e.year ? `, ${e.year}` : ''}`)));
   }

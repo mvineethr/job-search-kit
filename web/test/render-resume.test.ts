@@ -47,4 +47,11 @@ describe('renderResumeHtml', () => {
     delete none.certifications;
     expect(renderResumeHtml(none)).not.toContain('<h2>Certifications</h2>');
   });
+
+  it('skips sections with no content', () => {
+    const bare = { ...resume, summary: '', skills: [], education: [], certifications: [] };
+    const out = renderResumeHtml(bare);
+    for (const h of ['Summary', 'Skills', 'Education', 'Certifications']) expect(out).not.toContain(`<h2>${h}</h2>`);
+    expect(out).toContain('<h2>Experience</h2>');
+  });
 });
