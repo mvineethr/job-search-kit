@@ -4,12 +4,12 @@ import { getSessionCookie } from 'better-auth/cookies';
 /**
  * Send signed-out visitors to the sign-in page.
  *
- * This only checks that a session cookie is present; it cannot validate it on
- * the edge runtime without a database call. Every route that reads or writes
+ * This only checks that a session cookie is present; validating it here would
+ * cost a database call on every request. Every route that reads or writes
  * data validates the session properly via requireSid(), so a forged cookie gets
  * past this and then fails where it matters.
  */
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (getSessionCookie(req)) return NextResponse.next();
 
   const url = req.nextUrl.clone();
