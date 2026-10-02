@@ -13,6 +13,12 @@ describe('loadPrompt', () => {
     expect(p).toContain('Single column only');
   });
 
+  it('loads the build prompt with the ATS rules substituted', () => {
+    const p = loadPrompt('resume-build');
+    expect(p).toContain('Resume Build');
+    expect(p).not.toContain('{{ATS_RULES}}');
+  });
+
   it('throws on an unknown capability rather than returning an empty prompt', () => {
     expect(() => loadPrompt('does-not-exist')).toThrow();
   });
