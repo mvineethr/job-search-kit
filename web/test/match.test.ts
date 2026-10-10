@@ -114,6 +114,14 @@ describe('viewMatch', () => {
     expect(after.score).toBeGreaterThan(before.score!);
   });
 
+  it('does not say "you have this" for something only tried', () => {
+    const v = viewMatch(stored([req({ skill: 'Chaos engineering', status: 'missing' })]), [
+      { skill: 'Chaos engineering', level: 'some', detail: '' },
+    ]);
+    expect(v.requirements[0].status).toBe('partial');
+    expect(v.requirements[0].evidence).toBe('You told us you have tried this.');
+  });
+
   it('does not let a skill answer decide a hard filter', () => {
     const v = viewMatch(stored([req({ skill: 'AWS', category: 'certification', status: 'missing' })]), [
       { skill: 'AWS', level: 'deep', detail: '' },
