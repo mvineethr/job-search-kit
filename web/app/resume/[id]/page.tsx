@@ -66,9 +66,10 @@ export default async function ResumePage({
       }[])[0]?.description
     : undefined;
 
-  // For the review panel: the structured version reads better than raw text.
+  // For the review panel: the structured version reads better than raw text. Empty
+  // fields are dropped, or the review critiques "an empty array" the reader never sees.
   const forReview = resume
-    ? JSON.stringify(resume, null, 2)
+    ? JSON.stringify(resume, (_k, v) => ((Array.isArray(v) && v.length === 0) || v === '' ? undefined : v), 2)
     : (row.source_text ?? '');
 
   return (

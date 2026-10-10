@@ -1,3 +1,4 @@
+import { requireSid } from '@/lib/auth';
 import { loadPrompt } from '@/lib/prompts';
 import { streamCompletion, type ChatMessage } from '@/lib/provider';
 import { encodeEvent } from '@/lib/ndjson';
@@ -8,6 +9,13 @@ export const runtime = 'nodejs';
 export const maxDuration = 180;
 
 export async function POST(req: Request) {
+  // The proxy only checks that a session cookie exists; a forged one would get a free model call.
+  try {
+    await requireSid();
+  } catch {
+    return new Response('Sign in first.', { status: 401 });
+  }
+
   let body: { capability?: string; messages?: ChatMessage[] };
   try {
     body = await req.json();

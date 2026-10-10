@@ -116,7 +116,7 @@ export function viewMatch(match: StoredMatch, answers: Answer[]): MatchView {
     if (!a) return { ...r, answered: false };
     const fromAnswer = answerStatus(a);
     return RANK[fromAnswer] > RANK[r.status]
-      ? { ...r, status: fromAnswer, evidence: a.detail ? `You told us: ${a.detail}` : 'You told us you have this.', answered: true }
+      ? { ...r, status: fromAnswer, evidence: a.detail ? `You told us: ${a.detail}` : fromAnswer === 'met' ? 'You told us you have this.' : 'You told us you have tried this.', answered: true }
       : { ...r, answered: true };
   });
 
