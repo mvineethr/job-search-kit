@@ -1,4 +1,5 @@
 import { extractText, getDocumentProxy } from 'unpdf';
+import { requireSid } from '@/lib/auth';
 import { linkedinZipToText, NOT_LINKEDIN } from '@/lib/linkedin-zip';
 
 export const runtime = 'nodejs';
@@ -7,6 +8,12 @@ export const maxDuration = 30;
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
+  try {
+    await requireSid();
+  } catch {
+    return Response.json({ error: 'Sign in first.' }, { status: 401 });
+  }
+
   let form: FormData;
   try {
     form = await req.formData();
