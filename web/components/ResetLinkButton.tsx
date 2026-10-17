@@ -21,7 +21,7 @@ export default function ResetLinkButton({ email }: { email: string }) {
 
   if (state?.url) {
     return (
-      <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-1)' }}>
+      <span className="stack stack-sm">
         <CopyButton text={state.url} label="Copy reset link" />
         {/* Visible too, in case the clipboard is blocked. */}
         <input type="text" readOnly value={state.url} onFocus={(e) => e.target.select()} aria-label="Reset link" />
@@ -32,11 +32,11 @@ export default function ResetLinkButton({ email }: { email: string }) {
   if (state?.sent) return <span className="hint">Emailed to them.</span>;
 
   return (
-    <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-1)' }}>
+    <span className="stack stack-sm">
       <button type="button" className="btn" disabled={busy} onClick={make}>
         {busy ? 'One moment…' : 'Reset link'}
       </button>
-      {state?.error && <span className="hint" style={{ color: 'var(--danger-text)' }}>{state.error}</span>}
+      {state?.error && <span className="hint reset-error">{state.error}</span>}
     </span>
   );
 }

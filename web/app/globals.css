@@ -309,13 +309,6 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 
 /* ============ profile menu, footer, legal pages ============ */
 
-/* Sign in / Create account switch at the top of both auth pages */
-.auth-switch{display:grid; grid-template-columns:1fr 1fr; gap:var(--s-1); padding:var(--s-1); background:var(--bg-subtle); border:1px solid var(--border); border-radius:8px}
-.auth-switch a{padding:var(--s-2) var(--s-3); border-radius:4px; text-align:center; font-weight:500; color:var(--text-muted); text-decoration:none}
-.auth-switch a:hover{color:var(--text)}
-.auth-switch a{border:1px solid transparent}
-.auth-switch a[aria-current="page"]{background:var(--bg-surface); color:var(--text); border-color:var(--border-strong); box-shadow:0 1px 2px rgba(0,0,0,.08)}
-
 .legal{max-width:70ch; padding-bottom:var(--s-12)}
 .legal h2{font-size:var(--text-base); margin-top:var(--s-8); margin-bottom:var(--s-2)}
 .legal p, .legal li{line-height:1.6; margin-bottom:var(--s-2)}
@@ -444,3 +437,34 @@ input.edit-field{width:auto; min-width:12ch}
 .ats-check-body{flex:1; min-width:0}
 .ats-pre{white-space:pre-wrap; font-family:var(--mono,monospace); font-size:var(--text-xs); line-height:1.6; padding:var(--s-4); border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg-surface); max-height:520px; overflow:auto}
 @media (max-width:1023px){.letter-body{padding:var(--s-6)}}
+
+/* ============ auth ============ */
+.auth{display:grid; place-items:start center; padding:var(--s-12) var(--s-4)}
+.auth-card{width:100%; max-width:400px; box-shadow:var(--shadow-md)}
+.auth-card-wide{max-width:560px}
+.auth .page-head{padding:0 0 var(--s-4)}
+.auth-switch{display:grid; grid-template-columns:1fr 1fr; gap:var(--s-1); padding:var(--s-1); background:var(--bg-subtle); border-radius:var(--r-md)}
+.auth-switch a{padding:6px var(--s-3); border-radius:var(--r-sm); text-align:center; font-weight:500; color:var(--text-muted); text-decoration:none}
+.auth-switch a:hover{color:var(--text)}
+.auth-switch a[aria-current="page"]{background:var(--bg-surface); color:var(--text); box-shadow:var(--shadow-sm)}
+.auth-or{text-align:center}
+.btn-block{width:100%}
+.stack-sm{gap:var(--s-2)}
+.stack-lg{gap:var(--s-4)}
+.agree-list{display:flex; flex-direction:column; gap:var(--s-2); padding-left:var(--s-6)}
+.agree-form{margin-top:var(--s-6)}
+.agree-check{display:flex; gap:var(--s-2); align-items:flex-start}
+.agree-check input{margin-top:3px}
+.kv{display:flex; flex-direction:column; gap:var(--s-2); margin:0}
+.kv-row{display:flex; gap:var(--s-3); font-size:var(--text-sm)}
+.kv-row dt{width:140px; flex:none; color:var(--text-muted)}
+.kv-row dd{margin:0}
+.delete-form{max-width:360px; align-items:flex-start}
+.delete-form .field{align-self:stretch}
+.btn-danger-fill{background:var(--danger); border-color:var(--danger); color:#fff}
+.reset-error{color:var(--danger-text)}
+.table-scroll{overflow-x:auto}
+.table{width:100%; border-collapse:collapse; font-size:var(--text-sm)}
+.table th,.table td{padding:var(--s-2) var(--s-3); border-bottom:1px solid var(--border); text-align:left; vertical-align:top}
+.table th{color:var(--text-muted); white-space:nowrap}
+.block{display:block}
