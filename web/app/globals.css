@@ -335,6 +335,24 @@ input.edit-field{width:auto; min-width:12ch}
 .edit-status{font-size:var(--text-sm); color:var(--text-muted); margin:0 0 var(--s-2)}
 .edit-form{display:grid; gap:var(--s-2); margin-top:var(--s-3); max-width:420px}
 .edit-form-row{display:grid; gap:var(--s-1); font-size:var(--text-sm)}
+
+/* ============ fit score ============ */
+.fit{display:flex; flex-direction:column; gap:6px}
+.fit-large{align-items:center; text-align:center}
+.fit-num{font-size:var(--text-base)}
+.fit-label{font-weight:600}
+.fit-ok{color:var(--ok-text)} .fit-warn{color:var(--warn-text)} .fit-danger{color:var(--danger-text)}
+.fit-counts{font-size:var(--text-xs); color:var(--text-muted)}
+.fit-hard{font-size:var(--text-xs); color:var(--danger-text)}
+.fit-bar{height:6px; border-radius:var(--r-sm); background:var(--border); max-width:240px}
+.fit-bar-fill{height:100%; border-radius:var(--r-sm)}
+.fill-ok{background:var(--ok)} .fill-warn{background:var(--warn)} .fill-danger{background:var(--danger)}
+.fit-track{fill:none; stroke:var(--border); stroke-width:10}
+.fit-arc{fill:none; stroke-width:10; stroke-linecap:round}
+.stroke-ok{stroke:var(--ok)} .stroke-warn{stroke:var(--warn)} .stroke-danger{stroke:var(--danger)}
+.fit-ring-num{font-size:var(--text-2xl); font-weight:700; letter-spacing:-.03em; fill:var(--text); font-variant-numeric:tabular-nums}
+.fit-ring-of{font-size:var(--text-xs); fill:var(--text-muted)}
+
 @media print{
   .edit-only{display:none!important}
   .editable{outline:none!important}
