@@ -4,15 +4,8 @@ import { completeText } from './provider';
 import { extractJsonObject } from './extract-json';
 import { ResumeSchema } from './resume-schema';
 import { MatchOutputSchema, matchSource, verifyEvidence, type StoredMatch } from './match';
-
-/**
- * Today's date is included because the model does not know it: without it, "Jun 2019 –
- * Present" was counted as under seven years in some runs and over in others.
- */
-export function matchMessage(resumeText: string, title: string, description: string, today = new Date()): string {
-  const month = today.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-  return `TODAY: ${month}\n\nMY RESUME:\n${resumeText}\n\nTHE JOB (${title}):\n${description}`;
-}
+import { matchMessage } from './messages';
+export { matchMessage };
 
 /**
  * Matches the most recent master résumé against a posting and stores the
