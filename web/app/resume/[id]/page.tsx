@@ -11,25 +11,8 @@ import AiNotice from '@/components/AiNotice';
 import GenericPhrases from '@/components/GenericPhrases';
 import { resumeParts } from '@/lib/generic-phrases';
 import TailoringAuditPanel from '@/components/TailoringAudit';
-import type { TailoringAudit } from '@/lib/verify-tailoring';
+import { readNote } from '@/lib/resume-edit';
 import { countMarkers } from '@/lib/metric-schema';
-
-/**
- * A tailored row stores {note, audit} as JSON in source_text. Rows written before
- * the audit existed hold plain prose, so fall back to treating it as the note.
- */
-function readNote(raw: string | null): { note: string; audit: TailoringAudit | null } {
-  if (!raw) return { note: '', audit: null };
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && 'note' in parsed) {
-      return { note: String(parsed.note ?? ''), audit: (parsed.audit as TailoringAudit) ?? null };
-    }
-  } catch {
-    // older row: plain text
-  }
-  return { note: raw, audit: null };
-}
 
 export const dynamic = 'force-dynamic';
 
