@@ -39,6 +39,7 @@ web/
   components/            UI pieces
   scripts/copy-core.mjs  prebuild: copies ../core → web/core
   test/                  Vitest; fixtures/priya.json is a fictional person
+  evals/                 prompt test set: 12 fictional pairs, scorers, runner (`npm run eval`, costs money), compare
 docs/superpowers/        specs (design, UX, match score, onboarding, accounts) and plans
 ```
 
@@ -59,6 +60,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `ats-check.ts` | checks on extracted PDF text: readable, no font garbage, email/phone, headings (case-insensitive), dates |
 | `generic-phrases.ts` | flags the `## Banned` words from `ats-rules.md` in résumés/letters, skipping words the posting uses |
 | `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
+| `messages.ts` | the user message each prompt receives (`tailorMessage`, `letterMessage`, `reviewMessage`, `matchMessage`); routes and `evals/` share it |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
 | `db.ts` | Neon via plain SQL; `ensureSchema()` creates tables on demand |
 | `auth-server.ts` / `auth.ts` / `auth-client.ts` | Better Auth config; `currentUser()`, `requireSid()` (= user id); browser client |
@@ -125,8 +127,9 @@ reset links come from the Reset link button on `/admin`).
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 117 tests
+cd web && npm test                         # Vitest, 205 tests
 cd web && npm run build                    # prebuild copies ../core first
+cd web && npm run eval -- --label <name> --dry-run   # prompt test set; drop --dry-run to spend
 ```
 
 - **Vercel:** Root Directory **`web`**, preset Next.js, default build command (a custom one skips `prebuild`). `main` deploys to production.
