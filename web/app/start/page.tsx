@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import StartForm from '@/components/StartForm';
 import AboutForm from '@/components/AboutForm';
+import PageBar from '@/components/PageBar';
 import { currentSid } from '@/lib/auth';
 import { getProfile } from '@/lib/profile';
 
@@ -16,7 +17,9 @@ export default async function StartPage({
   const profile = sid ? await getProfile(sid) : null;
 
   return (
-    <div className="wrap" style={{ maxWidth: 720 }}>
+    <>
+    <PageBar crumbs={[{ label: 'Profile' }]} />
+    <div className="wrap col-720">
       <div className="page-head">
         <h1>Set up your profile</h1>
         <p className="sub">
@@ -28,7 +31,7 @@ export default async function StartPage({
       <AboutForm profile={profile} saved={Boolean(saved)} />
 
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-4)' }}>
+        <p role="alert" className="notice notice-error card-gap">
           {error}
         </p>
       )}
@@ -48,5 +51,6 @@ export default async function StartPage({
         </Link>
       </div>
     </div>
+    </>
   );
 }

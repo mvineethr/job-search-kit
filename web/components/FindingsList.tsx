@@ -50,47 +50,21 @@ export default function FindingsList({ findings }: { findings: Finding[] }) {
   if (findings.length === 0) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
+    <div className="stack">
       {findings.map((f, i) => (
-        <div
-          key={i}
-          style={{
-            border: '1px solid var(--border)',
-            borderLeft: `3px solid ${
-              f.severity === 'critical' ? 'var(--danger)' : 'var(--warn)'
-            }`,
-            borderRadius: 4,
-            padding: 'var(--s-3)',
-            background: 'var(--bg-page)',
-          }}
-        >
-          <p
-            style={{
-              fontSize: 'var(--text-xs)',
-              textTransform: 'uppercase',
-              letterSpacing: '.06em',
-              color: 'var(--text-faint)',
-              marginBottom: 'var(--s-1)',
-            }}
-          >
-            {f.severity === 'critical' ? 'Critical' : 'Worth fixing'} · {SECTION_LABEL[f.section]}
-          </p>
-          <p style={{ marginBottom: 'var(--s-2)', lineHeight: 1.5 }}>{f.finding}</p>
-          {jumpable.has(f.section) && (
-            <button
-              onClick={() => jump(f.section)}
-              style={{
-                fontSize: 'var(--text-xs)',
-                color: 'var(--accent)',
-                fontWeight: 500,
-                textDecoration: 'underline',
-                textUnderlineOffset: 2,
-                padding: 0,
-              }}
-            >
-              Jump to {SECTION_LABEL[f.section]}
-            </button>
-          )}
+        <div key={i} className="find-row find-item">
+          <span className={`tag ${f.severity === 'critical' ? 'tag-high' : 'tag-med'}`}>
+            {f.severity === 'critical' ? 'Critical' : 'Worth fixing'}
+          </span>
+          <div className="stack find-body">
+            <p className="find-where">{SECTION_LABEL[f.section]}</p>
+            <p>{f.finding}</p>
+            {jumpable.has(f.section) && (
+              <button onClick={() => jump(f.section)} className="btn btn-sm self-start">
+                Jump to {SECTION_LABEL[f.section]}
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </div>

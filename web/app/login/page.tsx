@@ -10,17 +10,21 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (await currentUser()) redirect('/');
 
   return (
-    <div className="wrap" style={{ maxWidth: 440 }}>
+    <div className="auth">
+      <div className="card auth-card">
+        <div className="card-body">
       <div className="page-head">
         <h1>Sign in</h1>
         <p className="sub">Your résumés, jobs and letters are kept in your account.</p>
       </div>
       {deleted && (
-        <p role="status" className="note" style={{ marginBottom: 'var(--s-4)' }}>
+        <p role="status" className="notice notice-ok">
           Your account and everything in it have been deleted.
         </p>
       )}
       <AuthForm mode="login" providers={enabledProviders()} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default function DeleteAccountForm() {
       method="post"
       action="/api/account/delete"
       onSubmit={() => setBusy(true)}
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)', maxWidth: 360 }}
+      className="stack delete-form"
     >
       <div className="field">
         <label htmlFor="confirm">Type delete to confirm</label>
@@ -21,9 +21,8 @@ export default function DeleteAccountForm() {
       </div>
       <button
         type="submit"
-        className="btn"
+        className={ok ? 'btn btn-danger btn-danger-fill' : 'btn btn-danger'}
         disabled={!ok || busy}
-        style={{ alignSelf: 'flex-start', color: 'var(--danger)', borderColor: 'var(--danger)' }}
       >
         {busy ? 'Deleting…' : 'Delete my account'}
       </button>

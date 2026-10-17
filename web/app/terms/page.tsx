@@ -1,12 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import LegalContact from '@/components/LegalContact';
+import PageBar from '@/components/PageBar';
+import { currentUser } from '@/lib/auth';
 import { GOVERNING_STATE, MIN_AGE, OPERATOR, REPO_URL, SITE_NAME, TERMS_UPDATED } from '@/lib/site';
 
 export const metadata: Metadata = { title: `Terms of Service · ${SITE_NAME}` };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const user = await currentUser();
   return (
+    <>
+      {user && <PageBar crumbs={[{ label: 'Terms' }]} />}
     <div className="wrap">
       <div className="page-head">
         <h1>Terms of Service</h1>
@@ -153,5 +158,6 @@ export default function TermsPage() {
         <LegalContact />
       </div>
     </div>
+    </>
   );
 }

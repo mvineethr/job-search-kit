@@ -6,60 +6,46 @@ import { loadAnswers } from '@/lib/answers';
 import { readMatch, viewMatch, type MatchedRequirement } from '@/lib/match';
 import { isMatchStale } from '@/lib/resume-edit';
 import FitMeter from '@/components/FitMeter';
+import PageBar from '@/components/PageBar';
 import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
 
 export const dynamic = 'force-dynamic';
 
-const STATUS: Record<MatchedRequirement['status'], { label: string; color: string }> = {
-  met: { label: 'Shown', color: 'var(--ok)' },
-  partial: { label: 'Partly', color: 'var(--warn)' },
-  missing: { label: 'Not shown', color: 'var(--danger)' },
-  unknown: { label: 'Check yourself', color: 'var(--text-muted)' },
+const STATUS: Record<MatchedRequirement['status'], { label: string; tone: 'ok' | 'warn' | 'danger' | 'muted' }> = {
+  met: { label: 'Shown', tone: 'ok' },
+  partial: { label: 'Partly', tone: 'warn' },
+  missing: { label: 'Not shown', tone: 'danger' },
+  unknown: { label: 'Check yourself', tone: 'muted' },
 };
 
 function RequirementList({ title, items }: { title: string; items: MatchedRequirement[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="sec">
-      <div className="sec-head">
-        <h2>{title}</h2>
-        <span className="count">{items.length}</span>
-      </div>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
-        {items.map((r) => (
-          <li
-            key={r.id}
-            style={{
-              border: '1px solid var(--border)',
-              borderLeft: `3px solid ${STATUS[r.status].color}`,
-              borderRadius: 4,
-              background: 'var(--bg-surface)',
-              padding: 'var(--s-3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
-            <div style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'baseline', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: STATUS[r.status].color, minWidth: 72 }}>
-                {STATUS[r.status].label}
-              </span>
-              <span>{r.text}</span>
-            </div>
-            {r.evidence ? (
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                {r.answered ? r.evidence : <>From your résumé: “{r.evidence}”</>}
-              </span>
-            ) : (
-              r.status === 'missing' && (
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-faint)' }}>Not on your résumé</span>
-              )
-            )}
-          </li>
-        ))}
+    <section>
+      <h2 className="section-title">
+        {title} <span className="count tnum">{items.length}</span>
+      </h2>
+      <ul className="req-list">
+        {items.map((r) => {
+          const s = STATUS[r.status];
+          return (
+            <li key={r.id} className="req">
+              <span className={`dot dot-${s.tone}`} aria-hidden="true" />
+              <div className="req-main">
+                <span className="req-text">{r.text}</span>
+                {r.evidence ? (
+                  <span className="req-evidence">{r.answered ? r.evidence : <>From your résumé: “{r.evidence}”</>}</span>
+                ) : (
+                  r.status === 'missing' && <span className="req-evidence">Not on your résumé</span>
+                )}
+              </div>
+              <span className={`tag ${s.tone === 'muted' ? '' : `tag-${s.tone}`}`}>{s.label}</span>
+            </li>
+          );
+        })}
       </ul>
-    </div>
+    </section>
   );
 }
 
@@ -101,148 +87,12 @@ export default async function JobPage({
   const scored = view?.requirements.filter((r) => r.status !== 'unknown') ?? [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 820 }}>
-      <div className="crumb" style={{ marginBottom: 'var(--s-4)' }}>
-        <Link href="/jobs">Jobs</Link>
-        <span className="sep">›</span>
-        <strong>
-          {job.company} — {job.role}
-        </strong>
-      </div>
-
-      <div className="page-head">
-        <h1>{job.role}</h1>
-        <p className="sub">{job.company}</p>
-      </div>
-
-      {error && (
-        <p role="alert" className="note" style={{ marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
-          {error}
-        </p>
-      )}
-
-      {answered && (
-        <p className="note tnum" style={{ marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--ok)' }}>
-          Saved {answered} {Number(answered) === 1 ? 'answer' : 'answers'}.{' '}
-          {view?.score != null && wasScore !== null && view.score !== wasScore
-            ? `Your fit went from ${wasScore} to ${view.score} from what you told us.`
-            : 'They apply to every job you tailor to from now on.'}
-        </p>
-      )}
-
-      {!view ? (
-        <div className="sec">
-          {master ? (
-            <>
-              <p className="note" style={{ marginBottom: 'var(--s-3)' }}>
-                This job has not been checked against your résumé yet.
-              </p>
-              <GenerateButton
-                action={`/api/jobs/${job.id}`}
-                op="match"
-                jobId={job.id}
-                label="Check my fit"
-                busyLabel="Checking… about 30 seconds"
-                primary
-              />
-            </>
-          ) : (
-            <p className="note">
-              <Link href="/review">Add your résumé</Link> first — the fit check compares it
-              against this posting.
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
-          <div className="sec">
-            <FitMeter view={view} large />
-            <p className="note" style={{ marginTop: 'var(--s-3)' }}>
-              This measures how much of what the posting asks for your résumé shows. It is not a
-              prediction of whether you will get an interview.
-            </p>
-            {stale && (
-              <div className="note" style={{ marginTop: 'var(--s-3)', borderLeft: '3px solid var(--warn)' }}>
-                <p style={{ marginBottom: 'var(--s-2)' }}>Your master résumé changed since this score was made.</p>
-                <GenerateButton
-                  action={`/api/jobs/${job.id}`}
-                  op="match"
-                  jobId={job.id}
-                  label="Re-check fit"
-                  busyLabel="Checking… about 30 seconds"
-                  primary
-                />
-              </div>
-            )}
-          </div>
-
-          {view.checkYourself.length > 0 && (
-            <div className="sec">
-              <p className="note">
-                <strong>Check these yourself.</strong> Résumés do not usually say them, so they
-                are not counted: {view.checkYourself.map((r) => r.text).join('; ')}.
-              </p>
-            </div>
-          )}
-
-          {view.openQuestions.length > 0 && (
-            <div className="sec">
-              <Link
-                href={`/jobs/${job.id}/questions`}
-                style={{
-                  display: 'block',
-                  border: '1px solid var(--accent)',
-                  borderRadius: 4,
-                  padding: 'var(--s-3)',
-                  background: 'var(--accent-subtle)',
-                  color: 'var(--accent)',
-                  textDecoration: 'none',
-                }}
-              >
-                <strong style={{ display: 'block', fontSize: 'var(--text-sm)' }}>
-                  Answer {Math.min(view.openQuestions.length, 8)} questions about your experience
-                </strong>
-                <span style={{ fontSize: 'var(--text-xs)', opacity: 0.85 }}>
-                  Your résumé may leave out things you have done. Answers you can back up raise the
-                  score and let the tailored version use them.
-                </span>
-              </Link>
-            </div>
-          )}
-
-          <RequirementList title="Must-haves" items={scored.filter((r) => r.kind === 'must')} />
-          <RequirementList title="Nice to have" items={scored.filter((r) => r.kind === 'nice')} />
-        </>
-      )}
-
-      <div className="sec" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
-        {tailored ? (
-          <Link href={`/resume/${tailored.id}`} className="btn">
-            ✓ Tailored résumé
-          </Link>
-        ) : master ? (
-          <GenerateButton
-            action="/api/tailor"
-            jobId={job.id}
-            resumeId={master.id}
-            label="Tailor my résumé"
-            busyLabel="Tailoring… about a minute"
-            primary={Boolean(view)}
-          />
-        ) : null}
-
-        {letter ? (
-          <Link href={`/letter/${letter.id}`} className="btn">
-            ✓ Cover letter
-          </Link>
-        ) : master ? (
-          <GenerateButton action="/api/letter" jobId={job.id} label="Write a cover letter" busyLabel="Writing… about a minute" />
-        ) : null}
-
+    <>
+      <PageBar crumbs={[{ href: '/jobs', label: 'Jobs' }, { label: job.company }]}>
         <form method="post" action={`/api/jobs/${job.id}`}>
           <input type="hidden" name="op" value="applied" />
           <input type="hidden" name="back" value={`/jobs/${job.id}`} />
-          <button type="submit" className="btn">
+          <button type="submit" className="btn btn-sm">
             {job.applied_at ? 'Mark not applied' : 'Mark as applied'}
           </button>
         </form>
@@ -263,7 +113,123 @@ export default async function JobPage({
           label="Delete job"
           confirm={`Delete ${job.role} at ${job.company}? Its tailored résumé and cover letter go with it. Your master résumé is not affected.`}
         />
+
+        {letter ? (
+          <Link href={`/letter/${letter.id}`} className="btn btn-sm">
+            Cover letter
+          </Link>
+        ) : master ? (
+          <GenerateButton action="/api/letter" jobId={job.id} label="Write a cover letter" busyLabel="Writing… about a minute" />
+        ) : null}
+
+        {tailored ? (
+          <Link href={`/resume/${tailored.id}`} className="btn btn-sm">
+            Tailored résumé
+          </Link>
+        ) : master ? (
+          <GenerateButton
+            action="/api/tailor"
+            jobId={job.id}
+            resumeId={master.id}
+            label="Tailor my résumé"
+            busyLabel="Tailoring… about a minute"
+            primary={Boolean(view)}
+          />
+        ) : null}
+      </PageBar>
+
+      <div className="wrap job">
+        <div className="page-head">
+          <h1>{job.role}</h1>
+          <p className="sub">{job.company}</p>
+        </div>
+
+        {error && (
+          <p role="alert" className="notice notice-error">
+            {error}
+          </p>
+        )}
+
+        {answered && (
+          <p className="notice notice-ok tnum">
+            Saved {answered} {Number(answered) === 1 ? 'answer' : 'answers'}.{' '}
+            {view?.score != null && wasScore !== null && view.score !== wasScore
+              ? `Your fit went from ${wasScore} to ${view.score} from what you told us.`
+              : 'They apply to every job you tailor to from now on.'}
+          </p>
+        )}
+
+        {!view ? (
+          <div className="card col-640">
+            <div className="card-body">
+              {master ? (
+                <div className="stack">
+                  <p className="notice">This job has not been checked against your résumé yet.</p>
+                  <div>
+                    <GenerateButton
+                      action={`/api/jobs/${job.id}`}
+                      op="match"
+                      jobId={job.id}
+                      label="Check my fit"
+                      busyLabel="Checking… about 30 seconds"
+                      primary
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="notice">
+                  <Link href="/review">Add your résumé</Link> first — the fit check compares it
+                  against this posting.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="job-grid">
+            <aside className="job-score card">
+              <div className="card-body stack">
+                {stale && (
+                  <div className="notice notice-warn stack">
+                    <p>Your master résumé changed since this score was made.</p>
+                    <GenerateButton
+                      action={`/api/jobs/${job.id}`}
+                      op="match"
+                      jobId={job.id}
+                      label="Re-check fit"
+                      busyLabel="Checking… about 30 seconds"
+                      primary
+                    />
+                  </div>
+                )}
+                <FitMeter view={view} large />
+                <p className="fit-counts">
+                  This measures how much of what the posting asks for your résumé shows. It is not a
+                  prediction of whether you will get an interview.
+                </p>
+              </div>
+            </aside>
+            <div className="stack">
+              {view.openQuestions.length > 0 && (
+                <Link href={`/jobs/${job.id}/questions`} className="notice notice-info notice-link">
+                  <strong>Answer {Math.min(view.openQuestions.length, 8)} questions about your experience</strong>
+                  <span className="notice-sub">
+                    Your résumé may leave out things you have done. Answers you can back up raise the
+                    score and let the tailored version use them.
+                  </span>
+                </Link>
+              )}
+              {view.checkYourself.length > 0 && (
+                <p className="notice">
+                  <strong>Check these yourself.</strong> Résumés do not usually say them, so they
+                  are not counted: {view.checkYourself.map((r) => r.text).join('; ')}.
+                </p>
+              )}
+              <RequirementList title="Must-haves" items={scored.filter((r) => r.kind === 'must')} />
+              <RequirementList title="Nice to have" items={scored.filter((r) => r.kind === 'nice')} />
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

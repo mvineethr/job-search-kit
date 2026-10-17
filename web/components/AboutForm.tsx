@@ -3,18 +3,19 @@ import { YEARS, SEARCH_STATUS, type Profile } from '@/lib/profile';
 /** Plain form post; no client state needed. Everything is optional. */
 export default function AboutForm({ profile, saved }: { profile: Profile | null; saved: boolean }) {
   return (
-    <form method="post" action="/api/profile/about" className="sec" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
-      <div className="sec-head">
+    <form method="post" action="/api/profile/about" className="card card-gap">
+      <div className="card-head">
         <h2>About you</h2>
       </div>
-      <p className="note">All optional. It helps us understand who this is useful for.</p>
+      <div className="card-body">
+      <p className="notice">All optional. It helps us understand who this is useful for.</p>
 
       <div className="field">
         <label htmlFor="target_role">The role you are aiming for</label>
         <input id="target_role" name="target_role" type="text" defaultValue={profile?.target_role ?? ''} placeholder="e.g. Platform engineer" />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--s-3)', flexWrap: 'wrap' }}>
+      <div className="form-pair">
         <div className="field">
           <label htmlFor="years_experience">Years of experience</label>
           <select id="years_experience" name="years_experience" defaultValue={profile?.years_experience ?? ''}>
@@ -49,7 +50,7 @@ export default function AboutForm({ profile, saved }: { profile: Profile | null;
         <input id="heard_from" name="heard_from" type="text" defaultValue={profile?.heard_from ?? ''} />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--s-3)', alignItems: 'center' }}>
+      <div className="row">
         <button type="submit" className="btn">
           Save
         </button>
@@ -58,6 +59,7 @@ export default function AboutForm({ profile, saved }: { profile: Profile | null;
             Saved.
           </span>
         )}
+      </div>
       </div>
     </form>
   );

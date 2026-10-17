@@ -8,6 +8,7 @@ import { QuestionsSchema } from '@/lib/question-schema';
 import { loadAnswers, skillKey } from '@/lib/answers';
 import { readMatch, viewMatch, type MatchView } from '@/lib/match';
 import FitMeter from '@/components/FitMeter';
+import PageBar from '@/components/PageBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,217 +61,183 @@ export default async function JobsPage({
   }
 
   return (
-    <div className="wrap">
-      <div className="page-head">
-        <h1>Jobs</h1>
-        <p className="sub">
-          Add a posting once. The tailored résumé and cover letter are both written from what
-          you enter here — you never paste the description twice.
-        </p>
-      </div>
-
-      {error && (
-        <div
-          role="alert"
-          style={{
-            border: '1px solid var(--danger)',
-            borderRadius: 8,
-            padding: 'var(--s-3) var(--s-4)',
-            marginBottom: 'var(--s-6)',
-            color: 'var(--danger)',
-            background: 'var(--bg-surface)',
-            maxWidth: 680,
-          }}
-        >
-          {error}
+    <>
+      <PageBar crumbs={[{ label: 'Jobs' }]} />
+      <div className="wrap">
+        <div className="page-head">
+          <h1>Jobs</h1>
+          <p className="sub">
+            Add a posting once. The tailored résumé and cover letter are both written from what
+            you enter here — you never paste the description twice.
+          </p>
         </div>
-      )}
 
-      {answered && (
-        <p
-          className="note"
-          style={{ maxWidth: 680, marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--ok)' }}
-        >
-          Saved {answered} {Number(answered) === 1 ? 'answer' : 'answers'}. These apply to every
-          job you tailor to from now on — tailor again to use them.
-        </p>
-      )}
+        <div className="stack col-720 jobs-top">
+          {error && (
+            <p role="alert" className="notice notice-error">
+              {error}
+            </p>
+          )}
 
-      {!master && (
-        <p className="note" style={{ maxWidth: 680, marginBottom: 'var(--s-6)' }}>
-          You have not added a résumé yet. <Link href="/review">Add one first</Link> — tailoring
-          and cover letters are written from it.
-        </p>
-      )}
+          {answered && (
+            <p className="notice notice-ok">
+              Saved {answered} {Number(answered) === 1 ? 'answer' : 'answers'}. These apply to every
+              job you tailor to from now on — tailor again to use them.
+            </p>
+          )}
 
-      <div className="sec">
-        <AddJobForm />
-      </div>
+          {!master && (
+            <p className="notice">
+              You have not added a résumé yet. <Link href="/review">Add one first</Link> — tailoring
+              and cover letters are written from it.
+            </p>
+          )}
 
-      {jobs.length === 0 ? (
-        <p className="note" style={{ maxWidth: 680 }}>
-          No jobs yet. Add one above — paste the whole posting, including the requirements
-          section, because that is where the keywords live.
-        </p>
-      ) : (
-        <div className="sec">
-          <div className="sec-head">
-            <h2>Your jobs</h2>
-            <span className="count">{jobs.length}</span>
-          </div>
+          <AddJobForm />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
-            {jobs.map((job) => {
-              const tailored = tailoredByJob.get(job.id);
-              const letter = letterByJob.get(job.id);
-              const view = views.get(job.id);
-              // The tailoring's own matched/missing is shown only for jobs without a fit check.
-              const matched = view ? 0 : (job.analysis?.matched?.length ?? 0);
-              const missing = view ? 0 : (job.analysis?.missing?.length ?? 0);
-              const total = matched + missing;
+          {jobs.length === 0 && (
+            <p className="notice">
+              No jobs yet. Add one above — paste the whole posting, including the requirements
+              section, because that is where the keywords live.
+            </p>
+          )}
+        </div>
 
-              return (
-                <div
-                  key={job.id}
-                  style={{
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    background: 'var(--bg-surface)',
-                    padding: 'var(--s-4)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'var(--s-3)',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', alignItems: 'baseline' }}>
-                    <Link href={`/jobs/${job.id}`} style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}>
-                      {job.role}
-                    </Link>
-                    <span style={{ color: 'var(--text-muted)' }}>{job.company}</span>
-                    {job.applied_at && (
-                      <span className="pill tnum" style={{ color: 'var(--ok)' }}>
-                        Applied {new Date(job.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
+        {jobs.length > 0 && (
+          <section className="jobs-list">
+            <h2 className="section-title">
+              Your jobs <span className="count tnum">{jobs.length}</span>
+            </h2>
+
+            <div className="stack">
+              {jobs.map((job) => {
+                const tailored = tailoredByJob.get(job.id);
+                const letter = letterByJob.get(job.id);
+                const view = views.get(job.id);
+                // The tailoring's own matched/missing is shown only for jobs without a fit check.
+                const matched = view ? 0 : (job.analysis?.matched?.length ?? 0);
+                const missing = view ? 0 : (job.analysis?.missing?.length ?? 0);
+                const total = matched + missing;
+
+                return (
+                  <div key={job.id} className="card job-row">
+                    <div className="job-row-head">
+                      <div className="job-row-main">
+                        <Link href={`/jobs/${job.id}`} className="job-row-title">
+                          {job.role}
+                        </Link>
+                        <span className="job-row-company">{job.company}</span>
+                      </div>
+
+                      {view ? (
+                        <div className="job-row-fit">
+                          <FitMeter view={view} />
+                        </div>
+                      ) : (
+                        master && (
+                          <Link href={`/jobs/${job.id}`} className="job-row-hint">
+                            Check how well your résumé fits this job
+                          </Link>
+                        )
+                      )}
+
+                      {job.applied_at && (
+                        <div className="job-row-tags">
+                          {job.applied_at && (
+                            <span className="tag tag-ok tnum">
+                              Applied {new Date(job.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {total > 0 && (
+                      <p className="tnum job-row-note">
+                        {matched} of {total} requirements matched
+                        {missing > 0 && ` · ${missing} real ${missing === 1 ? 'gap' : 'gaps'}`}
+                      </p>
+                    )}
+
+                    {!view && job.analysis?.missing && job.analysis.missing.length > 0 && (
+                      <div className="job-row-tags">
+                        {job.analysis.missing.map((m) => (
+                          <span key={m} className="tag tag-warn">
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {openQuestions.has(job.id) && (
+                      <Link href={`/jobs/${job.id}/questions`} className="notice notice-info notice-link">
+                        <strong>{openQuestions.get(job.id)} questions about your experience</strong>
+                        <span className="notice-sub">
+                          This posting asks for things your résumé does not mention. Answer them
+                          and the tailored version can use the real ones.
+                        </span>
+                      </Link>
+                    )}
+
+                    <div className="job-row-actions">
+                      {/* Tailored résumé */}
+                      {tailored ? (
+                        <Link href={`/resume/${tailored.id}`} className="btn btn-sm">
+                          Tailored résumé
+                        </Link>
+                      ) : master ? (
+                        <GenerateButton
+                          action="/api/tailor"
+                          jobId={job.id}
+                          resumeId={master.id}
+                          label="Tailor my résumé"
+                          busyLabel="Tailoring… about a minute"
+                          primary
+                        />
+                      ) : null}
+
+                      {/* Cover letter */}
+                      {letter ? (
+                        <Link href={`/letter/${letter.id}`} className="btn btn-sm">
+                          Cover letter
+                        </Link>
+                      ) : master ? (
+                        <GenerateButton
+                          action="/api/letter"
+                          jobId={job.id}
+                          label="Write a cover letter"
+                          busyLabel="Writing… about a minute"
+                        />
+                      ) : null}
+
+                      <form method="post" action={`/api/jobs/${job.id}`}>
+                        <input type="hidden" name="op" value="applied" />
+                        <button type="submit" className="btn btn-sm">
+                          {job.applied_at ? 'Mark not applied' : 'Mark as applied'}
+                        </button>
+                      </form>
+
+                      <ConfirmButton
+                        action={`/api/jobs/${job.id}`}
+                        fields={{ op: 'delete' }}
+                        label="Delete job"
+                        confirm={`Delete ${job.role} at ${job.company}? Its tailored résumé and cover letter go with it. Your master résumé is not affected.`}
+                      />
+                    </div>
+
+                    {!tailored && !letter && master && (
+                      <p className="job-row-note">
+                        Tailor first if you can — the cover letter is sharper when it is written
+                        from the tailored résumé rather than your master.
+                      </p>
                     )}
                   </div>
-
-                  {view ? (
-                    <FitMeter view={view} />
-                  ) : (
-                    master && (
-                      <Link href={`/jobs/${job.id}`} style={{ fontSize: 'var(--text-xs)' }}>
-                        Check how well your résumé fits this job
-                      </Link>
-                    )
-                  )}
-
-                  {total > 0 && (
-                    <p className="tnum" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                      {matched} of {total} requirements matched
-                      {missing > 0 && ` · ${missing} real ${missing === 1 ? 'gap' : 'gaps'}`}
-                    </p>
-                  )}
-
-                  {!view && job.analysis?.missing && job.analysis.missing.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {job.analysis.missing.map((m) => (
-                        <span
-                          key={m}
-                          style={{
-                            fontSize: 'var(--text-xs)',
-                            padding: '3px 8px',
-                            borderRadius: 4,
-                            background: 'var(--warn-subtle)',
-                            color: 'var(--warn)',
-                          }}
-                        >
-                          {m}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {openQuestions.has(job.id) && (
-                    <Link
-                      href={`/jobs/${job.id}/questions`}
-                      style={{
-                        display: 'block',
-                        border: '1px solid var(--accent)',
-                        borderRadius: 4,
-                        padding: 'var(--s-3)',
-                        background: 'var(--accent-subtle)',
-                        color: 'var(--accent)',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <strong style={{ display: 'block', fontSize: 'var(--text-sm)' }}>
-                        {openQuestions.get(job.id)} questions about your experience
-                      </strong>
-                      <span style={{ fontSize: 'var(--text-xs)', opacity: 0.85 }}>
-                        This posting asks for things your résumé does not mention. Answer them
-                        and the tailored version can use the real ones.
-                      </span>
-                    </Link>
-                  )}
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
-                    {/* Tailored résumé */}
-                    {tailored ? (
-                      <Link href={`/resume/${tailored.id}`} className="btn">
-                        ✓ Tailored résumé
-                      </Link>
-                    ) : master ? (
-                      <GenerateButton
-                        action="/api/tailor"
-                        jobId={job.id}
-                        resumeId={master.id}
-                        label="Tailor my résumé"
-                        busyLabel="Tailoring… about a minute"
-                        primary
-                      />
-                    ) : null}
-
-                    {/* Cover letter */}
-                    {letter ? (
-                      <Link href={`/letter/${letter.id}`} className="btn">
-                        ✓ Cover letter
-                      </Link>
-                    ) : master ? (
-                      <GenerateButton
-                        action="/api/letter"
-                        jobId={job.id}
-                        label="Write a cover letter"
-                        busyLabel="Writing… about a minute"
-                      />
-                    ) : null}
-
-                    <form method="post" action={`/api/jobs/${job.id}`}>
-                      <input type="hidden" name="op" value="applied" />
-                      <button type="submit" className="btn">
-                        {job.applied_at ? 'Mark not applied' : 'Mark as applied'}
-                      </button>
-                    </form>
-
-                    <ConfirmButton
-                      action={`/api/jobs/${job.id}`}
-                      fields={{ op: 'delete' }}
-                      label="Delete job"
-                      confirm={`Delete ${job.role} at ${job.company}? Its tailored résumé and cover letter go with it. Your master résumé is not affected.`}
-                    />
-                  </div>
-
-                  {!tailored && !letter && master && (
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-faint)' }}>
-                      Tailor first if you can — the cover letter is sharper when it is written
-                      from the tailored résumé rather than your master.
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   );
 }

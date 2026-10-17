@@ -7,6 +7,7 @@ import EditableResume from '@/components/EditableResume';
 import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
 import ConfirmButton from '@/components/ConfirmButton';
+import PageBar from '@/components/PageBar';
 import AiNotice from '@/components/AiNotice';
 import GenericPhrases from '@/components/GenericPhrases';
 import { resumeParts } from '@/lib/generic-phrases';
@@ -57,101 +58,61 @@ export default async function ResumePage({
 
   return (
     <>
-      <div className="canvas-head">
-        <div className="canvas-head-in">
-          <div className="crumb">
-            <Link href="/">Home</Link>
-            <span className="sep">›</span>
-            {isTailored ? (
-              <>
-                <Link href={`/resume/${row.parent_id}`}>Master</Link>
-                <span className="sep">›</span>
-                <strong>{row.title}</strong>
-              </>
-            ) : (
-              <strong>{row.title}</strong>
-            )}
-          </div>
-          <div className="rail">
-            {isTailored && <Link href="/jobs" className="btn">All jobs</Link>}
-            {markers > 0 && (
-              <Link href={`/resume/${row.id}/metrics`} className="btn">
-                Fill in {markers} {markers === 1 ? 'number' : 'numbers'}
-              </Link>
-            )}
-            <PrintButton />
-            {resume && (
-              <a href={`/api/resumes/${row.id}/docx`} className="btn">
-                Download Word
-              </a>
-            )}
-            <Link href="/ats-check" className="btn">
-              Check what an ATS sees
-            </Link>
-            {isTailored && (
-              <ConfirmButton
-                action={`/api/resumes/${row.id}`}
-                label="Delete this copy"
-                confirm="Delete this tailored copy? Your master résumé and the job stay, so you can tailor again."
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      <main
-        className="canvas-split"
-        style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: 'var(--s-6) var(--s-4) var(--s-16)',
-          display: 'grid',
-          gap: 'var(--s-6)',
-          gridTemplateColumns: 'minmax(0,1fr) 380px',
-          alignItems: 'start',
-        }}
+      <PageBar
+        crumbs={
+          isTailored
+            ? [{ href: '/resumes', label: 'Résumés' }, { href: `/resume/${row.parent_id}`, label: 'Master' }, { label: row.title }]
+            : [{ href: '/resumes', label: 'Résumés' }, { label: row.title }]
+        }
       >
+        {isTailored && <Link href="/jobs" className="btn">All jobs</Link>}
+        <Link href="/ats-check" className="btn">
+          Check what an ATS sees
+        </Link>
+        {resume && (
+          <a href={`/api/resumes/${row.id}/docx`} className="btn">
+            Download Word
+          </a>
+        )}
+        <PrintButton />
+        {isTailored && (
+          <ConfirmButton
+            action={`/api/resumes/${row.id}`}
+            label="Delete this copy"
+            confirm="Delete this tailored copy? Your master résumé and the job stay, so you can tailor again."
+          />
+        )}
+        {markers > 0 && (
+          <Link href={`/resume/${row.id}/metrics`} className="btn btn-primary">
+            Fill in {markers} {markers === 1 ? 'number' : 'numbers'}
+          </Link>
+        )}
+      </PageBar>
+
+      <main className="canvas-split resume-split">
         <div id="printable">
           {resume ? (
-            <div
-              style={{
-                border: '1px solid var(--doc-border)',
-                borderRadius: 8,
-                boxShadow: 'var(--shadow)',
-                overflow: 'hidden',
-              }}
-            >
+            <div className="paper">
               <EditableResume id={row.id} initial={resume} flags={audit?.unsupportedNumbers ?? []} />
             </div>
           ) : (
-            <article
-              style={{
-                background: 'var(--doc-bg)',
-                color: 'var(--doc-text)',
-                border: '1px solid var(--doc-border)',
-                borderRadius: 8,
-                padding: 'var(--s-12)',
-                whiteSpace: 'pre-wrap',
-                fontFamily: 'var(--serif)',
-                lineHeight: 1.6,
-              }}
-            >
+            <article className="paper resume-plain">
               {row.source_text}
             </article>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
+        <div className="stack">
           {isTailored && <AiNotice />}
 
           {error && (
-            <p role="alert" className="note" style={{ borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+            <p role="alert" className="notice notice-error">
               {error}
             </p>
           )}
 
           {filled && (
-            <p className="note" style={{ borderLeft: '3px solid var(--ok)' }}>
+            <p className="notice notice-ok">
               Filled in {filled} {Number(filled) === 1 ? 'number' : 'numbers'} from what you told
               us.{' '}
               {Number(left) > 0
@@ -161,19 +122,19 @@ export default async function ResumePage({
           )}
 
           {markers > 0 && (
-            <div className="panel">
-              <div className="panel-head">
+            <div className="card">
+              <div className="card-head">
                 <h2 className="tnum">
                   {markers} {markers === 1 ? 'bullet is' : 'bullets are'} missing a number
                 </h2>
               </div>
-              <div className="panel-body">
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              <div className="card-body">
+                <p className="muted">
                   Nothing was invented to fill these, which is why they have holes. A bullet
                   without a number reads as a claim rather than a result — but a made-up number
                   is worse, so we asked instead of guessing.
                 </p>
-                <Link href={`/resume/${row.id}/metrics`} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                <Link href={`/resume/${row.id}/metrics`} className="btn btn-primary self-start">
                   Tell us the numbers
                 </Link>
               </div>
@@ -183,7 +144,7 @@ export default async function ResumePage({
           {resume && <GenericPhrases parts={resumeParts(resume)} posting={posting} />}
 
           {!resume && (
-            <p className="note">
+            <p className="notice">
               This one could not be read into sections, so it is shown as plain text. The
               review still works; the formatted document and PDF export need the structured
               version.
@@ -191,13 +152,13 @@ export default async function ResumePage({
           )}
           {audit && <TailoringAuditPanel audit={audit} />}
           {note && (
-            <div className="panel">
-              <div className="panel-head">
+            <div className="card">
+              <div className="card-head">
                 <h2>What it says it changed</h2>
               </div>
-              <div className="panel-body">
-                <p style={{ lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{note}</p>
-                <p className="note">
+              <div className="card-body">
+                <p className="pre-wrap">{note}</p>
+                <p className="notice">
                   Your master résumé is untouched. This is a separate copy for this job.
                 </p>
               </div>
