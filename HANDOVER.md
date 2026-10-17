@@ -4,7 +4,7 @@ Context for anyone (human or AI agent) picking this project up later. This file 
 **public** — no personal data lives here. Personal job-search specifics are kept in a
 local, gitignored notes file (see "Local notes" below).
 
-_Last updated: 2026-10-01._ The standing dev brief (module map, hard rules, gotchas) is
+_Last updated: 2026-10-17._ The standing dev brief (module map, hard rules, gotchas) is
 `CLAUDE.md`; this file is the narrative.
 
 ## What this repo is
@@ -13,10 +13,225 @@ An open-source toolkit for fixing a résumé and LinkedIn profile with an AI age
 capability is both an auto-triggered **skill** (`skills/<name>/SKILL.md`) and an explicit
 **slash command** (`commands/<name>.md`). Works in Claude Code / Cowork.
 
-Since September 2026 it is also a **web app** (`web/`, Next.js on Vercel + Neon + Kimi),
-password-gated for testing (real accounts are built on a branch; see the 2026-09-27 → 10-01
-session), so people without a terminal-based AI agent can use it. The plugin and the web app
+Since September 2026 it is also a **web app** (`web/`, Next.js on Vercel + Neon + Kimi), with
+real accounts since 2026-10-09 (see the 2026-09-27 → 10-01 session), so people without a
+terminal-based AI agent can use it. The plugin and the web app
 read the same prompts from `core/`.
+
+---
+
+## Session 2026-10-16 → 10-17: competitor refresh, inline editing, auth pages, and the Workbench redesign
+
+Builds on everything below. PRs #3 (accounts, onboarding, legal layer: the 2026-09-27 → 10-01
+and 2026-10-01 sessions) and #4 (sign-in required on `/api/chat` and `/api/extract`, plus
+review fixes) were **already merged to `main` by 2026-10-09**, so the live site has real
+accounts. That merge and PR #4 aren't narrated anywhere in this file; it's a gap, not
+reconstructed here.
+
+### What was asked
+
+1. "Where are we, and how do competitors compare?"
+2. Then a reset of ambition. The app came from two or three early prompts and does about what
+   others do. Improve every part, UI to final output. The `core/` prompts are not fixed. And
+   "guarantee to be picked more than 50% of the time".
+3. Inline résumé editing (chosen from the gaps), built subagent-driven with reviews.
+4. Make "create an account" prominent, with a sign-up button beside sign-in.
+5. A dropdown or autofill for "Where you are based", and a dropdown for "How did you find us".
+6. A complete UI redesign: "early 2000s vibes", wanted modern and reliable, canvas-style but
+   not boring.
+
+### Research and decisions
+
+- **Competitor refresh** by a Sonnet subagent, about 12 searches, with prices and ratings
+  unverified and some sources competitors of each other. Findings:
+  - **Still no rival checks its output for invented content in code**, based on finding no
+    evidence in a narrow search.
+  - **The table stakes we lack:** a job tracker with statuses and a save-job extension (Teal,
+    Huntr, Simplify), in-app editing, a LinkedIn optimizer, interview prep.
+  - **Category complaints:** trial charges and refunds (Jobscan 3.2★ from 1,699 reviews on
+    SmartCustomer), weekly pricing, auto-apply volume (LazyApply about 2.5★), paywalled
+    scores.
+  - **Recruiters:** 92% of 998 recruiting leaders say AI résumés are common, and about a third
+    trust résumés reflect skills (Lighthouse/Criteria, as cited by HR Executive).
+  - **Regulation** mostly binds employer-side screening; the EU AI Act's transparency duties
+    (2026-08-02) are already covered by the AI notice.
+- **No guarantee; an internal goal instead.** "Picked more than 50% of the time" is the
+  backend north star, never in copy, measured once outcome tracking exists. Same reasoning as
+  dropping the 80% guarantee in the 2026-09-24 session: no tool controls hiring, and it's an
+  FTC risk.
+- **The quality series, in order:**
+  1. inline editing
+  2. a prompt test set, then a `core/` rewrite against it
+  3. the output template
+  4. a UI pass
+  5. outcome tracking
+- **Inline editing, brainstormed one question at a time**
+  (`docs/superpowers/specs/2026-10-16-inline-editing-design.md`):
+  - masters and tailored copies are editable; cover letters later
+  - edits to a copy **never** touch the master. The owner keeps a clean master and hand-edits
+    a copy per job; this reversed the first proposal, which offered to copy facts into the
+    master
+  - editing happens on the document itself, not a form
+  - saves on blur
+  - headings can't be renamed
+  - no undo in v1
+  - a stale-score note when the master changes after a fit score was made
+- **"The master" stays the latest `updated_at`.** Editing an older master makes it active.
+  Accepted (one master in practice) and added to CLAUDE.md's gotchas.
+- **Location:** a state dropdown plus city suggestions from a list shipped with the app,
+  plus "Outside the US". There's no lookup API, so no privacy change, and it's still one
+  `location` field. A worldwide lookup and US-only were rejected.
+- **The redesign ran in its own session, mockups first.** The scope was then confirmed as a
+  complete redesign of every page; only the exported résumé (`DOCUMENT_CSS`) stays fixed.
+
+### What was built
+
+- **Inline editing** (PR [#5](https://github.com/mvineethr/job-search-kit/pull/5), 10
+  commits, merged 2026-10-17 as `18052c2`). It ran from
+  `docs/superpowers/plans/2026-10-16-inline-editing.md`: a fresh subagent per task (Haiku
+  where the plan held the full code, Sonnet otherwise), a Sonnet review per task, and an Opus
+  whole-branch review.
+  - `lib/resume-edit.ts`:
+    - `parseEdit` trims every string, runs `ResumeSchema`, and turns the first Zod issue into
+      a plain sentence
+    - `clearFlags(before, after, flags)` keeps a flag only while the number is still present
+      and no changed string contains it. It matches whole numbers, the same as the on-screen
+      highlight
+    - `moveBullet`, `isMatchStale` (an empty `created_at` counts as stale), and `readNote`
+      (moved out of the résumé page)
+  - `PUT /api/resumes/[id]` checks, in order: `requireSid`, a 200 KB cap, JSON, `parseEdit`,
+    then SELECT and UPDATE by `id AND sid`. On tailored rows it rewrites only
+    `audit.unsupportedNumbers` in `source_text`. A master's `source_text` and old plain-prose
+    tailored rows stay as they are. It returns 404 if the row vanishes between the two
+    queries.
+  - `components/EditableText.tsx`:
+    - click to edit; Enter or blur commits; Escape restores
+    - line breaks collapse
+    - empty fields show a `+ <label>` placeholder so they stay clickable
+    - Enter is ignored while composing (IME, including Safari's keyCode 229)
+    - inputs are sized to their text, capped at 48 characters
+  - `components/MarkedText.tsx` holds the `[METRIC NEEDED]` and flag highlighting, moved out
+    of the old `ResumeDocument.tsx`, which is now deleted.
+  - `components/EditableResume.tsx`:
+    - the same markup and `DOCUMENT_CSS` as before, so print is unchanged
+    - bullets get ↑ ↓ ×
+    - skills and certifications can be added and removed; roles and education are added
+      through small forms
+    - deletes confirm
+    - saves are queued: one in flight, and only the newest waiting edit is sent
+    - one `aria-live` status line with Retry
+    - controls are `.edit-only`, hidden in print
+  - The job page shows "Your master résumé changed since this score was made." with the only
+    Re-check button.
+  - 21 new tests (`test/resume-edit.test.ts`); 120 → 141.
+- **Auth pages** (PR [#6](https://github.com/mvineethr/job-search-kit/pull/6), merged):
+  - a Sign in / Create account switch (`.auth-switch`) on both pages, a full-width submit,
+    and the AI notice moved below the form
+  - the signed-out bar shows both buttons
+  - email and password inputs now share the field style; they were browser-white in dark
+    mode
+  - links use `--accent`; nothing had set a link colour before
+  - `.hint` became a global class
+- **Profile form** (`claude/profile-location-dropdowns`, `73a15cd`, **not pushed, owner's
+  hold**):
+  - `lib/places.ts`: 51 states/DC, a few big cities each, `parseLocation`/`formatLocation`
+  - `components/LocationFields.tsx`: posts a hidden `location`, "City, ST" or free text
+  - `HEARD_FROM` list in `lib/profile.ts`; the route only accepts listed values; old answers
+    show as Other
+  - `.field select` gets the field style
+  - 6 tests (147 on that branch)
+- **The Workbench redesign** (PR [#7](https://github.com/mvineethr/job-search-kit/pull/7),
+  "Workbench redesign: cobalt, Geist, sidebar layout", 17 commits, 178 tests, merged
+  2026-10-17), built by the parallel session "Visual redesign: modern, reliable look"
+  (branch `claude/vibrant-cray-f4d876`):
+  - spec `docs/superpowers/specs/2026-10-17-workbench-redesign-design.md`, plan
+    `docs/superpowers/plans/2026-10-17-workbench-redesign.md`
+  - new `lib/nav.ts`, `lib/resume-groups.ts`, `components/Sidebar.tsx`,
+    `components/PageBar.tsx`; `TopBar` is now the signed-out bar only
+  - the mockup alternatives and the reasoning behind "Workbench" live in that session and
+    its spec, not here
+- **The prompt test set** (parallel session "Prompt test set for core/ résumé prompts",
+  branch `claude/distracted-mendeleev-256d1d`, 16 commits, local only): a spec and 7-task
+  plan, a runner that scores real prompt output in code, a before/after table, blind A/B
+  pages and usage docs. Its last report said it was entering the final review; the first
+  paid run waits for the owner.
+
+### Bugs found live, and how
+
+- **"Saved" with nothing saved.** The proxy redirects signed-out or out-of-consent requests to
+  `/login` or `/agree`; `fetch` follows redirects; those pages answer 200 HTML. So
+  `res.json()` failed to `{}`, the editor said "Saved" and cleared every flag, and nothing was
+  written. All five per-task reviews passed it. The Opus whole-branch review found it by
+  reading `proxy.ts` next to the editor. The fix is a save only counts when the body says
+  `ok: true`, with "Sign in again to save." when `res.redirected`. It was reproduced live
+  (PUT → `/login`, 200, HTML) and handled correctly. It's now a CLAUDE.md gotcha.
+- **Cramped title input.** A 66-character title got a 209 px box that needed 523 px. The
+  first fix (`size` = text length) made it 641 px on a 571 px page. The final fix caps it at
+  48 characters (263 px short, 461 px long).
+- **Dark-mode form fields and links** (found while checking PR #6): the field rule matched
+  only `type="text"`, and there was no link colour at all.
+- **Tailoring invented a number.** On a fictional résumé (2016 to the present) it wrote "7+
+  years" into the summary; the audit flagged it. It also stripped "CI/CD deploy pipelines"
+  even though the master says "builds deploy pipelines": the known literal-match weakness.
+
+### Verified
+
+- **Inline editing**, on `web-localtest` (port 3001) with the throwaway accounts
+  `edit-test-1017@example.com` and `edit-test-other-1017@example.com`, about five model
+  calls:
+  - **Setup:** master parse 6.8 s; job creation with the fit check 23 s; tailoring 26.5 s;
+    Re-check 29 s.
+  - **Edits survive a reload:** a bullet, the name, move and delete, adding and removing a
+    skill, a new role, new education.
+  - **Errors recover:** the empty-name and empty-bullet messages show, and both save once
+    fixed; Escape restores.
+  - **The blocked save** shows "Couldn't save", and Retry recovers.
+  - **Flags:** a reorder keeps the flag; editing the summary clears it; "99.5%" typed over
+    `[METRIC NEEDED]` isn't flagged; the master is unchanged.
+  - **The stale note** shows, and Re-check clears it.
+  - **Rapid edits:** four quick edits went out as two PUTs, and the saved state matched the
+    screen.
+  - **Route refusals:** bad JSON, null and `{}` give 400; 250 KB gives 413; an unknown id
+    gives 404; **a second account's PUT to the first account's master gives 404, with the row
+    unchanged.**
+  - **Export and print:** the Word export, unzipped in the browser, holds every edit and no UI
+    text; no control sits outside `.edit-only`.
+  - **Keyboard:** Tab, Enter and Escape work.
+- **PR #6:** `/login` and `/signup` checked in light and dark mode and at 375 px, with no
+  sideways scroll.
+- **Profile form:** Texas → Texas cities in the suggestions; "Austin, TX" saved and reloaded;
+  "Outside the US" switches to "City and country".
+- Before every push: a secret scan of the branch diff (clean), `tsc`, and the full suite.
+
+**Not verified:**
+- an old plain-prose tailored row being edited
+- the expired-Terms variant of the blocked save (same code path as no session)
+- a real screen reader
+- a visual print preview
+- production after the merges
+- the redesign's print fidelity against the old export (its session hadn't compared them when
+  it opened PR #7)
+
+### Pending
+
+- Check production after #5–#7; compare a résumé's print preview with the export.
+- Rebase `claude/profile-location-dropdowns` onto the Workbench `AboutForm.tsx` and
+  `globals.css`, restyle it, then push when the owner says so.
+- The prompt test set: final review, then the owner's yes for the paid baseline, then rewrite
+  `core/` against it.
+- Delete the two S5 throwaway accounts and their résumés and jobs from the database
+  `.env.local` points at.
+- Inline-editing leftovers:
+  - focus is lost after add or delete
+  - the add forms aren't real `<form>`s, so Enter and Escape don't work in them
+  - the display span announces its text, not "Edit X"
+  - the size cap counts characters, not bytes
+  - some `messageFor` branches are untested
+- Setup outside the repo: `web/.env.local` copied into the main checkout, with a
+  `.worktreeinclude` listing it (untracked). The `ui-ux-pro-max-cli` npm CLI
+  was installed globally at the owner's request (v2.15.0; no install scripts, no repository
+  link). The owner then ran `uipro init --ai claude --global`, and the `ui-ux-pro-max` skill
+  now appears in sessions.
 
 ---
 
