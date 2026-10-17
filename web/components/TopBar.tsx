@@ -87,9 +87,14 @@ export default function TopBar({ me }: { me: Me }) {
             </div>
           </details>
         ) : (
-          <Link href="/login" className="btn signin-link">
-            Sign in
-          </Link>
+          <div className="signin-link">
+            <Link href="/login" className="btn">
+              Sign in
+            </Link>
+            <Link href="/signup" className="btn btn-primary">
+              Create account
+            </Link>
+          </div>
         )}
       </div>
     </header>
