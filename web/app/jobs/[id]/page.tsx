@@ -4,6 +4,7 @@ import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow, type ResumeRow, type LetterRow } from '@/lib/db';
 import { loadAnswers } from '@/lib/answers';
 import { readMatch, viewMatch, type MatchedRequirement } from '@/lib/match';
+import { isMatchStale } from '@/lib/resume-edit';
 import FitMeter from '@/components/FitMeter';
 import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
@@ -82,7 +83,7 @@ export default async function JobPage({
   if (!job) notFound();
 
   const master = ((await q`
-    SELECT id FROM resumes WHERE sid = ${sid} AND parent_id IS NULL
+    SELECT id, updated_at FROM resumes WHERE sid = ${sid} AND parent_id IS NULL
     ORDER BY updated_at DESC LIMIT 1`) as unknown as ResumeRow[])[0];
   const tailored = ((await q`
     SELECT id FROM resumes WHERE sid = ${sid} AND job_id = ${id} AND parent_id IS NOT NULL
@@ -92,6 +93,8 @@ export default async function JobPage({
     ORDER BY created_at DESC LIMIT 1`) as unknown as LetterRow[])[0];
 
   const match = readMatch(job.match);
+  // The score was verified against the master as it was; an edit since then can change it.
+  const stale = Boolean(match && master && isMatchStale(master.updated_at, match.created_at));
   const view = match ? viewMatch(match, await loadAnswers(sid)) : null;
   const wasScore = was !== undefined ? Number(was) : null;
 
@@ -158,6 +161,19 @@ export default async function JobPage({
               This measures how much of what the posting asks for your résumé shows. It is not a
               prediction of whether you will get an interview.
             </p>
+            {stale && (
+              <div className="note" style={{ marginTop: 'var(--s-3)', borderLeft: '3px solid var(--warn)' }}>
+                <p style={{ marginBottom: 'var(--s-2)' }}>Your master résumé changed since this score was made.</p>
+                <GenerateButton
+                  action={`/api/jobs/${job.id}`}
+                  op="match"
+                  jobId={job.id}
+                  label="Re-check fit"
+                  busyLabel="Checking… about 30 seconds"
+                  primary
+                />
+              </div>
+            )}
           </div>
 
           {view.checkYourself.length > 0 && (
@@ -231,7 +247,7 @@ export default async function JobPage({
           </button>
         </form>
 
-        {view && master && (
+        {view && master && !stale && (
           <GenerateButton
             action={`/api/jobs/${job.id}`}
             op="match"
