@@ -10,7 +10,7 @@
   --danger:#f04438; --danger-subtle:#fde8e8; --danger-text:#b42318;
 
   /* the document is always light — it is going to be printed */
-  --doc-bg:#ffffff; --doc-text:#1c1b19; --doc-muted:#6b665e; --doc-border:#e3e0da;
+  --doc-marker-bg:#fdf4e0; --doc-marker-text:#8a6410; --doc-bg:#ffffff; --doc-text:#1c1b19; --doc-muted:#6b665e; --doc-border:#e3e0da;
 
   --shadow-sm:0 1px 2px rgba(16,24,40,.05);
   --shadow-md:0 1px 2px rgba(16,24,40,.06), 0 8px 24px -6px rgba(16,24,40,.12);
@@ -201,7 +201,7 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 }
 .entry:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md)}
 .entry strong{font-size:var(--text-base); font-weight:600; display:flex; align-items:center; gap:var(--s-2)}
-.entry span{color:var(--text-muted); font-size:var(--text-sm); line-height:1.5}
+.entry > span{color:var(--text-muted); font-size:var(--text-sm); line-height:1.5}
 .entry-lead{border-color:var(--accent); background:var(--accent-subtle)}
 .entry-lead strong, .entry-lead span{color:var(--accent-text)}
 .entry-soon{opacity:.7}
@@ -264,7 +264,7 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 /* Printing: only the document reaches the page. */
 @media print{
   .topbar, .sidebar, .mobile-bar, .page-bar, .site-foot, .card, .notice, .btn{display:none!important}
-  .shell{margin-left:0!important}
+  .shell{margin-left:0!important; min-height:auto!important}
   .paper{box-shadow:none!important; border:0!important; border-radius:0!important}
   .canvas-split{display:block!important; padding:0!important; max-width:none!important}
   #printable{border:0!important; box-shadow:none!important}
@@ -390,8 +390,8 @@ input.edit-field{width:auto; min-width:12ch}
 .q-option-label{font-weight:500; display:block}
 .q-option-help{font-size:var(--text-xs); color:var(--text-muted)}
 .bullet-sample{font-family:var(--serif); font-size:var(--text-base); line-height:1.55; background:var(--doc-bg); color:var(--doc-text); border:1px solid var(--doc-border); border-radius:var(--r-md); padding:var(--s-3)}
-.marker-chip{background:var(--warn-subtle); color:var(--warn-text); padding:0 var(--s-1); border-radius:var(--r-sm); font-family:var(--sans); font-size:.8em; font-weight:600}
-.field-label-base{font-size:var(--text-base)}
+.marker-chip{background:var(--doc-marker-bg); color:var(--doc-marker-text); padding:0 var(--s-1); border-radius:var(--r-sm); font-family:var(--sans); font-size:.8em; font-weight:600}
+.field .field-label-base{font-size:var(--text-base)}
 .letter-body{padding:var(--s-12); color:var(--doc-text); font-family:Georgia,"Times New Roman",serif; font-size:11pt; line-height:1.6}
 .letter-para{margin-bottom:var(--s-4); max-width:68ch}
 .letter-sign{margin-top:var(--s-6)}
@@ -422,10 +422,10 @@ input.edit-field{width:auto; min-width:12ch}
 .kv{display:flex; flex-direction:column; gap:var(--s-2); margin:0}
 .kv-row{display:flex; gap:var(--s-3); font-size:var(--text-sm)}
 .kv-row dt{width:140px; flex:none; color:var(--text-muted)}
-.kv-row dd{margin:0}
+.kv-row dd{margin:0; min-width:0; overflow-wrap:anywhere}
 .delete-form{max-width:360px; align-items:flex-start}
 .delete-form .field{align-self:stretch}
-.btn-danger-fill{background:var(--danger); border-color:var(--danger); color:#fff}
+.btn-danger-fill, .btn-danger-fill:hover{background:var(--danger-text); border-color:var(--danger-text); color:var(--bg-surface)}
 .reset-error{color:var(--danger-text)}
 .table-scroll{overflow-x:auto}
 .table{width:100%; border-collapse:collapse; font-size:var(--text-sm)}

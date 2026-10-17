@@ -141,17 +141,12 @@ export default async function JobsPage({
                         )
                       )}
 
-                      {(job.applied_at || openQuestions.has(job.id)) && (
+                      {job.applied_at && (
                         <div className="job-row-tags">
                           {job.applied_at && (
                             <span className="tag tag-ok tnum">
                               Applied {new Date(job.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
-                          )}
-                          {openQuestions.has(job.id) && (
-                            <Link href={`/jobs/${job.id}/questions`} className="tag tag-accent">
-                              {openQuestions.get(job.id)} questions
-                            </Link>
                           )}
                         </div>
                       )}
@@ -175,10 +170,13 @@ export default async function JobsPage({
                     )}
 
                     {openQuestions.has(job.id) && (
-                      <p className="job-row-note">
-                        This posting asks for things your résumé does not mention. Answer the questions
-                        and the tailored version can use the real ones.
-                      </p>
+                      <Link href={`/jobs/${job.id}/questions`} className="notice notice-info notice-link">
+                        <strong>{openQuestions.get(job.id)} questions about your experience</strong>
+                        <span className="notice-sub">
+                          This posting asks for things your résumé does not mention. Answer them
+                          and the tailored version can use the real ones.
+                        </span>
+                      </Link>
                     )}
 
                     <div className="job-row-actions">
