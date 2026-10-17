@@ -3,7 +3,7 @@
  * Prints a before/after table per prompt, writes it to <new>/compare.md, and writes
  * blind A/B pages to <new>/blind/ when both runs still have raw output.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { Summary } from './summary';
@@ -31,6 +31,8 @@ export function compareSummaries(before: Summary, after: Summary): string {
   }
   const changed = Object.keys({ ...b.coreHashes, ...a.coreHashes }).filter((f) => b.coreHashes[f] !== a.coreHashes[f]);
   out.push(`Changed prompts: ${changed.length ? changed.join(', ') : 'none'}`, '');
+  const missing = Object.keys(before.prompts).filter((n) => !(n in after.prompts));
+  if (missing.length) out.push(`Not in this run: ${missing.join(', ')}`, '');
 
   for (const name of Object.keys(after.prompts)) {
     const pa = after.prompts[name];
@@ -40,12 +42,13 @@ export function compareSummaries(before: Summary, after: Summary): string {
     for (const f of pa.failures) out.push(`- ${f.fixture} #${f.run}: ${f.gate}`);
     if (pa.errors || pa.degraded) out.push(`- ${pa.errors} errored, ${pa.degraded} degraded (not scored)`);
     out.push('', '| metric | before | after | change | spread before → after |', '|---|---|---|---|---|');
-    for (const m of Object.keys(pa.metrics)) {
+    for (const m of new Set([...Object.keys(pb?.metrics ?? {}), ...Object.keys(pa.metrics)])) {
       const x = pb?.metrics[m];
       const y = pa.metrics[m];
-      const delta = x ? y.mean - x.mean : 0;
+      const delta = x && y ? Math.round((y.mean - x.mean) * 100) / 100 : 0;
       const sign = delta > 0 ? '+' : '';
-      out.push(`| ${m} | ${x ? f2(x.mean) : '—'} | ${f2(y.mean)} | ${x ? sign + f2(delta) + verdict(m, delta) : '—'} | ${x ? f2(x.spread) : '—'} → ${f2(y.spread)} |`);
+      const cell = (s?: { mean: number }) => (s ? f2(s.mean) : '—');
+      out.push(`| ${m} | ${cell(x)} | ${cell(y)} | ${x && y ? sign + f2(delta) + verdict(m, delta) : '—'} | ${x ? f2(x.spread) : '—'} → ${y ? f2(y.spread) : '—'} |`);
     }
     out.push('');
   }
@@ -57,6 +60,7 @@ export function writeBlind(beforeDir: string, afterDir: string, count: number, r
   const key: Record<string, { A: string; B: string }> = {};
   const rawA = join(afterDir, 'raw');
   if (!existsSync(rawA) || !existsSync(join(beforeDir, 'raw'))) return 0;
+  rmSync(join(afterDir, 'blind'), { recursive: true, force: true }); // stale pages would leak the previous pairing
   let written = 0;
   for (const prompt of readdirSync(rawA)) {
     const both = readdirSync(join(rawA, prompt)).filter((fx) => existsSync(join(beforeDir, 'raw', prompt, fx, '1.txt')) && existsSync(join(rawA, prompt, fx, '1.txt')));
@@ -83,6 +87,7 @@ export function writeBlind(beforeDir: string, afterDir: string, count: number, r
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('evals/compare.ts')) {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: { blind: { type: 'string', default: '4' } } });
   const [beforeDir, afterDir] = positionals;
+  if (!/^\d+$/.test(values.blind as string)) throw new Error('--blind must be a non-negative integer');
   if (!beforeDir || !afterDir) throw new Error('Usage: npm run eval:compare -- <baseline run dir> <new run dir> [--blind 4]');
   const read = (d: string) => JSON.parse(readFileSync(join(d, 'summary.json'), 'utf8')) as Summary;
   const md = compareSummaries(read(beforeDir), read(afterDir));

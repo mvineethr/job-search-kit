@@ -29,7 +29,34 @@ describe('compareSummaries', () => {
   });
 });
 
+describe('compareSummaries gaps and verdicts', () => {
+  it('lists prompts missing from the new run, and shows a dash for a metric missing before', () => {
+    const before = summarize([rec({}), rec({ prompt: 'letter' })], meta());
+    const after = summarize([rec({ metrics: { coverage: 0.4, filler: 3, score: 9 } })], meta());
+    const md = compareSummaries(before, after);
+    expect(md).toContain('Not in this run: letter');
+    expect(md).toMatch(/\| score \| — \| 9\.00 \| — \|/);
+    expect(md).toMatch(/\| coverage \| 0\.50 \| 0\.40 \| -0\.10 worse \|/);
+  });
+  it('gives a neutral metric no verdict', () => {
+    const before = summarize([rec({ metrics: { score: 5 } })], meta());
+    const after = summarize([rec({ metrics: { score: 8 } })], meta());
+    expect(compareSummaries(before, after)).toMatch(/\| score \| 5\.00 \| 8\.00 \| \+3\.00 \|/);
+  });
+});
+
 describe('writeBlind', () => {
+  it('removes stale pages from a previous call', () => {
+    const root = mkdtempSync(join(tmpdir(), 'blind-'));
+    for (const run of ['before', 'after']) {
+      mkdirSync(join(root, run, 'raw', 'tailor', 'junior'), { recursive: true });
+      writeFileSync(join(root, run, 'raw', 'tailor', 'junior', '1.txt'), run);
+    }
+    mkdirSync(join(root, 'after', 'blind', 'old'), { recursive: true });
+    writeFileSync(join(root, 'after', 'blind', 'old', 'stale.md'), 'x');
+    writeBlind(join(root, 'before'), join(root, 'after'), 4);
+    expect(readdirSync(join(root, 'after', 'blind'))).not.toContain('old');
+  });
   it('writes A/B pairs and a key, with labels assigned by the rng', () => {
     const root = mkdtempSync(join(tmpdir(), 'blind-'));
     for (const [run, text] of [['before', 'OLD'], ['after', 'NEW']]) {
