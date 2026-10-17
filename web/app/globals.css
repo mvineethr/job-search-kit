@@ -210,19 +210,17 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 
 .entries{display:grid; gap:var(--s-3); grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 .entry{
-  padding:18px var(--s-4); border-radius:8px; border:1px solid var(--border);
-  background:var(--bg-surface); display:flex; flex-direction:column; gap:5px;
-  text-decoration:none; color:inherit; text-align:left;
-  transition:border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+  padding:var(--s-4); border-radius:var(--r-lg); border:1px solid var(--border); background:var(--bg-surface); box-shadow:var(--shadow-sm);
+  display:flex; flex-direction:column; gap:var(--s-1); text-decoration:none; color:inherit;
+  transition:border-color .12s ease, box-shadow .12s ease;
 }
-.entry:hover{border-color:var(--border-strong); box-shadow:var(--shadow); transform:translateY(-1px)}
-.entry strong{font-size:var(--text-base); font-weight:600; letter-spacing:-.01em}
+.entry:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md)}
+.entry strong{font-size:var(--text-base); font-weight:600; display:flex; align-items:center; gap:var(--s-2)}
 .entry span{color:var(--text-muted); font-size:var(--text-sm); line-height:1.5}
 .entry-lead{border-color:var(--accent); background:var(--accent-subtle)}
-.entry-lead strong{color:var(--accent)}
-.entry-lead span{color:var(--accent); opacity:.85}
-.entry-soon{opacity:.62}
-.entry-soon:hover{transform:none; box-shadow:none; border-color:var(--border)}
+.entry-lead strong, .entry-lead span{color:var(--accent-text)}
+.entry-soon{opacity:.7}
+.home-recent{display:grid; gap:var(--s-6); grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 
 .pill{
   display:inline-block; padding:2px 8px; border-radius:99px; white-space:nowrap;
@@ -407,3 +405,19 @@ input.edit-field{width:auto; min-width:12ch}
 .find-item{align-items:flex-start}
 .find-body{flex:1; min-width:0; gap:var(--s-1)}
 .find-where{font-size:var(--text-xs); color:var(--text-muted)}
+
+/* home */
+.home-recent .stack{gap:var(--s-2)}
+.entry-row .entry-title{flex:1; min-width:0}
+.entry-row .entry-title strong{display:block; font-size:var(--text-sm)}
+
+/* forms */
+.card-gap{margin-bottom:var(--s-6)}
+.form-actions{display:flex; flex-wrap:wrap; gap:var(--s-2)}
+.form-pair{display:flex; flex-wrap:wrap; gap:var(--s-3)}
+.field-label{font-weight:500}
+.field-label-gap{font-weight:500; margin-top:var(--s-2)}
+.field-text{font:inherit; padding:var(--s-3); border-radius:var(--r-md); border:1px solid var(--border-strong); background:var(--bg-surface); color:var(--text); line-height:1.5; resize:vertical}
+.resume-preview{padding:var(--s-4); max-height:260px; overflow:auto; white-space:pre-wrap; font-family:var(--serif); line-height:1.6; color:var(--doc-text)}
+.sub-card{border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-3); display:flex; flex-direction:column; gap:var(--s-3)}
+

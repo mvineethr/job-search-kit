@@ -45,8 +45,8 @@ export default function TextOrFileInput({
   const tooShort = text.trim().length < MIN_CHARS;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
-      <label htmlFor={`${id}-file`} style={{ fontWeight: 500 }}>
+    <div className="stack">
+      <label htmlFor={`${id}-file`} className="field-label">
         {label}
       </label>
       <input
@@ -59,7 +59,7 @@ export default function TextOrFileInput({
         }}
       />
 
-      <label htmlFor={`${id}-text`} style={{ fontWeight: 500, marginTop: 'var(--s-2)' }}>
+      <label htmlFor={`${id}-text`} className="field-label-gap">
         Or paste it
       </label>
       <textarea
@@ -68,36 +68,18 @@ export default function TextOrFileInput({
         onChange={(e) => setText(e.target.value)}
         rows={14}
         placeholder="Paste the whole thing…"
-        style={{
-          font: 'inherit',
-          padding: 'var(--s-3)',
-          borderRadius: 4,
-          border: '1px solid var(--border-strong)',
-          background: 'var(--bg-surface)',
-          color: 'var(--text)',
-          lineHeight: 1.5,
-          resize: 'vertical',
-        }}
+        className="field-text"
       />
 
       {extracted && (
-        <p
-          style={{
-            fontSize: 'var(--text-xs)',
-            color: 'var(--warn-text)',
-            background: 'var(--warn-subtle)',
-            padding: 'var(--s-2) var(--s-3)',
-            borderRadius: 4,
-            lineHeight: 1.5,
-          }}
-        >
+        <p className="notice notice-warn">
           This is what came out of your file. PDF extraction mangles things — read it over and
           fix anything wrong before continuing, or the review will be about the wrong text.
         </p>
       )}
 
       {error && (
-        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-text)' }}>
+        <p role="alert" className="notice notice-error">
           {error}
         </p>
       )}
@@ -106,15 +88,7 @@ export default function TextOrFileInput({
         type="button"
         disabled={busy || tooShort}
         onClick={() => onConfirm(text)}
-        style={{
-          padding: 'var(--s-2) var(--s-3)',
-          borderRadius: 4,
-          background: 'var(--accent)',
-          color: '#fff',
-          alignSelf: 'flex-start',
-          fontWeight: 500,
-          opacity: busy || tooShort ? 0.5 : 1,
-        }}
+        className="btn btn-primary self-start"
       >
         {busy ? 'Reading your file…' : buttonLabel}
       </button>

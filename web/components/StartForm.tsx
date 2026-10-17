@@ -6,7 +6,7 @@ import Elapsed from './Elapsed';
 
 function Added({ text, onChange }: { text: string; onChange: () => void }) {
   return (
-    <div className="note" style={{ display: 'flex', gap: 'var(--s-3)', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className="notice row">
       <span className="tnum">Added · {text.length.toLocaleString()} characters</span>
       <button type="button" className="btn" onClick={onChange}>
         Change
@@ -22,22 +22,25 @@ export default function StartForm() {
 
   return (
     <>
-      <div className="sec">
-        <div className="sec-head">
+      <div className="card card-gap">
+        <div className="card-head">
           <h2>Your résumé</h2>
         </div>
-        {resume ? (
-          <Added text={resume} onChange={() => setResume(null)} />
-        ) : (
-          <TextOrFileInput onConfirm={setResume} buttonLabel="Use this résumé" />
-        )}
+        <div className="card-body">
+          {resume ? (
+            <Added text={resume} onChange={() => setResume(null)} />
+          ) : (
+            <TextOrFileInput onConfirm={setResume} buttonLabel="Use this résumé" />
+          )}
+        </div>
       </div>
 
-      <div className="sec">
-        <div className="sec-head">
+      <div className="card card-gap">
+        <div className="card-head">
           <h2>Your LinkedIn</h2>
         </div>
-        <p className="note" style={{ marginBottom: 'var(--s-3)' }}>
+        <div className="card-body">
+        <p className="notice">
           Either the PDF from your profile (More, then Save to PDF) or the zip from Settings, Data
           privacy, Get a copy of your data. With a résumé as well, this is kept for fixing your
           LinkedIn later and does not change the résumé.
@@ -52,9 +55,10 @@ export default function StartForm() {
             buttonLabel="Use this profile"
           />
         )}
+        </div>
       </div>
 
-      <form method="post" action="/api/profile" onSubmit={() => setBusy(true)} className="sec">
+      <form method="post" action="/api/profile" onSubmit={() => setBusy(true)} className="form-actions card-gap">
         <input type="hidden" name="resume_text" value={resume ?? ''} />
         <input type="hidden" name="linkedin_text" value={linkedin ?? ''} />
         <button type="submit" className="btn btn-primary" disabled={busy || (!resume && !linkedin)}>
