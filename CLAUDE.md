@@ -129,7 +129,7 @@ reset links come from the Reset link button on `/admin`).
 cd web && npm install && npm run dev      # needs web/.env.local
 cd web && npm test                         # Vitest, 205 tests
 cd web && npm run build                    # prebuild copies ../core first
-cd web && npm run eval -- --label <name> --dry-run   # prompt test set; drop --dry-run to spend
+cd web && npm run eval -- --label <name> --dry-run   # prompt test set (needs .env.local); drop --dry-run to spend
 ```
 
 - **Vercel:** Root Directory **`web`**, preset Next.js, default build command (a custom one skips `prebuild`). `main` deploys to production.
