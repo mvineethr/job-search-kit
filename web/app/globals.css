@@ -110,7 +110,7 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
   text-decoration:none; transition:background .12s ease, border-color .12s ease;
 }
 .btn:hover{background:var(--bg-subtle)}
-.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
 .btn-primary:hover{background:var(--accent-hover); border-color:var(--accent-hover)}
 .btn:disabled{opacity:.5; cursor:default}
 

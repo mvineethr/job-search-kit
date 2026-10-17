@@ -34,6 +34,8 @@ const PAIRS: [string, string][] = [
   ['--text-muted', '--bg-page'],
   ['--accent', '--bg-surface'],
   ['--on-accent', '--accent'],
+  ['--on-accent', '--accent-hover'],
+  ['--accent-text', '--bg-surface'],
   ['--accent-text', '--accent-subtle'],
   ['--ok-text', '--ok-subtle'],
   ['--ok-text', '--bg-surface'],
