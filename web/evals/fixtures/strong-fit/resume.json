@@ -2,7 +2,7 @@
   "name": "Dana Okafor",
   "targetTitle": "Site Reliability Engineer",
   "contact": { "location": "Denver, CO", "email": "dana.okafor@example.com", "phone": "(303) 555-0187" },
-  "summary": "SRE with seven years keeping high-traffic e-commerce systems up.",
+  "summary": "SRE with eight years keeping high-traffic e-commerce systems up.",
   "skills": ["Kubernetes", "Terraform", "AWS", "Python", "Go", "Prometheus", "Grafana", "PagerDuty"],
   "experience": [
     {

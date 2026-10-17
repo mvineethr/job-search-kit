@@ -2,7 +2,7 @@ DANA OKAFOR
 Site Reliability Engineer | Denver, CO | dana.okafor@example.com | (303) 555-0187
 
 SUMMARY
-SRE with seven years keeping high-traffic e-commerce systems up.
+SRE with eight years keeping high-traffic e-commerce systems up.
 
 SKILLS
 Kubernetes, Terraform, AWS, Python, Go, Prometheus, Grafana, PagerDuty

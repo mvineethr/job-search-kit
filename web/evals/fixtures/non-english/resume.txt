@@ -2,7 +2,7 @@ Nguyễn Thị Lan
 Data Analyst | São Paulo, Brasil | lan.nguyen@example.com | +55 11 5550-0148
 
 RESUMO
-Analista de dados com cinco anos de experiência em logística e varejo. Data analyst with five years in logistics and retail.
+Analista de dados com sete anos de experiência em logística e varejo. Data analyst with seven years in logistics and retail.
 
 SKILLS
 SQL, Tableau, Python, Excel, dashboards, ETL, estatística
