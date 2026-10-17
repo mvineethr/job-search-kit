@@ -1,0 +1,26 @@
+{
+  "name": "Nguyễn Thị Lan",
+  "targetTitle": "Data Analyst",
+  "contact": { "location": "São Paulo, Brasil", "email": "lan.nguyen@example.com", "phone": "+55 11 5550-0148" },
+  "summary": "Analista de dados com cinco anos de experiência em logística e varejo. Data analyst with five years in logistics and retail.",
+  "skills": ["SQL", "Tableau", "Python", "Excel", "dashboards", "ETL", "estatística"],
+  "experience": [
+    {
+      "title": "Analista de Dados", "company": "Café Mãe Logística", "location": "São Paulo", "start": "Mar 2022", "end": "Present",
+      "bullets": [
+        "Built 12 Tableau dashboards that track delivery time, fuel cost and late orders for 8 regional hubs.",
+        "Wrote SQL queries and Python scripts that replaced a weekly manual Excel report (6 hours saved every week).",
+        "Found that 70% of late deliveries came from three routes; the route change cut late orders by 22%."
+      ]
+    },
+    {
+      "title": "Junior Data Analyst", "company": "Zürich Datenwerk", "location": "Zürich", "start": "Sep 2019", "end": "Feb 2022",
+      "bullets": [
+        "Maintained SQL reports for retail customers in Switzerland and Germany",
+        "Built a monthly sales dashboard in Tableau used by the account managers",
+        "Cleaned and validated customer data before every quarterly review"
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.Sc. Estatística", "school": "Universidade de São Paulo", "year": "2019" }]
+}

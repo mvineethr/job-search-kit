@@ -1,0 +1,27 @@
+{
+  "name": "Marcus Bell",
+  "targetTitle": "Front-End Developer",
+  "contact": { "location": "Austin, TX", "email": "marcus.bell@example.com", "phone": "512-555-0143" },
+  "summary": "",
+  "skills": ["JavaScript", "TypeScript", "React", "Redux", "HTML", "CSS", "SQL", "Git", "Jest", "Agile"],
+  "experience": [
+    {
+      "title": "Front-End Developer", "company": "Tilework Software", "location": "Austin TX", "start": "Jun 2022", "end": "Present",
+      "bullets": [
+        "Rebuilt the account dashboard in React; load time dropped from 4.2s to 1.4s.",
+        "Cut checkout drop-off by 18% after redesigning the payment form.",
+        "Wrote SQL queries to pull usage numbers for the product team's weekly report.",
+        "Mentored two junior developers through their first production releases."
+      ]
+    },
+    {
+      "title": "Web Developer", "company": "Cedar & Pine Studio", "location": "Remote", "start": "2020", "end": "May 2022",
+      "bullets": [
+        "Built 14 marketing sites in JavaScript and CSS for small retail clients.",
+        "Raised the Lighthouse accessibility score on the biggest client site from 61 to 94.",
+        "Worked in two-week Agile sprints with a team of five, tracked in Git."
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.A. Graphic Design", "school": "Texas State University", "year": "2019" }]
+}

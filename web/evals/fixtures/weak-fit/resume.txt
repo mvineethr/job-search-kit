@@ -1,0 +1,20 @@
+MARCUS BELL
+Front-End Developer | Austin, TX | marcus.bell@example.com | 512-555-0143
+
+SKILLS
+JavaScript, TypeScript, React, Redux, HTML, CSS, SQL, Git, Jest, Agile
+
+EXPERIENCE
+Front-End Developer - Tilework Software, Austin TX          06/2022 - Present
+* Rebuilt the account dashboard in React; load time dropped from 4.2s to 1.4s.
+* Cut checkout drop-off by 18% after redesigning the payment form.
+- Wrote SQL queries to pull usage numbers for the product team's weekly report.
+• Mentored two junior developers through their first production releases.
+
+Web Developer - Cedar & Pine Studio, Remote          2020 – 05/2022
+* Built 14 marketing sites in JavaScript and CSS for small retail clients.
+* Raised the Lighthouse accessibility score on the biggest client site from 61 to 94.
+* Worked in two-week Agile sprints with a team of five, tracked in Git.
+
+EDUCATION
+B.A. Graphic Design, Texas State University, 2019

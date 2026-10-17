@@ -1,0 +1,25 @@
+{
+  "name": "Dana Okafor",
+  "targetTitle": "Site Reliability Engineer",
+  "contact": { "location": "Denver, CO", "email": "dana.okafor@example.com", "phone": "(303) 555-0187" },
+  "summary": "SRE with seven years keeping high-traffic e-commerce systems up.",
+  "skills": ["Kubernetes", "Terraform", "AWS", "Python", "Go", "Prometheus", "Grafana", "PagerDuty"],
+  "experience": [
+    {
+      "title": "Senior SRE", "company": "Brightcart", "location": "Denver CO", "start": "Apr 2021", "end": "Present",
+      "bullets": [
+        "Cut p99 checkout latency from 1.8s to 600ms by moving session storage to Redis.",
+        "Ran the on-call rotation for 14 engineers; pages per week fell from 30 to 9.",
+        "Wrote Terraform modules now used by 11 teams to create AWS accounts."
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer", "company": "Larkspur Media", "location": "Remote", "start": "Jan 2018", "end": "Mar 2021",
+      "bullets": [
+        "Moved 60 services from VMs to Kubernetes over nine months.",
+        "Built Prometheus and Grafana dashboards for every tier-one service."
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.S. Computer Science", "school": "University of Colorado Boulder", "year": "2017" }]
+}

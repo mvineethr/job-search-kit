@@ -1,0 +1,31 @@
+{
+  "name": "Helen Marsh",
+  "targetTitle": "Science Teacher",
+  "contact": { "location": "Columbus, OH", "email": "helen.marsh@example.com", "phone": "614-555-0126" },
+  "summary": "High-school science teacher with nine years in the classroom, looking to move into instructional design.",
+  "skills": ["Curriculum design", "assessment", "Google Classroom", "Canva", "Google Slides", "differentiated instruction", "data analysis"],
+  "experience": [
+    {
+      "title": "Science Teacher", "company": "Westbrook High School", "location": "Columbus OH", "start": "Aug 2017", "end": "Present",
+      "bullets": [
+        "Taught biology and chemistry to about 120 students a year across five sections.",
+        "Rewrote the ninth-grade biology curriculum with two colleagues; the new units are now used by all four biology teachers.",
+        "Built weekly assessment quizzes in Google Classroom and used the results to reteach weak topics; pass rate on the unit exam rose from 71% to 84%.",
+        "Ran a training session each fall for new teachers on lab safety and Google Classroom.",
+        "Coached the Science Olympiad team."
+      ]
+    },
+    {
+      "title": "Science Teacher", "company": "Pine Ridge Middle School", "location": "Dublin OH", "start": "Aug 2014", "end": "Jun 2017",
+      "bullets": [
+        "Taught seventh and eighth-grade life science.",
+        "Made slide decks and printed study guides for every unit.",
+        "Served on the school's technology committee and trained staff on the new learning management system."
+      ]
+    }
+  ],
+  "education": [
+    { "degree": "M.Ed. Curriculum and Instruction", "school": "Ohio State University", "year": "2016" },
+    { "degree": "B.S. Biology", "school": "Ohio Wesleyan University", "year": "2014" }
+  ]
+}

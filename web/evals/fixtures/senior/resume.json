@@ -1,0 +1,51 @@
+{
+  "name": "Greg Lindqvist",
+  "targetTitle": "Staff Software Engineer",
+  "contact": { "location": "Seattle, WA", "email": "greg.lindqvist@example.com", "phone": "(206) 555-0138" },
+  "summary": "Staff engineer with fifteen years building and running distributed systems on the JVM. I lead architecture across teams, mentor senior engineers and like deleting more code than I write.",
+  "skills": ["Java", "Kotlin", "Python", "distributed systems", "AWS", "Kafka", "Cassandra", "PostgreSQL", "Terraform", "system architecture", "mentoring", "technical writing"],
+  "experience": [
+    {
+      "title": "Staff Software Engineer", "company": "Meridian Commerce", "location": "Seattle WA", "start": "Feb 2020", "end": "Present",
+      "bullets": [
+        "Led the architecture of the order-orchestration platform that now processes 2.1M orders a day across 14 services.",
+        "Cut AWS spend by $1.4M a year by moving batch workloads to spot capacity and retiring three idle clusters.",
+        "Designed the event schema and replay tooling that let teams rebuild any service from the Kafka log; incident recovery time fell from hours to minutes.",
+        "Mentored 9 engineers, 4 of whom were promoted to senior in two years.",
+        "Wrote the company's architecture decision record process; over 120 ADRs filed since.",
+        "Interview loop owner for senior backend hires; ran about 60 interviews."
+      ]
+    },
+    {
+      "title": "Senior Software Engineer", "company": "Halyard Logistics", "location": "Seattle WA", "start": "Aug 2015", "end": "Jan 2020",
+      "bullets": [
+        "Rebuilt the shipment tracking service in Java to handle 50x the event volume of the old system.",
+        "Introduced Cassandra for the tracking store and ran the migration with zero downtime.",
+        "Led a team of 5 through a move from a monolith to services on AWS.",
+        "Built the on-call runbooks and trained the team on them.",
+        "Reduced p95 API latency from 900ms to 210ms through query tuning and caching.",
+        "Code reviews, design reviews, and so on."
+      ]
+    },
+    {
+      "title": "Software Engineer", "company": "Pinecrest Systems", "location": "Portland OR", "start": "Jun 2011", "end": "Jul 2015",
+      "bullets": [
+        "Developed the billing engine in Java used by 40 hospital customers.",
+        "Wrote an internal job scheduler used by other teams.",
+        "Fixed a memory leak that caused weekly restarts.",
+        "Worked on the PostgreSQL schema and reporting queries.",
+        "Participated in the on-call rotation."
+      ]
+    },
+    {
+      "title": "Junior Developer", "company": "Oakfield Consulting", "location": "Portland OR", "start": "Jul 2009", "end": "May 2011",
+      "bullets": [
+        "Built internal tools and small websites for clients.",
+        "Responsible for bug fixes and testing.",
+        "Helped with deployments.",
+        "Supported the helpdesk when needed."
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.S. Computer Engineering", "school": "Oregon State University", "year": "2009" }]
+}

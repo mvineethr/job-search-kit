@@ -1,0 +1,33 @@
+{
+  "name": "Marisol Vega, RN, BSN",
+  "targetTitle": "Registered Nurse",
+  "contact": { "location": "Albuquerque, NM", "email": "marisol.vega@example.com", "phone": "(505) 555-0117" },
+  "summary": "Med-surg nurse with seven years on a 32-bed unit, often the resource nurse on nights. Ready to take on charge responsibilities in the ICU.",
+  "skills": ["Patient care", "IV therapy", "wound care", "telemetry", "medication administration", "patient education", "charge nurse relief", "EHR documentation"],
+  "experience": [
+    {
+      "title": "Registered Nurse, Med-Surg", "company": "Desert Springs Medical Center", "location": "Albuquerque NM", "start": "Jul 2019", "end": "Present",
+      "bullets": [
+        "Care for 5-6 patients per shift on a 32-bed medical-surgical unit with telemetry.",
+        "Charge nurse relief about twice a month: assign patients, manage admissions and escalate to the house supervisor.",
+        "Precepted 11 new graduate nurses; 10 finished orientation on schedule.",
+        "Led the unit's fall-prevention project; falls per 1,000 patient days dropped from 3.1 to 1.9 in a year."
+      ]
+    },
+    {
+      "title": "Staff Nurse", "company": "Rio Grande Community Hospital", "location": "Albuquerque NM", "start": "Aug 2017", "end": "Jun 2019",
+      "bullets": [
+        "Provided patient care on a 28-bed orthopedic floor",
+        "Taught discharge education to patients and families",
+        "Floated to the telemetry unit when short-staffed"
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.S.N.", "school": "University of New Mexico", "year": "2017" }],
+  "certifications": [
+    "RN, New Mexico Board of Nursing, active",
+    "BLS, American Heart Association",
+    "ACLS, American Heart Association",
+    "NIH Stroke Scale certified"
+  ]
+}
