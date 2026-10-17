@@ -39,7 +39,7 @@ function Links({ pathname }: { pathname: string }) {
         <Link
           key={item.href}
           href={item.href}
-          className={item.soon ? 'side-link side-soon' : 'side-link'}
+          className="nav-link"
           aria-current={navCurrent(pathname, item.href) ? 'page' : undefined}
         >
           {item.label}
@@ -50,66 +50,43 @@ function Links({ pathname }: { pathname: string }) {
   );
 }
 
-function AccountLinks({ me }: { me: Me }) {
-  return (
-    <>
-      <div className="who">
-        <strong>{me.name}</strong>
-        <span>{me.email}</span>
-      </div>
-      <Link href="/start">Profile</Link>
-      <Link href="/settings">Settings</Link>
-      <Link href="/help">Help</Link>
-      {me.admin && <Link href="/admin">Admin</Link>}
-      <SignOutButton className="" />
-    </>
-  );
-}
-
-export default function Sidebar({ me }: { me: Me }) {
+/** The signed-in bar: brand and sections on the left, the account menu on the right. Phones get the sections inside the menu. */
+export default function AppNav({ me }: { me: Me }) {
   const pathname = usePathname();
   const account = useRef<HTMLDetailsElement>(null);
-  const mobile = useRef<HTMLDetailsElement>(null);
   useDetailsClose(account, pathname);
-  useDetailsClose(mobile, pathname);
-
-  const brand = (
-    <Link href="/" className="brand">
-      <span className="brand-mark" aria-hidden="true" />
-      {SITE_NAME}
-    </Link>
-  );
 
   return (
-    <>
-      <aside className="sidebar" aria-label="Main">
-        {brand}
-        <nav className="side-nav">
+    <header className="topbar">
+      <div className="topbar-in">
+        <Link href="/" className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          {SITE_NAME}
+        </Link>
+        <nav className="top-nav" aria-label="Main">
           <Links pathname={pathname} />
         </nav>
-        <details className="menu side-account" ref={account}>
+        <details className="menu account" ref={account}>
           <summary aria-label={`Account menu for ${me.name}`}>
             <span className="avatar" aria-hidden="true">{initials(me.name) || '?'}</span>
-            <span className="side-name">{me.name}</span>
+            <span className="account-name">{me.name}</span>
           </summary>
-          <div className="menu-pop menu-up">
-            <AccountLinks me={me} />
-          </div>
-        </details>
-      </aside>
-
-      <header className="mobile-bar">
-        {brand}
-        <details className="menu" ref={mobile}>
-          <summary className="btn btn-sm" aria-label="Menu">Menu</summary>
           <div className="menu-pop">
-            <nav className="side-nav">
+            <nav className="menu-nav" aria-label="Main">
               <Links pathname={pathname} />
             </nav>
-            <AccountLinks me={me} />
+            <div className="who">
+              <strong>{me.name}</strong>
+              <span>{me.email}</span>
+            </div>
+            <Link href="/start">Profile</Link>
+            <Link href="/settings">Settings</Link>
+            <Link href="/help">Help</Link>
+            {me.admin && <Link href="/admin">Admin</Link>}
+            <SignOutButton className="" />
           </div>
         </details>
-      </header>
-    </>
+      </div>
+    </header>
   );
 }

@@ -70,7 +70,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
 | `nav.ts` | sidebar items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
 | `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
-| `components/Sidebar.tsx` | the signed-in sidebar and profile menu (client; uses `NAV`) |
+| `components/AppNav.tsx` | the signed-in top bar: sections on the left, account menu on the right; on phones the sections move into the menu (client; uses `NAV`) |
 | `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
 
 Account pages: `/agree` (clickwrap), `/settings` (export, delete), `/privacy`, `/terms`, `/help` (last three public). API: `/api/consent`, `/api/consent/sync`, `/api/account/export`, `/api/account/delete`.

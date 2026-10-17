@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SITE_NAME } from '@/lib/site';
 
-/** The bar for people who are not signed in. Signed-in pages use the sidebar. */
+/** The bar for people who are not signed in. Signed-in pages use AppNav. */
 export default function TopBar() {
   return (
     <header className="topbar">
