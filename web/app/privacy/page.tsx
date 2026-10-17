@@ -1,12 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import LegalContact from '@/components/LegalContact';
+import PageBar from '@/components/PageBar';
+import { currentUser } from '@/lib/auth';
 import { MIN_AGE, OPERATOR, SITE_NAME, TERMS_UPDATED } from '@/lib/site';
 
 export const metadata: Metadata = { title: `Privacy Policy · ${SITE_NAME}` };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const user = await currentUser();
   return (
+    <>
+      {user && <PageBar crumbs={[{ label: 'Privacy' }]} />}
     <div className="wrap">
       <div className="page-head">
         <h1>Privacy Policy</h1>
@@ -154,5 +159,6 @@ export default function PrivacyPage() {
         <LegalContact />
       </div>
     </div>
+    </>
   );
 }

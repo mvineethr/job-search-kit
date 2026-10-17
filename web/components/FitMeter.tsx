@@ -49,10 +49,10 @@ export default function FitMeter({ view, large = false }: { view: MatchView; lar
           strokeDasharray={`${(view.score / 100) * C} ${C}`}
           transform="rotate(-90 60 60)"
         />
-        <text x="60" y="60" className="fit-ring-num" textAnchor="middle" dominantBaseline="central">
+        <text aria-hidden="true" x="60" y="60" className="fit-ring-num" textAnchor="middle" dominantBaseline="central">
           {view.score}
         </text>
-        <text x="60" y="84" className="fit-ring-of" textAnchor="middle">of 100</text>
+        <text aria-hidden="true" x="60" y="84" className="fit-ring-of" textAnchor="middle">of 100</text>
       </svg>
       <span className={`fit-label fit-${tone}`}>{label}</span>
       {counts}

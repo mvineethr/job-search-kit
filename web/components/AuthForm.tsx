@@ -124,7 +124,7 @@ export default function AuthForm({
         )}
       </form>
 
-      <p className="hint">
+      <p className="notice">
         Reviews, tailored résumés and cover letters are drafted by AI. It is told never to invent
         experience or numbers, but check everything before you send it.
         {mode === 'signup' && (

@@ -68,6 +68,10 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `consent.ts` / `consent-cookie.ts` | Terms gate: `consentCookieValue` (version + hash of session token), `isExempt`, `safeNext` (same-site paths only); `consentSetCookie` |
 | `redirect.ts` | `redirectTo`, `backWithError` for form posts |
 | `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
+| `nav.ts` | sidebar items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
+| `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
+| `components/Sidebar.tsx` | the signed-in sidebar and profile menu (client; uses `NAV`) |
+| `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
 
 Account pages: `/agree` (clickwrap), `/settings` (export, delete), `/privacy`, `/terms`, `/help` (last three public). API: `/api/consent`, `/api/consent/sync`, `/api/account/export`, `/api/account/delete`.
 
@@ -105,7 +109,7 @@ Résumé editing: `/resume/[id]` renders `components/EditableResume.tsx` (fields
 - **Legal copy states only what the code does.** No guessed facts about providers (location, retention): flag them for the owner to verify.
 - **Password-reset links travel only in response bodies** — never in URLs, query strings or logs; whoever holds one can set the password.
 - **Form posts redirect with `backWithError`,** never return raw JSON to a browser form.
-- Design tokens in `web/app/globals.css` are fixed by the UX spec; spacing 4/8/12/16/24/32/48/64, type 12–28px, no gradients/emoji/"AI-powered" copy, no exclamation marks.
+- Design tokens in `web/app/globals.css` follow the Workbench spec (`docs/superpowers/specs/2026-10-17-workbench-redesign-design.md`): spacing 4/8/12/16/24/32/48/64, type 12–28px, radii 6/8/12, two neutral shadows, no gradients/emoji/"AI-powered" copy, no exclamation marks.
 
 ## Models (Moonshot Kimi, OpenAI-compatible)
 
@@ -128,7 +132,7 @@ reset links come from the Reset link button on `/admin`).
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 141 tests
+cd web && npm test                         # Vitest, 178 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
