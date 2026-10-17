@@ -569,7 +569,8 @@ export function scoreLetter(text: string, fx: Fixture): Score {
     gates: {
       parses: true,
       noTrap: !fx.truth.traps.some((t) => hasTerm(body, t)),
-      noNewNumbers: numbersIn(body).every((n) => allowed.includes(n.toLowerCase())),
+      // numbersIn keeps a sentence's final dot ("12."); strip it before looking the number up.
+      noNewNumbers: numbersIn(body).every((n) => allowed.includes(n.toLowerCase().replace(/[.,]+$/, ''))),
     },
     metrics: {
       filler: findGenericPhrases(parsed.data.paragraphs.map((p) => ({ where: 'Letter', text: p })), bannedList(), fx.description).length,
@@ -1033,6 +1034,9 @@ const calls = names.length * fixtures.length * runs;
 console.log(`${names.length} prompts × ${fixtures.length} fixtures × ${runs} runs = ${calls} calls`);
 console.log(`primary: ${primary.model} (effort ${primary.effort ?? 'default'}), fast: ${fast.model}`);
 if (args['dry-run']) process.exit(0);
+
+// package.json has no "type": "module", so tsx loads this as CJS: no top-level await.
+async function main() {
 if (!args.yes) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   await rl.question('Press Enter to start, Ctrl+C to cancel. ');
@@ -1096,7 +1100,15 @@ for (const [name, s] of Object.entries(summary.prompts)) {
   for (const f of s.failures) console.log(`  ${f.fixture} #${f.run}: ${f.gate}`);
 }
 console.log(`\nWrote ${outDir}`);
+}
+
+main().catch((err) => {
+  console.error((err as Error)?.message ?? err);
+  process.exit(1);
+});
 ```
+
+(The body of `main` is left unindented above to keep the diff readable. Indent it when you write the file.)
 
 - [ ] **Step 7: Add `tsx`, the scripts and the gitignore lines**
 
@@ -1219,7 +1231,6 @@ Expected: FAIL, `Cannot find module '@/evals/compare'`
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { fileURLToPath } from 'node:url';
 import type { Summary } from './summary';
 
 /** 1 = higher is better, -1 = lower is better, 0 = no right direction (shown without a verdict). */
@@ -1293,7 +1304,8 @@ export function writeBlind(beforeDir: string, afterDir: string, count: number, r
   return written;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// Run as a CLI only (not when Vitest imports it). import.meta is unavailable: tsx loads this as CJS.
+if (process.argv[1]?.replace(/\\/g, '/').endsWith('evals/compare.ts')) {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: { blind: { type: 'string', default: '4' } } });
   const [beforeDir, afterDir] = positionals;
   if (!beforeDir || !afterDir) throw new Error('Usage: npm run eval:compare -- <baseline run dir> <new run dir> [--blind 4]');
