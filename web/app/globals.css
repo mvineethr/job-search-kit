@@ -129,6 +129,7 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 .menu-pop > a:hover, .menu-pop > button:hover{background:var(--bg-subtle)}
 
 .shell{margin-left:var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column}
+.shell > *{width:100%}
 .shell > .site-foot{margin-top:auto}
 .mobile-bar{display:none}
 
