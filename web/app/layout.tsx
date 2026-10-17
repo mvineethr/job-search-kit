@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Inter, Source_Serif_4 } from 'next/font/google';
+import { Geist, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import TopBar from '@/components/TopBar';
 import { currentUser } from '@/lib/auth';
@@ -9,7 +9,7 @@ import { REPO_URL, SITE_NAME } from '@/lib/site';
 
 // Downloaded at build time and served from this site: visitors' browsers never
 // contact Google for fonts, so no IP addresses go to a third party on page load.
-const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+const sans = Geist({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 const serif = Source_Serif_4({ subsets: ['latin'], variable: '--font-serif', axes: ['opsz'], display: 'swap' });
 
 export const metadata: Metadata = {
