@@ -84,5 +84,5 @@ export default function EditableText({
       }
     },
   };
-  return multiline ? <textarea {...props} rows={Math.max(2, Math.ceil(draft.length / 80))} /> : <input {...props} />;
+  return multiline ? <textarea {...props} rows={Math.max(2, Math.ceil(draft.length / 80))} /> : <input {...props} size={Math.min(48, Math.max(12, draft.length + 2))} />;
 }

@@ -1,7 +1,7 @@
 # Inline résumé editing — spec
 
-**Status:** built · 2026-10-16 (`5d6a361`…`e036d0f`). 141 tests and the build pass. **Not yet
-clicked through in a browser**: see "Still to verify" at the end.
+**Status:** built · 2026-10-16 (`5d6a361`…`e036d0f`). 141 tests and the build pass. Checked in a
+browser on 2026-10-17; see "Live check" at the end.
 
 **What changed during planning and review:**
 - One save-status line above the document, not one per field. It names the problem and has Retry.
@@ -152,10 +152,23 @@ Escape cancels an edit and restores the saved text. Save status is announced
 Cover-letter editing, undo history, rich text, live collaboration, editing unparsed
 résumés, a "copy this into the master" action.
 
-## Still to verify (browser, `web-localtest`, `@example.com` account)
+## Live check, 2026-10-17 (`web-localtest`, two `@example.com` accounts)
 
-Unit tests cover the pure logic only. None of this has been checked against a live database or
-in a browser yet:
+Passed: 1, 2, 3 (no-session case: the PUT was redirected to `/login` as 200 HTML, and the editor
+showed "Couldn't save: Sign in again to save.", with Retry recovering), 4, 5, 7 (four quick edits
+went out as two saves), 8 (Word export holds every edit and no UI text; every control,
+placeholder and the status line sit in a print-hidden `.edit-only` element), 9, 10, and 11
+(including a second account's PUT to the first account's master: 404, row unchanged).
+
+Fixed during the check: single-line inputs were 12ch wide, so a long role title scrolled inside
+a 209px box. They are now sized to their text, capped at 48 characters.
+
+Not checked: 6 (an old plain-prose tailored row; it can't be made without writing to the
+database by hand), the expired-Terms variant of 3 (it takes the same code path as no session),
+a real screen reader, and an actual print preview. Print was checked through CSS rules, not
+visually.
+
+The original list:
 
 1. Master edits (name, contact, summary, skills, bullet edit/move/delete with confirm, add role,
    add education) survive a reload.

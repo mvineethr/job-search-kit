@@ -184,8 +184,8 @@ the merge isn't recorded. LinkedIn sign-in untested (no app yet).
 **Built, not pushed (S5, branch `claude/competitive-analysis-state-86062a`):** inline résumé
 editing on masters and tailored copies, plus a stale-score note on jobs after a master edit
 (spec `docs/superpowers/specs/2026-10-16-inline-editing-design.md`). Every task passed review
-and so did the whole branch; 141 tests, build green. **Not run in a browser yet.** The
-click-through list is in the spec.
+and so did the whole branch; 141 tests, build green. Clicked through locally on 2026-10-17;
+what was and wasn't covered is in the spec.
 
 **Legal gaps:** no contact email yet (waits on the project rename; pages fall back to Settings +
 GitHub), no governing-law state, Moonshot and Neon facts in `/privacy` unverified, no lawyer
@@ -202,7 +202,7 @@ first, and a master's original upload stays in `source_text`); the ATS check use
 
 ## Next
 
-1. Click through inline editing on `web-localtest` (list in the spec), then push and open a PR.
+1. Push inline editing and open a PR (clicked through locally 2026-10-17).
 2. Publish the Google OAuth app out of Testing. LinkedIn app (needs a Company Page).
 3. Rename the project (`SITE_NAME` in `lib/site.ts`), then set `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_GOVERNING_STATE`; verify Moonshot (location, retention, training) and Neon region against `/privacy`.
 4. Moonshot spend cap — sign-up is open with no limits.
