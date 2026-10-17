@@ -111,9 +111,9 @@ All scorers are pure functions in `web/evals/score.ts` that take `(output text, 
 
 | Prompt | Hard gates (any false fails the version) | Metrics (shown as deltas) |
 |---|---|---|
-| **parse** | output parses to `ResumeSchema`; **invented words = 0** (content words in the output that aren't in `resume.txt`) | words lost (content words in `resume.txt` missing from the output); roles and bullets count vs `resume.json` |
+| **parse** | output parses to `ResumeSchema`; **invented words = 0** (content words in the output that aren't in `resume.txt`; month abbreviations are exempt because the parse prompt normalises dates to `Mon YYYY`) | words lost (content words in `resume.txt` missing from the output); roles and bullets count vs `resume.json` |
 | **tailor** | parses; after `verifyTailoring` against `resume.json`: **removed skills = 0, unsupported numbers = 0, unsupported employers = 0**; **no trap** appears anywhere in the output | supported-keyword coverage (share of `supported` present); `[METRIC NEEDED]` count; filler hits (posting words exempt, as in the app); bullet strength; bullets restored |
-| **letter** | parses to `LetterSchema`; no trap in the paragraphs; no number that isn't in `resume.json` | filler hits; supported-keyword coverage; word count |
+| **letter** | parses to `LetterSchema`; no trap in the paragraphs; no number that is in neither the résumé nor the posting (quoting the posting's own numbers is not invention) | filler hits; supported-keyword coverage; word count |
 | **match** | parses to `MatchOutputSchema`; **no trap requirement marked met or partial** after `verifyEvidence` | fit score (computed with the app's arithmetic); score spread across runs; unverified quotes; fit band hit (score falls in `fitBand`'s range) |
 | **review** | findings block parses (`parseFindings` returns ≥1) | finding count; severity mix; finding-count spread across runs |
 
@@ -146,8 +146,8 @@ npm run eval:compare -- runs/2026-10-16-1200-baseline runs/2026-10-18-0900-v2-ta
   mean before, mean after and the change, with an arrow for "better" in that metric's direction.
   It also writes the table to `<new run>/compare.md`.
 - If both runs have raw outputs, it writes `<new run>/blind/<prompt>/<fixture>.md`: one output from
-  each version, labelled A and B at random. The key goes in `<new run>/blind/key.json`, which is
-  gitignored with `raw/`. It covers a few fixtures per prompt (default 4, chosen by `--blind`), so the
+  each version, labelled A and B at random, with the key in `<new run>/blind/key.json`. All of `blind/` is
+  gitignored along with `raw/`, since it holds raw output. It covers a few fixtures per prompt (default 4, chosen by `--blind`), so the
   pick takes minutes rather than hours.
 - Mismatched SHAs, models or efforts are printed as a warning above the table. Comparing across a
   model change is allowed but labelled.
