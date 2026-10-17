@@ -421,3 +421,26 @@ input.edit-field{width:auto; min-width:12ch}
 .resume-preview{padding:var(--s-4); max-height:260px; overflow:auto; white-space:pre-wrap; font-family:var(--serif); line-height:1.6; color:var(--doc-text)}
 .sub-card{border:1px solid var(--border); border-radius:var(--r-md); padding:var(--s-3); display:flex; flex-direction:column; gap:var(--s-3)}
 
+/* secondary flows: questions, numbers, letter, ATS check */
+.form-actions-end{justify-content:flex-end}
+.q-card{margin:0; padding:var(--s-4); display:flex; flex-direction:column; gap:var(--s-3); min-width:0}
+.q-legend{padding:0; float:none}
+.q-count{font-size:var(--text-xs); letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:var(--s-1)}
+.q-title{font-size:var(--text-lg); font-weight:600}
+.q-options{display:flex; flex-direction:column; gap:var(--s-2)}
+.q-option{display:flex; gap:var(--s-3); align-items:flex-start; padding:var(--s-2) var(--s-3); border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg-page); cursor:pointer}
+.q-option input{margin-top:var(--s-1)}
+.q-option-label{font-weight:500; display:block}
+.q-option-help{font-size:var(--text-xs); color:var(--text-muted)}
+.bullet-sample{font-family:var(--serif); font-size:var(--text-base); line-height:1.55; background:var(--doc-bg); color:var(--doc-text); border:1px solid var(--doc-border); border-radius:var(--r-md); padding:var(--s-3)}
+.marker-chip{background:var(--warn-subtle); color:var(--warn-text); padding:0 var(--s-1); border-radius:var(--r-sm); font-family:var(--sans); font-size:.8em; font-weight:600}
+.field-label-base{font-size:var(--text-base)}
+.letter-body{padding:var(--s-12); color:var(--doc-text); font-family:Georgia,"Times New Roman",serif; font-size:11pt; line-height:1.6}
+.letter-para{margin-bottom:var(--s-4); max-width:68ch}
+.letter-sign{margin-top:var(--s-6)}
+.letter-count{margin-top:var(--s-6); padding-top:var(--s-2); border-top:1px dashed var(--doc-border); font-family:var(--sans); font-size:var(--text-xs); color:var(--doc-muted)}
+.facts-list{margin:0; padding-left:var(--s-4); line-height:1.6; font-size:var(--text-sm)}
+.ats-checks{list-style:none; margin:0; padding:0}
+.ats-check-body{flex:1; min-width:0}
+.ats-pre{white-space:pre-wrap; font-family:var(--mono,monospace); font-size:var(--text-xs); line-height:1.6; padding:var(--s-4); border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg-surface); max-height:520px; overflow:auto}
+@media (max-width:1023px){.letter-body{padding:var(--s-6)}}
