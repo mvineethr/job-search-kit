@@ -69,7 +69,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const { note, audit } = readNote(row.source_text);
     if (audit) {
       const before = ResumeSchema.safeParse(row.content);
-      flags = before.success ? clearFlags(before.data, edit.resume, audit.unsupportedNumbers) : audit.unsupportedNumbers;
+      flags = before.success ? clearFlags(before.data, edit.resume, audit.unsupportedNumbers ?? []) : audit.unsupportedNumbers ?? [];
       sourceText = JSON.stringify({ note, audit: { ...audit, unsupportedNumbers: flags } });
     }
   }
@@ -78,6 +78,8 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     UPDATE resumes SET content = ${JSON.stringify(edit.resume)}, source_text = ${sourceText}, updated_at = now()
     WHERE id = ${id} AND sid = ${sid}
     RETURNING updated_at`) as unknown as { updated_at: string | Date }[];
+
+  if (!saved[0]) return Response.json({ error: 'Résumé not found.' }, { status: 404 });
 
   return Response.json({ ok: true, updatedAt: new Date(saved[0].updated_at).toISOString(), unsupportedNumbers: flags });
 }

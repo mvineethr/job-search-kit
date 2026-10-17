@@ -153,8 +153,9 @@ export default function EditableResume({ id, initial, flags: initialFlags }: { i
         body: JSON.stringify({ content: next }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setStatus({ kind: 'error', message: data.error ?? "That change couldn't be saved." });
+      if (!(res.ok && data.ok === true)) {
+        // a proxy redirect to /agree or /login answers 200 HTML, so ok alone isn't proof of a save
+        setStatus({ kind: 'error', message: data.error ?? (res.redirected ? 'Sign in again to save.' : "That change couldn't be saved.") });
       } else {
         setFlags(data.unsupportedNumbers ?? []);
         setStatus({ kind: 'saved' });

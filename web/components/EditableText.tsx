@@ -78,7 +78,7 @@ export default function EditableText({
         e.preventDefault();
         cancelled.current = true;
         e.currentTarget.blur();
-      } else if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+      } else if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
         e.preventDefault();
         e.currentTarget.blur();
       }
