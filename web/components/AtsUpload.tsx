@@ -31,7 +31,7 @@ export default function AtsUpload() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
+    <div className="stack">
       <div className="field">
         <label htmlFor="ats-file">Your résumé PDF</label>
         <input
@@ -48,55 +48,32 @@ export default function AtsUpload() {
       </div>
 
       {error && (
-        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>
+        <p role="alert" className="notice notice-error">
           {error}
         </p>
       )}
 
       {result && (
         <>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
+          <ul className="ats-checks">
             {result.checks.map((c) => (
-              <li
-                key={c.label}
-                style={{
-                  border: '1px solid var(--border)',
-                  borderLeft: `3px solid var(--${c.ok ? 'ok' : 'danger'})`,
-                  borderRadius: 4,
-                  background: 'var(--bg-surface)',
-                  padding: 'var(--s-3)',
-                }}
-              >
-                <strong style={{ color: `var(--${c.ok ? 'ok' : 'danger'})` }}>
-                  {c.ok ? 'Pass' : 'Problem'}: {c.label}
-                </strong>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2 }}>{c.detail}</p>
+              <li key={c.label} className="find-row">
+                <span className={`tag ${c.ok ? 'tag-ok' : 'tag-danger'}`}>{c.ok ? 'Pass' : 'Problem'}</span>
+                <div className="ats-check-body">
+                  <strong>{c.label}</strong>
+                  <p className="muted">{c.detail}</p>
+                </div>
               </li>
             ))}
           </ul>
 
-          <div>
-            <h2 style={{ fontSize: 'var(--text-base)', marginBottom: 'var(--s-2)' }}>The text it pulled out</h2>
-            <p className="note" style={{ marginBottom: 'var(--s-2)' }}>
+          <div className="stack">
+            <h2 className="section-title">The text it pulled out</h2>
+            <p className="notice">
               Read it top to bottom. If sections run together, dates sit away from their job, or
               words are missing, a parser will get the same thing wrong.
             </p>
-            <pre
-              style={{
-                whiteSpace: 'pre-wrap',
-                fontFamily: 'var(--mono, monospace)',
-                fontSize: 'var(--text-xs)',
-                lineHeight: 1.6,
-                padding: 'var(--s-4)',
-                border: '1px solid var(--border)',
-                borderRadius: 4,
-                background: 'var(--bg-surface)',
-                maxHeight: 520,
-                overflow: 'auto',
-              }}
-            >
-              {result.text}
-            </pre>
+            <pre className="ats-pre">{result.text}</pre>
           </div>
         </>
       )}

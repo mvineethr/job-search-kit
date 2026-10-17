@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import LegalContact from '@/components/LegalContact';
+import PageBar from '@/components/PageBar';
+import { currentUser } from '@/lib/auth';
 import { SITE_NAME } from '@/lib/site';
 
 export const metadata: Metadata = { title: `Help · ${SITE_NAME}` };
@@ -84,8 +86,11 @@ const QA: { q: string; a: React.ReactNode }[] = [
   },
 ];
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const user = await currentUser();
   return (
+    <>
+      {user && <PageBar crumbs={[{ label: 'Help' }]} />}
     <div className="wrap">
       <div className="page-head">
         <h1>Help</h1>
@@ -104,5 +109,6 @@ export default function HelpPage() {
         <LegalContact />
       </div>
     </div>
+    </>
   );
 }

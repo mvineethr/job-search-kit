@@ -9,7 +9,9 @@ export default async function SignupPage() {
   if (await currentUser()) redirect('/');
 
   return (
-    <div className="wrap" style={{ maxWidth: 440 }}>
+    <div className="auth">
+      <div className="card auth-card">
+        <div className="card-body">
       <div className="page-head">
         <h1>Create your account</h1>
         <p className="sub">
@@ -17,6 +19,8 @@ export default async function SignupPage() {
         </p>
       </div>
       <AuthForm mode="signup" providers={enabledProviders()} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -27,7 +27,7 @@ function Field({
 }) {
   return (
     <label className="field">
-      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>{label}</span>
+      <span className="field-label">{label}</span>
       {multiline ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={5} />
       ) : (
@@ -79,8 +79,8 @@ export default function BuildForm() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
-      <p className="note tnum">
+    <div className="stack card-gap">
+      <p className="notice tnum">
         Step {step + 1} of {STEPS.length} · {STEPS[step]}
       </p>
 
@@ -102,15 +102,15 @@ export default function BuildForm() {
 
       {step === 1 && (
         <>
-          <p className="note">
+          <p className="notice">
             Most recent first. Include part-time work, volunteering or placements. Write what you did
             the way you would say it out loud; it gets tidied into bullets, and nothing is added.
           </p>
           {roles.map((r, i) => (
-            <div key={i} className="note" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
+            <div key={i} className="card card-body">
               <Field label="Job title" value={r.title} onChange={(title) => setRole(i, { title })} />
               <Field label="Company or organisation" value={r.company} onChange={(company) => setRole(i, { company })} />
-              <div style={{ display: 'flex', gap: 'var(--s-3)', flexWrap: 'wrap' }}>
+              <div className="form-pair">
                 <Field label="Started" value={r.start} onChange={(start) => setRole(i, { start })} hint="e.g. Mar 2022" />
                 <Field label="Finished" value={r.end} onChange={(end) => setRole(i, { end })} hint="or Present" />
               </div>
@@ -122,13 +122,13 @@ export default function BuildForm() {
                 multiline
               />
               {roles.length > 1 && (
-                <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setRoles(roles.filter((_, j) => j !== i))}>
+                <button type="button" className="btn self-start" onClick={() => setRoles(roles.filter((_, j) => j !== i))}>
                   Remove this role
                 </button>
               )}
             </div>
           ))}
-          <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setRoles([...roles, { ...blankRole }])}>
+          <button type="button" className="btn self-start" onClick={() => setRoles([...roles, { ...blankRole }])}>
             Add another role
           </button>
         </>
@@ -137,16 +137,16 @@ export default function BuildForm() {
       {step === 2 && (
         <>
           {education.map((e, i) => (
-            <div key={i} className="note" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
+            <div key={i} className="card card-body">
               <Field label="Qualification" value={e.degree} onChange={(degree) => setEdu(i, { degree })} />
               <Field label="School, college or university" value={e.school} onChange={(school) => setEdu(i, { school })} />
               <Field label="Year" value={e.year} onChange={(year) => setEdu(i, { year })} hint="Optional." />
-              <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setEducation(education.filter((_, j) => j !== i))}>
+              <button type="button" className="btn self-start" onClick={() => setEducation(education.filter((_, j) => j !== i))}>
                 Remove
               </button>
             </div>
           ))}
-          <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => setEducation([...education, { ...blankEdu }])}>
+          <button type="button" className="btn self-start" onClick={() => setEducation([...education, { ...blankEdu }])}>
             Add education
           </button>
           <Field
@@ -159,12 +159,12 @@ export default function BuildForm() {
       )}
 
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+        <p role="alert" className="notice notice-error">
           {error}
         </p>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--s-2)', flexWrap: 'wrap' }}>
+      <div className="form-actions">
         {step > 0 && (
           <button type="button" className="btn" disabled={busy} onClick={() => setStep(step - 1)}>
             Back

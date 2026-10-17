@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import PageBar from '@/components/PageBar';
 import { currentUser } from '@/lib/auth';
 import { isAdmin } from '@/lib/admin';
 import { ensureSchema, sql } from '@/lib/db';
@@ -46,58 +47,56 @@ export default async function AdminPage() {
     ORDER BY u."createdAt" DESC`) as Row[];
 
   return (
-    <div className="wrap">
-      <div className="page-head">
-        <h1>Accounts</h1>
-        <p className="sub tnum">
-          {rows.length} {rows.length === 1 ? 'person' : 'people'} ·{' '}
-          {rows.filter((r) => r.resumes > 0).length} with a résumé
-        </p>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
-        <table className="tnum" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', color: 'var(--text-muted)' }}>
-              {['Person', 'Signs in with', 'Joined', 'Last active', 'Résumés', 'Jobs', 'Letters', 'Aiming for', 'Experience', 'Based in', 'Search', 'Found us via', ''].map((h) => (
-                <th key={h} style={{ padding: 'var(--s-2)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} style={{ verticalAlign: 'top' }}>
-                <td style={{ padding: 'var(--s-2)', borderBottom: '1px solid var(--border)' }}>
-                  <strong style={{ display: 'block' }}>{r.name}</strong>
-                  <span className="hint">{r.email}</span>
-                </td>
-                {[
-                  (r.methods ?? '').split(',').filter(Boolean).map((m) => METHOD[m] ?? m).join(', ') || '—',
-                  day(r.created_at),
-                  day(r.last_active),
-                  r.resumes,
-                  r.jobs,
-                  r.letters,
-                  r.target_role ?? '—',
-                  r.years_experience ?? '—',
-                  r.location ?? '—',
-                  r.search_status ?? '—',
-                  r.heard_from ?? '—',
-                ].map((v, i) => (
-                  <td key={i} style={{ padding: 'var(--s-2)', borderBottom: '1px solid var(--border)' }}>
-                    {v}
-                  </td>
+    <>
+      <PageBar crumbs={[{ label: 'Admin' }]} />
+      <div className="wrap stack stack-lg">
+        <section className="card">
+          <div className="card-head">
+            <h2>Accounts</h2>
+            <p className="muted tnum">
+              {rows.length} {rows.length === 1 ? 'person' : 'people'} ·{' '}
+              {rows.filter((r) => r.resumes > 0).length} with a résumé
+            </p>
+          </div>
+          <div className="card-body table-scroll">
+            <table className="table tnum">
+              <thead>
+                <tr>
+                  {['Person', 'Signs in with', 'Joined', 'Last active', 'Résumés', 'Jobs', 'Letters', 'Aiming for', 'Experience', 'Based in', 'Search', 'Found us via', ''].map((h) => (
+                    <th key={h}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <strong className="block">{r.name}</strong>
+                      <span className="hint">{r.email}</span>
+                    </td>
+                    {[
+                      (r.methods ?? '').split(',').filter(Boolean).map((m) => METHOD[m] ?? m).join(', ') || '—',
+                      day(r.created_at),
+                      day(r.last_active),
+                      r.resumes,
+                      r.jobs,
+                      r.letters,
+                      r.target_role ?? '—',
+                      r.years_experience ?? '—',
+                      r.location ?? '—',
+                      r.search_status ?? '—',
+                      r.heard_from ?? '—',
+                    ].map((v, i) => (
+                      <td key={i}>{v}</td>
+                    ))}
+                    <td>{(r.methods ?? '').includes('credential') && <ResetLinkButton email={r.email} />}</td>
+                  </tr>
                 ))}
-                <td style={{ padding: 'var(--s-2)', borderBottom: '1px solid var(--border)' }}>
-                  {(r.methods ?? '').includes('credential') && <ResetLinkButton email={r.email} />}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
-    </div>
+    </>
   );
 }

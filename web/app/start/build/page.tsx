@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import BuildForm from '@/components/BuildForm';
+import PageBar from '@/components/PageBar';
 
 export default function BuildPage() {
   return (
-    <div className="wrap" style={{ maxWidth: 720 }}>
+    <>
+    <PageBar crumbs={[{ label: 'Build a résumé' }]} />
+    <div className="wrap col-720">
       <div className="page-head">
         <h1>Build your résumé</h1>
         <p className="sub">
@@ -13,9 +16,10 @@ export default function BuildPage() {
         </p>
       </div>
       <BuildForm />
-      <p className="note" style={{ marginTop: 'var(--s-6)' }}>
+      <p className="notice card-gap">
         Have a résumé or LinkedIn after all? <Link href="/start">Start from that instead.</Link>
       </p>
     </div>
+    </>
   );
 }

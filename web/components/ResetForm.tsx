@@ -22,14 +22,14 @@ export default function ResetForm({ token }: { token: string }) {
 
   if (done) {
     return (
-      <p className="note">
+      <p role="status" className="notice notice-ok">
         Password changed. <Link href="/login">Sign in with it now.</Link>
       </p>
     );
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
+    <form onSubmit={submit} className="stack">
       <div className="field">
         <label htmlFor="password">New password</label>
         <input
@@ -44,11 +44,11 @@ export default function ResetForm({ token }: { token: string }) {
         <span className="hint">At least 8 characters.</span>
       </div>
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+        <p role="alert" className="notice notice-error">
           {error}
         </p>
       )}
-      <button type="submit" className="btn btn-primary" disabled={busy} style={{ alignSelf: 'flex-start' }}>
+      <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
         {busy ? 'One moment…' : 'Set my password'}
       </button>
     </form>

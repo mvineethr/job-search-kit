@@ -79,99 +79,54 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
   }
 
   return (
-    <aside
-      style={{
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        background: 'var(--bg-surface)',
-        padding: 'var(--s-4)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--s-4)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-2)' }}>
-        <h2 style={{ fontSize: 'var(--text-sm)' }}>Review</h2>
+    <aside className="card">
+      <div className="card-head">
+        <h2>Review</h2>
         {running && (
-          <button
-            onClick={() => controller?.abort()}
-            style={{ marginLeft: 'auto', color: 'var(--text-muted)' }}
-          >
+          <button onClick={() => controller?.abort()} className="btn btn-sm ml-auto">
             Cancel
           </button>
         )}
       </div>
 
-      {!running && raw === '' && (
-        <button
-          onClick={run}
-          style={{
-            padding: 'var(--s-2) var(--s-3)',
-            borderRadius: 4,
-            background: 'var(--accent)',
-            color: '#fff',
-            fontWeight: 500,
-            alignSelf: 'flex-start',
-          }}
-        >
-          Review this résumé
-        </button>
-      )}
+      <div className="card-body">
+        {!running && raw === '' && (
+          <button onClick={run} className="btn btn-primary self-start">
+            Review this résumé
+          </button>
+        )}
 
-      {running && raw === '' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
-          <p style={{ color: 'var(--text-muted)' }}>
-            {thinking ? 'Working through your résumé…' : 'Reading your résumé…'}
+        {running && raw === '' && (
+          <div className="stack">
+            <p className="muted">{thinking ? 'Working through your résumé…' : 'Reading your résumé…'}</p>
+            {thinking && <p className="thinking-line">{lastLine(thinking)}</p>}
+          </div>
+        )}
+
+        {degraded && (
+          <p className="notice notice-warn">
+            Served by a backup model — the output may be weaker. Re-run for a better one.
           </p>
-          {thinking && (
-            <p
-              style={{
-                fontSize: 'var(--text-xs)',
-                color: 'var(--text-faint)',
-                fontStyle: 'italic',
-                lineHeight: 1.5,
-                borderLeft: '2px solid var(--border)',
-                paddingLeft: 'var(--s-3)',
-              }}
-            >
-              {lastLine(thinking)}
-            </p>
-          )}
+        )}
+
+        <div aria-live="polite" aria-busy={running} className="pre-wrap">
+          {stripFindings(raw)}
         </div>
-      )}
 
-      {degraded && (
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--warn)', lineHeight: 1.5 }}>
-          Served by a backup model — the output may be weaker. Re-run for a better one.
-        </p>
-      )}
+        <FindingsList findings={findings} />
 
-      <div aria-live="polite" aria-busy={running} style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
-        {stripFindings(raw)}
+        {!running && raw !== '' && (
+          <button onClick={run} className="btn self-start">
+            Run it again
+          </button>
+        )}
+
+        {error && (
+          <p role="alert" className="notice notice-error">
+            {error}
+          </p>
+        )}
       </div>
-
-      <FindingsList findings={findings} />
-
-      {!running && raw !== '' && (
-        <button
-          onClick={run}
-          style={{
-            padding: 'var(--s-2) var(--s-3)',
-            borderRadius: 4,
-            border: '1px solid var(--border-strong)',
-            alignSelf: 'flex-start',
-            fontWeight: 500,
-          }}
-        >
-          Run it again
-        </button>
-      )}
-
-      {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)' }}>
-          {error}
-        </p>
-      )}
     </aside>
   );
 }
