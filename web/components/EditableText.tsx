@@ -49,7 +49,7 @@ export default function EditableText({
           }
         }}
       >
-        {value ? (render ? render(value) : value) : <span className="edit-placeholder edit-only">{placeholder}</span>}
+        {value ? (render ? render(value) : value) : <span className="edit-placeholder edit-only">{placeholder || `+ ${label}`}</span>}
       </span>
     );
   }
@@ -78,7 +78,7 @@ export default function EditableText({
         e.preventDefault();
         cancelled.current = true;
         e.currentTarget.blur();
-      } else if (e.key === 'Enter') {
+      } else if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
         e.preventDefault();
         e.currentTarget.blur();
       }

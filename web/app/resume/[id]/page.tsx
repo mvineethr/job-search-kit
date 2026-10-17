@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type ResumeRow } from '@/lib/db';
 import { ResumeSchema } from '@/lib/resume-schema';
-import ResumeDocument from '@/components/ResumeDocument';
+import EditableResume from '@/components/EditableResume';
 import AssistantPanel from '@/components/AssistantPanel';
 import PrintButton from '@/components/PrintButton';
 import ConfirmButton from '@/components/ConfirmButton';
@@ -121,7 +121,7 @@ export default async function ResumePage({
                 overflow: 'hidden',
               }}
             >
-              <ResumeDocument resume={resume} unsupportedNumbers={audit?.unsupportedNumbers ?? []} />
+              <EditableResume id={row.id} initial={resume} flags={audit?.unsupportedNumbers ?? []} />
             </div>
           ) : (
             <article
