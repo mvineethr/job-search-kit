@@ -11,11 +11,11 @@ import ConfirmButton from '@/components/ConfirmButton';
 
 export const dynamic = 'force-dynamic';
 
-const STATUS: Record<MatchedRequirement['status'], { label: string; color: string }> = {
-  met: { label: 'Shown', color: 'var(--ok)' },
-  partial: { label: 'Partly', color: 'var(--warn)' },
-  missing: { label: 'Not shown', color: 'var(--danger)' },
-  unknown: { label: 'Check yourself', color: 'var(--text-muted)' },
+const STATUS: Record<MatchedRequirement['status'], { label: string; color: string; border: string }> = {
+  met: { label: 'Shown', color: 'var(--ok-text)', border: 'var(--ok)' },
+  partial: { label: 'Partly', color: 'var(--warn-text)', border: 'var(--warn)' },
+  missing: { label: 'Not shown', color: 'var(--danger-text)', border: 'var(--danger)' },
+  unknown: { label: 'Check yourself', color: 'var(--text-muted)', border: 'var(--text-muted)' },
 };
 
 function RequirementList({ title, items }: { title: string; items: MatchedRequirement[] }) {
@@ -32,7 +32,7 @@ function RequirementList({ title, items }: { title: string; items: MatchedRequir
             key={r.id}
             style={{
               border: '1px solid var(--border)',
-              borderLeft: `3px solid ${STATUS[r.status].color}`,
+              borderLeft: `3px solid ${STATUS[r.status].border}`,
               borderRadius: 4,
               background: 'var(--bg-surface)',
               padding: 'var(--s-3)',
@@ -116,7 +116,7 @@ export default async function JobPage({
       </div>
 
       {error && (
-        <p role="alert" className="note" style={{ marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+        <p role="alert" className="note" style={{ marginBottom: 'var(--s-6)', borderLeft: '3px solid var(--danger)', color: 'var(--danger-text)' }}>
           {error}
         </p>
       )}

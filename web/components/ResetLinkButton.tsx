@@ -36,7 +36,7 @@ export default function ResetLinkButton({ email }: { email: string }) {
       <button type="button" className="btn" disabled={busy} onClick={make}>
         {busy ? 'One moment…' : 'Reset link'}
       </button>
-      {state?.error && <span className="hint" style={{ color: 'var(--danger)' }}>{state.error}</span>}
+      {state?.error && <span className="hint" style={{ color: 'var(--danger-text)' }}>{state.error}</span>}
     </span>
   );
 }

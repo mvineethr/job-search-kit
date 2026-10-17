@@ -77,7 +77,7 @@ export default async function JobsPage({
             borderRadius: 8,
             padding: 'var(--s-3) var(--s-4)',
             marginBottom: 'var(--s-6)',
-            color: 'var(--danger)',
+            color: 'var(--danger-text)',
             background: 'var(--bg-surface)',
             maxWidth: 680,
           }}
@@ -148,7 +148,7 @@ export default async function JobsPage({
                     </Link>
                     <span style={{ color: 'var(--text-muted)' }}>{job.company}</span>
                     {job.applied_at && (
-                      <span className="pill tnum" style={{ color: 'var(--ok)' }}>
+                      <span className="pill tnum" style={{ color: 'var(--ok-text)' }}>
                         Applied {new Date(job.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
@@ -181,7 +181,7 @@ export default async function JobsPage({
                             padding: '3px 8px',
                             borderRadius: 4,
                             background: 'var(--warn-subtle)',
-                            color: 'var(--warn)',
+                            color: 'var(--warn-text)',
                           }}
                         >
                           {m}

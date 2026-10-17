@@ -28,7 +28,7 @@ export default async function StartPage({
       <AboutForm profile={profile} saved={Boolean(saved)} />
 
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-4)' }}>
+        <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-4)' }}>
           {error}
         </p>
       )}

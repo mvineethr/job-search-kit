@@ -111,7 +111,7 @@ export default function AuthForm({
         </div>
 
         {error && (
-          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+          <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)' }}>
             {error}
           </p>
         )}

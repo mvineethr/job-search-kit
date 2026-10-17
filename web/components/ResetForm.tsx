@@ -44,7 +44,7 @@ export default function ResetForm({ token }: { token: string }) {
         <span className="hint">At least 8 characters.</span>
       </div>
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+        <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)' }}>
           {error}
         </p>
       )}

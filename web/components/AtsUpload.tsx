@@ -48,7 +48,7 @@ export default function AtsUpload() {
       </div>
 
       {error && (
-        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>
+        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-text)' }}>
           {error}
         </p>
       )}

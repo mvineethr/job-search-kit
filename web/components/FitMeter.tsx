@@ -5,14 +5,15 @@ export default function FitMeter({ view, large = false }: { view: MatchView; lar
   if (view.score === null) return null;
   const { label, tone } = band(view.score);
   const color = `var(--${tone})`;
+  const textColor = `var(--${tone}-text)`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--s-2)', flexWrap: 'wrap' }}>
-        <strong className="tnum" style={{ fontSize: large ? 'var(--text-2xl)' : 'var(--text-base)', color }}>
+        <strong className="tnum" style={{ fontSize: large ? 'var(--text-2xl)' : 'var(--text-base)', color: textColor }}>
           {view.score}
         </strong>
-        <span style={{ fontWeight: 600, color }}>{label}</span>
+        <span style={{ fontWeight: 600, color: textColor }}>{label}</span>
         <span className="tnum" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
           {view.mustMet} of {view.mustTotal} must-haves shown
         </span>
@@ -28,7 +29,7 @@ export default function FitMeter({ view, large = false }: { view: MatchView; lar
         <div style={{ width: `${view.score}%`, height: '100%', borderRadius: 4, background: color }} />
       </div>
       {view.hardWarnings.length > 0 && (
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-text)' }}>
           Hard requirement not shown: {view.hardWarnings.map((r) => r.text).join('; ')}
         </p>
       )}

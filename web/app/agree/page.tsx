@@ -65,7 +65,7 @@ export default async function AgreePage({
         </label>
 
         {error && (
-          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+          <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)' }}>
             {error}
           </p>
         )}

@@ -141,7 +141,7 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
       )}
 
       {degraded && (
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--warn)', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--warn-text)', lineHeight: 1.5 }}>
           Served by a backup model — the output may be weaker. Re-run for a better one.
         </p>
       )}
@@ -168,7 +168,7 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
       )}
 
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-xs)' }}>
+        <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-xs)' }}>
           {error}
         </p>
       )}

@@ -159,7 +159,7 @@ export default function BuildForm() {
       )}
 
       {error && (
-        <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+        <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)' }}>
           {error}
         </p>
       )}

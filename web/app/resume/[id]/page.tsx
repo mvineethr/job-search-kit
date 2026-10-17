@@ -145,7 +145,7 @@ export default async function ResumePage({
           {isTailored && <AiNotice />}
 
           {error && (
-            <p role="alert" className="note" style={{ borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+            <p role="alert" className="note" style={{ borderLeft: '3px solid var(--danger)', color: 'var(--danger-text)' }}>
               {error}
             </p>
           )}

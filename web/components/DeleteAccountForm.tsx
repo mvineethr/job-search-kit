@@ -23,7 +23,7 @@ export default function DeleteAccountForm() {
         type="submit"
         className="btn"
         disabled={!ok || busy}
-        style={{ alignSelf: 'flex-start', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+        style={{ alignSelf: 'flex-start', color: 'var(--danger-text)', borderColor: 'var(--danger)' }}
       >
         {busy ? 'Deleting…' : 'Delete my account'}
       </button>

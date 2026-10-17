@@ -83,7 +83,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           letters and answers. This cannot be undone. Download your data first if you want a copy.
         </p>
         {error && (
-          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-3)' }}>
+          <p role="alert" style={{ color: 'var(--danger-text)', fontSize: 'var(--text-sm)', marginBottom: 'var(--s-3)' }}>
             {error}
           </p>
         )}

@@ -64,7 +64,7 @@ export default async function QuestionsPage({
       </div>
 
       {error && (
-        <p role="alert" className="note" style={{ maxWidth: 680, marginBottom: 'var(--s-4)', borderLeft: '3px solid var(--danger)', color: 'var(--danger)' }}>
+        <p role="alert" className="note" style={{ maxWidth: 680, marginBottom: 'var(--s-4)', borderLeft: '3px solid var(--danger)', color: 'var(--danger-text)' }}>
           {error}
         </p>
       )}

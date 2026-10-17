@@ -84,7 +84,7 @@ export default function TextOrFileInput({
         <p
           style={{
             fontSize: 'var(--text-xs)',
-            color: 'var(--warn)',
+            color: 'var(--warn-text)',
             background: 'var(--warn-subtle)',
             padding: 'var(--s-2) var(--s-3)',
             borderRadius: 4,
@@ -97,7 +97,7 @@ export default function TextOrFileInput({
       )}
 
       {error && (
-        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger)' }}>
+        <p role="alert" style={{ fontSize: 'var(--text-xs)', color: 'var(--danger-text)' }}>
           {error}
         </p>
       )}

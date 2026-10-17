@@ -52,7 +52,7 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
                     padding: '3px 8px',
                     borderRadius: 4,
                     background: 'var(--warn-subtle)',
-                    color: 'var(--warn)',
+                    color: 'var(--warn-text)',
                   }}
                 >
                   {s}
@@ -76,7 +76,7 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
               background: 'var(--bg-page)',
             }}
           >
-            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger)' }}>
+            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger-text)' }}>
               Check these numbers
             </p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -97,7 +97,7 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
               background: 'var(--bg-page)',
             }}
           >
-            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger)' }}>
+            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger-text)' }}>
               An employer here is not on your original
             </p>
             <p style={{ fontSize: 'var(--text-sm)' }}>{audit.unsupportedEmployers.join(', ')}</p>
