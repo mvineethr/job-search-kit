@@ -176,7 +176,7 @@ objects move into named classes. No CSS framework or new dependency.
 | `FitMeter` | Two variants. **Large** (job page): a 120px SVG ring, 10px stroke, track `--border`, value arc in the band colour (`--ok` / `--warn` / `--danger`), the score in the centre at `--text-2xl`, "of 100" under it; below, the band label in `*-text` and "N of M must-haves shown". **Small** (lists): the existing bar, 6px, `--r-sm`. Both keep `role="meter"` and the full text label; colour is never the only signal. |
 | Requirement row | `.card`-like row with a 8px status dot, the requirement in 500 weight, then the evidence quote or "Not on your résumé" in muted text, and a status `.tag` for text. |
 | Findings list | Rows divided by `--border`, a severity `.tag` then the finding. |
-| `[METRIC NEEDED]` and number flags | Drawn by `MarkedText` as today; restyled as `.tag-warn` chips. They are editing chrome and never reach the export. |
+| `[METRIC NEEDED]` and number flags | Unchanged. `MarkedText` draws them, and their look comes from `DOCUMENT_CSS` (`.resume .metric-needed`, `.resume .unsupported-number`), which is out of scope. |
 
 Status words stay as today ("Shown", "Partly", "Not shown", "Check yourself"; "Strong fit",
 "Partial fit", "Big gaps").
