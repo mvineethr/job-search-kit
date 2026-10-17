@@ -2,7 +2,7 @@
   "name": "Helen Marsh",
   "targetTitle": "Science Teacher",
   "contact": { "location": "Columbus, OH", "email": "helen.marsh@example.com", "phone": "614-555-0126" },
-  "summary": "High-school science teacher with nine years in the classroom, looking to move into instructional design.",
+  "summary": "High-school science teacher with twelve years in the classroom, looking to move into instructional design.",
   "skills": ["Curriculum design", "assessment", "Google Classroom", "Canva", "Google Slides", "differentiated instruction", "data analysis"],
   "experience": [
     {
@@ -25,7 +25,7 @@
     }
   ],
   "education": [
-    { "degree": "M.Ed. Curriculum and Instruction", "school": "Ohio State University", "year": "2016" },
-    { "degree": "B.S. Biology", "school": "Ohio Wesleyan University", "year": "2014" }
+    { "degree": "M.Ed. Curriculum and Instruction", "school": "Great Lakes State University", "year": "2016" },
+    { "degree": "B.S. Biology", "school": "Wesleyan Heights College", "year": "2014" }
   ]
 }

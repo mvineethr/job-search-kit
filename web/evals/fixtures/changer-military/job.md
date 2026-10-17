@@ -10,6 +10,6 @@ Responsibilities:
 
 Requirements:
 - 5+ years in warehouse or logistics operations, with 2+ years supervised teams
-- Working knowledge of SAP or a comparable warehouse system
+- Experience with SAP
 - Lean Six Sigma Green Belt preferred
 - Veterans welcome: we hire for leadership, not job titles

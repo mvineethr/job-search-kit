@@ -2,7 +2,7 @@
   "name": "Rosa Delgado",
   "targetTitle": "Office Manager",
   "contact": { "location": "Tucson, AZ", "email": "rosa.delgado@example.com", "phone": "(520) 555-0164" },
-  "summary": "Office manager with six years keeping a busy dental practice and a small design firm running.",
+  "summary": "Office manager with eight years keeping a busy dental practice and a small design firm running.",
   "skills": ["Scheduling", "vendor management", "invoices", "accounts payable", "Excel", "Google Workspace", "front desk", "filing"],
   "experience": [
     {
@@ -24,5 +24,5 @@
       ]
     }
   ],
-  "education": [{ "degree": "Associate degree, Business Administration", "school": "Pima Community College", "year": "2018" }]
+  "education": [{ "degree": "Associate degree, Business Administration", "school": "Saguaro Community College", "year": "2018" }]
 }

@@ -18,4 +18,4 @@ Site Reliability Engineer — Larkspur Media, Remote      Jan 2018 - Mar 2021
 • Built Prometheus and Grafana dashboards for every tier-one service.
 
 EDUCATION
-B.S. Computer Science, University of Colorado Boulder, 2017
+B.S. Computer Science, Front Range State University, 2017

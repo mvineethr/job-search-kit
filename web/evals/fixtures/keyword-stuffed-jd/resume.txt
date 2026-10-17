@@ -2,7 +2,7 @@ RAVI MENON
 DevOps Engineer | Atlanta, GA | ravi.menon@example.com | 404-555-0152
 
 SUMMARY
-DevOps engineer, eight years. I build the pipelines and servers other engineers don't want to think about.
+DevOps engineer, twelve years. I build the pipelines and servers other engineers don't want to think about.
 
 SKILLS
 Docker, Jenkins, Ansible, Terraform, Linux, Bash, Git, AWS, Python, Nagios
@@ -24,4 +24,4 @@ Help Desk Technician — Southern Tech Staffing, Marietta GA          2014 – 2
 • Resolved 25+ tickets a day for 400 users
 
 EDUCATION
-B.S. Information Systems, Georgia State University, 2014
+B.S. Information Systems, Magnolia State University, 2014

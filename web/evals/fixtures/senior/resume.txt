@@ -2,7 +2,7 @@ GREG LINDQVIST
 Staff Software Engineer | Seattle, WA | greg.lindqvist@example.com | (206) 555-0138
 
 SUMMARY
-Staff engineer with fifteen years building and running distributed systems on the JVM. I lead architecture across teams, mentor senior engineers and like deleting more code than I write.
+Staff engineer with seventeen years building and running distributed systems on the JVM. I lead architecture across teams, mentor senior engineers and like deleting more code than I write.
 
 SKILLS
 Java, Kotlin, Python, distributed systems, AWS, Kafka, Cassandra, PostgreSQL, Terraform, system architecture, mentoring, technical writing
@@ -38,4 +38,4 @@ Junior Developer — Oakfield Consulting, Portland OR          Jul 2009 - May 20
 • Supported the helpdesk when needed.
 
 EDUCATION
-B.S. Computer Engineering, Oregon State University, 2009
+B.S. Computer Engineering, Cascade State University, 2009

@@ -2,7 +2,7 @@
   "name": "Greg Lindqvist",
   "targetTitle": "Staff Software Engineer",
   "contact": { "location": "Seattle, WA", "email": "greg.lindqvist@example.com", "phone": "(206) 555-0138" },
-  "summary": "Staff engineer with fifteen years building and running distributed systems on the JVM. I lead architecture across teams, mentor senior engineers and like deleting more code than I write.",
+  "summary": "Staff engineer with seventeen years building and running distributed systems on the JVM. I lead architecture across teams, mentor senior engineers and like deleting more code than I write.",
   "skills": ["Java", "Kotlin", "Python", "distributed systems", "AWS", "Kafka", "Cassandra", "PostgreSQL", "Terraform", "system architecture", "mentoring", "technical writing"],
   "experience": [
     {
@@ -47,5 +47,5 @@
       ]
     }
   ],
-  "education": [{ "degree": "B.S. Computer Engineering", "school": "Oregon State University", "year": "2009" }]
+  "education": [{ "degree": "B.S. Computer Engineering", "school": "Cascade State University", "year": "2009" }]
 }

@@ -21,12 +21,12 @@
       ]
     },
     {
-      "title": "Project: Campus Bike Share (class capstone)", "company": "Northeastern University", "start": "Jan 2025", "end": "Apr 2025",
+      "title": "Project: Campus Bike Share (class capstone)", "company": "Harborview University", "start": "Jan 2025", "end": "Apr 2025",
       "bullets": [
         "Built a bike checkout app with Python, Flask and PostgreSQL for a team of 5; used by 60 classmates during the final demo week",
         "Designed the REST API and the database schema"
       ]
     }
   ],
-  "education": [{ "degree": "B.S. Computer Science", "school": "Northeastern University", "year": "May 2025" }]
+  "education": [{ "degree": "B.S. Computer Science", "school": "Harborview University", "year": "May 2025" }]
 }

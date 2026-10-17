@@ -2,11 +2,11 @@
   "name": "Sgt (Ret.) Devon Harris",
   "targetTitle": "Logistics Supervisor",
   "contact": { "location": "Killeen, TX", "email": "devon.harris@example.com", "phone": "(254) 555-0172" },
-  "summary": "Retired US Army logistics NCO, ten years of experience running supply operations and leading soldiers. Seeking warehouse operations management.",
+  "summary": "Retired US Army logistics NCO, thirteen years of experience running supply operations and leading soldiers. Seeking warehouse operations management.",
   "skills": ["Inventory control", "logistics", "supervised teams", "safety programs", "convoy planning", "property accountability", "MS Excel"],
   "experience": [
     {
-      "title": "NCOIC", "company": "Supply Support Activity, 4th Sustainment Bde", "location": "Fort Cavazos TX", "start": "Mar 2019", "end": "Aug 2024",
+      "title": "NCOIC, Supply Support Activity", "company": "Calder Sustainment Brigade", "location": "Fort Calder TX", "start": "Mar 2019", "end": "Aug 2024",
       "bullets": [
         "NCOIC of a 22-soldier SSA handling 9,000 line items; kept inventory accuracy above 98% through monthly cycle counts.",
         "Supervised receiving, storage and issue of Class II, IX and VIII supplies for 3,400 soldiers.",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "title": "Supply Sergeant (MOS 92A)", "company": "1st Armored Division", "location": "Fort Bliss TX", "start": "2014", "end": "2019",
+      "title": "Supply Sergeant (MOS 92A)", "company": "Harlan Mechanized Division", "location": "Fort Harlan TX", "start": "2014", "end": "2019",
       "bullets": [
         "Managed $4.2M of unit property and signed for all hand receipts.",
         "Planned 40+ convoy and rail movements for field exercises with no loss of equipment.",
@@ -23,12 +23,12 @@
       ]
     },
     {
-      "title": "Automated Logistical Specialist (92A)", "company": "Fort Hood TX", "start": "2011", "end": "2014",
+      "title": "Automated Logistical Specialist (92A)", "company": "Merrow Support Battalion", "location": "Fort Merrow TX", "start": "2011", "end": "2014",
       "bullets": ["Processed requests and tracked shipments in the unit supply system."]
     }
   ],
   "education": [
-    { "degree": "A.A.S. Logistics Management", "school": "Central Texas College", "year": "2018" },
+    { "degree": "A.A.S. Logistics Management", "school": "Lone Star Technical College", "year": "2018" },
     { "degree": "Warrior Leader Course and Advanced Leader Course", "school": "US Army" }
   ]
 }

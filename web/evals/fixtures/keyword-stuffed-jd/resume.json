@@ -2,7 +2,7 @@
   "name": "Ravi Menon",
   "targetTitle": "DevOps Engineer",
   "contact": { "location": "Atlanta, GA", "email": "ravi.menon@example.com", "phone": "404-555-0152" },
-  "summary": "DevOps engineer, eight years. I build the pipelines and servers other engineers don't want to think about.",
+  "summary": "DevOps engineer, twelve years. I build the pipelines and servers other engineers don't want to think about.",
   "skills": ["Docker", "Jenkins", "Ansible", "Terraform", "Linux", "Bash", "Git", "AWS", "Python", "Nagios"],
   "experience": [
     {
@@ -28,5 +28,5 @@
       "bullets": ["Resolved 25+ tickets a day for 400 users"]
     }
   ],
-  "education": [{ "degree": "B.S. Information Systems", "school": "Georgia State University", "year": "2014" }]
+  "education": [{ "degree": "B.S. Information Systems", "school": "Magnolia State University", "year": "2014" }]
 }

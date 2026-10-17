@@ -1,5 +1,5 @@
-Lumen Learning Co — Instructional Designer
-Lumen Learning builds online compliance and onboarding courses for mid-size employers. We are looking for an instructional designer to turn subject-matter expertise into clear, engaging self-paced courses.
+Brightpath Learning Co — Instructional Designer
+Brightpath Learning builds online compliance and onboarding courses for mid-size employers. We are looking for an instructional designer to turn subject-matter expertise into clear, engaging self-paced courses.
 
 What you will do:
 - Design curriculum and learning objectives for new courses
