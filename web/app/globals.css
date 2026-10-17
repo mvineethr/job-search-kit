@@ -432,3 +432,25 @@ input.edit-field{width:auto; min-width:12ch}
 .table th,.table td{padding:var(--s-2) var(--s-3); border-bottom:1px solid var(--border); text-align:left; vertical-align:top}
 .table th{color:var(--text-muted); white-space:nowrap}
 .block{display:block}
+
+/* ============ landing (signed out) — purple accent scoped here only ============ */
+body:has(.landing){--accent:#6d28d9; --accent-hover:#5b21b6; --accent-subtle:#f3effd; --accent-text:#5b21b6}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) body:has(.landing){--accent:#a78bfa; --accent-hover:#c4b5fd; --accent-subtle:#251a47; --accent-text:#c4b5fd}
+}
+:root[data-theme="dark"] body:has(.landing){--accent:#a78bfa; --accent-hover:#c4b5fd; --accent-subtle:#251a47; --accent-text:#c4b5fd}
+.land-hero{display:grid; gap:var(--s-8); grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); align-items:center; padding-block:var(--s-16) var(--s-12)}
+.land-hero h1{font-size:var(--text-2xl)}
+.land-hero .sub{color:var(--text-muted); margin-top:var(--s-3); max-width:52ch; line-height:1.5; font-size:var(--text-base)}
+.land-cta{display:flex; gap:var(--s-2); margin-top:var(--s-6)}
+.demo-label{font-size:var(--text-xs); color:var(--text-faint); font-weight:600; margin-bottom:var(--s-1)}
+.demo-before{color:var(--text-muted); text-decoration:line-through; text-decoration-color:var(--border-strong)}
+.demo-after{min-height:3em; color:var(--text)}
+.demo-after .metric-needed{background:var(--accent-subtle); color:var(--accent-text); padding:0 var(--s-1); border-radius:var(--r-sm); font-weight:600}
+.demo-caret{display:inline-block; width:2px; height:1em; vertical-align:text-bottom; background:var(--accent); margin-left:1px}
+.land-tiers{display:grid; gap:var(--s-3); grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.tier h3{font-size:var(--text-base)}
+.tier-price{font-size:var(--text-xl); font-weight:600}
+.tier .btn{align-self:flex-start}
+.tier-lead{border-color:var(--accent)}
+@media (max-width:480px){.land-hero{grid-template-columns:1fr; padding-block:var(--s-8)}}

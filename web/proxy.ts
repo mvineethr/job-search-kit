@@ -17,6 +17,7 @@ export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   if (!session) {
+    if (pathname === '/') return NextResponse.next(); // the landing page; it reads no data
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.search = '';
