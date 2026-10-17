@@ -1,0 +1,49 @@
+import { METRIC_NEEDED, type Resume } from '../lib/resume-schema';
+import { sourceText } from '../lib/verify-tailoring';
+
+export type Score = { gates: Record<string, boolean>; metrics: Record<string, number> };
+
+const STOP = new Set(
+  'the and for with from that this was were are has have had into over per our its their your you all not but than then also via who which been will can out'.split(' '),
+);
+
+/** The parse prompt normalises dates to "Mon YYYY", so a month word it adds is formatting, not invention. */
+export const DATE_WORDS = new Set('jan feb mar apr may jun jul aug sep oct nov dec present'.split(' '));
+
+/** Lowercased runs of letters/digits, 3+ long, minus stopwords. Diacritics count as letters. */
+export function contentWords(text: string): Set<string> {
+  return new Set((text.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter((w) => !STOP.has(w)));
+}
+
+/** Every word a résumé holds: body text plus the name, contact and dates that sourceText leaves out. */
+export function resumeWords(r: Resume): Set<string> {
+  const dates = r.experience.map((e) => `${e.start} ${e.end}`).join(' ');
+  const contact = Object.values(r.contact).filter(Boolean).join(' ');
+  return contentWords([sourceText(r), r.name, r.targetTitle ?? '', contact, dates].join(' \n '));
+}
+
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Whole-word, case-insensitive: "go" must not match "ago". */
+export function hasTerm(text: string, term: string): boolean {
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escape(term)}(?![\\p{L}\\p{N}])`, 'iu').test(text);
+}
+
+export function coverage(text: string, terms: string[]): number {
+  if (terms.length === 0) return 1;
+  return terms.filter((t) => hasTerm(text, t)).length / terms.length;
+}
+
+/**
+ * Share of bullets that open with a plain verb (not banned, not a gerund) and carry a
+ * number or the [METRIC NEEDED] marker. Crude on purpose; the blind pick covers the rest.
+ */
+export function bulletStrength(bullets: string[], banned: string[]): number {
+  if (bullets.length === 0) return 0;
+  const strong = bullets.filter((b) => {
+    const first = (b.trim().split(/\s+/)[0] ?? '').toLowerCase().replace(/[^\p{L}]/gu, '');
+    const verbOk = first.length > 0 && !banned.includes(first) && !first.endsWith('ing');
+    return verbOk && (/\d/.test(b) || b.includes(METRIC_NEEDED));
+  });
+  return strong.length / bullets.length;
+}
