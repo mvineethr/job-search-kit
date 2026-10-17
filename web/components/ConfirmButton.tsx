@@ -17,7 +17,7 @@ export default function ConfirmButton({
       {Object.entries(fields).map(([k, v]) => (
         <input key={k} type="hidden" name={k} value={v} />
       ))}
-      <button type="submit" className="btn" style={{ color: 'var(--danger-text)' }}>
+      <button type="submit" className="btn btn-danger">
         {label}
       </button>
     </form>
