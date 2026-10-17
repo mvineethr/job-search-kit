@@ -60,6 +60,13 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
   const outDir = join(process.cwd(), 'evals', 'runs', `${stamp}-${label}`);
 
+  // Fixed before the loop: a failing git call must not discard a finished paid run.
+  let gitSha = 'unknown';
+  try {
+    gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {}
+  const startedAt = new Date().toISOString();
+
   const records: RunRecord[] = [];
   let n = 0;
   for (const name of names) {
@@ -68,35 +75,39 @@ async function main() {
       for (let run = 1; run <= runs; run++) {
         n++;
         const started = Date.now();
+        let result: { text: string; degraded: boolean };
         try {
-          const { text, degraded } = await completeText({
+          result = await completeText({
             system: loadPrompt(p.core),
             messages: [{ role: 'user', content: p.message(fx) }],
             tier: p.tier,
           });
-          const ms = Date.now() - started;
-          const dir = join(outDir, 'raw', name, fx.slug);
-          mkdirSync(dir, { recursive: true });
-          writeFileSync(join(dir, `${run}.txt`), text);
-          const s = p.score(text, fx);
-          records.push({ prompt: name, fixture: fx.slug, run, ok: true, degraded, gates: s.gates, metrics: { ...s.metrics, ms } });
-          const failed = Object.entries(s.gates).filter(([, ok]) => !ok).map(([g]) => g);
-          console.log(`[${n}/${calls}] ${name} ${fx.slug} #${run} ${ms}ms${degraded ? ' DEGRADED' : ''}${failed.length ? ' FAIL ' + failed.join(',') : ''}`);
         } catch (err) {
           // Status or error name only: provider messages are not printed in case they echo request details.
           const e = err as { status?: number; name?: string };
           const error = String(e?.status ?? e?.name ?? 'error');
           records.push({ prompt: name, fixture: fx.slug, run, ok: false, degraded: false, error, gates: {}, metrics: {} });
           console.log(`[${n}/${calls}] ${name} ${fx.slug} #${run} ERROR ${error}`);
+          continue;
         }
+        // Outside the try: a scorer bug or disk error must throw, not look like a model error.
+        const { text, degraded } = result;
+        const ms = Date.now() - started;
+        const dir = join(outDir, 'raw', name, fx.slug);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, `${run}.txt`), text);
+        const s = p.score(text, fx);
+        records.push({ prompt: name, fixture: fx.slug, run, ok: true, degraded, gates: s.gates, metrics: { ...s.metrics, ms } });
+        const failed = Object.entries(s.gates).filter(([, ok]) => !ok).map(([g]) => g);
+        console.log(`[${n}/${calls}] ${name} ${fx.slug} #${run} ${ms}ms${degraded ? ' DEGRADED' : ''}${failed.length ? ' FAIL ' + failed.join(',') : ''}`);
       }
     }
   }
 
   const meta: Meta = {
     label,
-    startedAt: new Date().toISOString(),
-    gitSha: execSync('git rev-parse --short HEAD').toString().trim(),
+    startedAt,
+    gitSha,
     models: { primary: primary.model, fast: fast.model },
     effort: primary.effort ?? 'default',
     coreHashes,
@@ -106,7 +117,7 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
   for (const [name, s] of Object.entries(summary.prompts)) {
-    console.log(`${name}: gates ${s.gatesPassed ? 'PASS' : 'FAIL'}${s.errors ? `, ${s.errors} errors` : ''}${s.degraded ? `, ${s.degraded} degraded` : ''}`);
+    console.log(`${name}: ${Object.keys(s.fixtures).length === 0 ? 'no scored runs' : 'gates ' + (s.gatesPassed ? 'PASS' : 'FAIL')}${s.errors ? `, ${s.errors} errors` : ''}${s.degraded ? `, ${s.degraded} degraded` : ''}`);
     for (const f of s.failures) console.log(`  ${f.fixture} #${f.run}: ${f.gate}`);
   }
   console.log(`\nWrote ${outDir}`);
