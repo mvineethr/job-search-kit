@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import WritingDemo from '@/components/WritingDemo';
 import { REPO_URL } from '@/lib/site';
+import { enabledProviders } from '@/lib/auth-server';
 
 const USES = [
   { title: 'Review a résumé', body: 'A diagnosis first: what is vague, what is missing, what an ATS will trip on. Then rewrites.' },
@@ -10,7 +11,7 @@ const USES = [
 ];
 
 const INTEGRATIONS = [
-  { title: 'Word and PDF', body: 'Export any résumé as .docx or a single-column PDF.', soon: false },
+  { title: 'Word and PDF', body: 'Export a résumé read into sections as .docx or a single-column PDF.', soon: false },
   { title: 'LinkedIn export', body: 'Start from the zip LinkedIn gives you, or a profile PDF.', soon: false },
   { title: 'Google sign-in', body: 'Or an email and password.', soon: false },
   { title: 'MCP server', body: 'Use the same prompts from your own AI assistant.', soon: true },
@@ -42,6 +43,9 @@ const TIERS = [
 
 /** The home page for people who are not signed in. */
 export default function Landing() {
+  // Only advertise Google when this deployment has it configured, like AuthForm does.
+  const google = enabledProviders().google;
+  const integrations = INTEGRATIONS.filter((i) => i.title !== 'Google sign-in' || google);
   return (
     <div className="landing wrap">
       <section className="land-hero">
@@ -74,7 +78,7 @@ export default function Landing() {
       <section className="sec">
         <div className="sec-head"><h2>Works with</h2></div>
         <div className="entries">
-          {INTEGRATIONS.map((i) => (
+          {integrations.map((i) => (
             <div key={i.title} className={i.soon ? 'entry entry-soon' : 'entry'}>
               <strong>
                 {i.title} {i.soon && <span className="tag tag-soon">Planned</span>}
