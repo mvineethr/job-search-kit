@@ -48,3 +48,6 @@ next-env.d.ts
 /core
 *.local.mts
 *.local.ts
+# prompt test set: raw model output and blind-pick keys stay local
+/evals/runs/*/raw/
+/evals/runs/*/blind/
