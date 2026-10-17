@@ -1,6 +1,21 @@
 # Inline résumé editing — spec
 
-**Status:** designed · 2026-10-16. Not built.
+**Status:** built · 2026-10-16 (`5d6a361`…`e036d0f`). 141 tests and the build pass. **Not yet
+clicked through in a browser**: see "Still to verify" at the end.
+
+**What changed during planning and review:**
+- One save-status line above the document, not one per field. It names the problem and has Retry.
+- `ResumeDocument.tsx` is deleted: the résumé page was its only user. `Flagged` and the
+  marker drawing moved to `components/MarkedText.tsx`.
+- Enter commits every field, and line breaks collapse to spaces. New roles go at the end.
+- An empty field always shows a `+ <label>` placeholder, so an emptied required field stays
+  clickable after its save is rejected.
+- A save counts only when the body says `ok: true`. The proxy's redirects to `/agree` and
+  `/login` answer 200 HTML, and before this fix that showed "Saved" with nothing written.
+- Flags are cleared per number, not per place. If one flagged number appears in two bullets,
+  editing one clears the highlight on both.
+- Editing a master makes it "the master" for jobs (latest `updated_at`). Accepted; see the
+  CLAUDE.md gotcha.
 
 ## Why
 
@@ -136,3 +151,31 @@ Escape cancels an edit and restores the saved text. Save status is announced
 
 Cover-letter editing, undo history, rich text, live collaboration, editing unparsed
 résumés, a "copy this into the master" action.
+
+## Still to verify (browser, `web-localtest`, `@example.com` account)
+
+Unit tests cover the pure logic only. None of this has been checked against a live database or
+in a browser yet:
+
+1. Master edits (name, contact, summary, skills, bullet edit/move/delete with confirm, add role,
+   add education) survive a reload.
+2. Emptying the name or a bullet shows the right message; fixing it lets the next save through.
+3. Blocked save: delete the terms cookie, then the session cookie, then edit. Each must say
+   "Couldn't save", not "Saved", and keep the flags.
+4. Tailored copy: editing a flagged bullet clears its highlight, and the audit count drops after
+   reload. Reordering does not clear it. The master is unchanged.
+5. Typing over `[METRIC NEEDED]` lowers the missing-number count.
+6. An older tailored row with plain-prose `source_text` saves and keeps its note.
+7. Rapid edits (about one a second) end in the same saved state as the screen.
+8. Print preview and Word export show no controls, placeholders, status line or stray contact
+   separators.
+9. The stale note appears on a job after a master edit, with one Re-check button; Re-check
+   clears it.
+10. Keyboard: Tab, Enter to open, Escape restores, Enter commits. Long titles fit the input.
+11. `curl.exe` PUT: another account's id gives 404 and the row is unchanged; a 250 KB body
+    gives 413; `{"content":null}` gives 400.
+
+Deferred minors, triaged as able to wait: focus is lost after adding or deleting (keyboard
+users); the add forms aren't `<form>`s, so Enter and Escape don't work in them; the display span
+announces its text, not "Edit X"; the size cap counts characters, not bytes; untested
+`messageFor` branches.

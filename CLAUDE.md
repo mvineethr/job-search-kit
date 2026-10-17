@@ -67,8 +67,11 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `site.ts` | site facts quoted by the legal pages and chrome: `SITE_NAME`, `OPERATOR`, `CONTACT_EMAIL`, `GOVERNING_STATE`, `TERMS_VERSION`/`TERMS_UPDATED`, `MIN_AGE` (16) |
 | `consent.ts` / `consent-cookie.ts` | Terms gate: `consentCookieValue` (version + hash of session token), `isExempt`, `safeNext` (same-site paths only); `consentSetCookie` |
 | `redirect.ts` | `redirectTo`, `backWithError` for form posts |
+| `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
 
 Account pages: `/agree` (clickwrap), `/settings` (export, delete), `/privacy`, `/terms`, `/help` (last three public). API: `/api/consent`, `/api/consent/sync`, `/api/account/export`, `/api/account/delete`.
+
+Résumé editing: `/resume/[id]` renders `components/EditableResume.tsx` (fields are `EditableText`; `MarkedText` draws `[METRIC NEEDED]` and flags). Each change sends the whole résumé to `PUT /api/resumes/[id]` (JSON, not a form post). Masters' `source_text` is never touched; tailored copies get `audit.unsupportedNumbers` updated by `clearFlags`.
 
 ## Data model (Neon)
 
@@ -125,7 +128,7 @@ reset links come from the Reset link button on `/admin`).
 
 ```bash
 cd web && npm install && npm run dev      # needs web/.env.local
-cd web && npm test                         # Vitest, 117 tests
+cd web && npm test                         # Vitest, 141 tests
 cd web && npm run build                    # prebuild copies ../core first
 ```
 
@@ -163,48 +166,50 @@ cd web && npm run build                    # prebuild copies ../core first
 - The PDF export uppercases headings via CSS, so extracted text says "EXPERIENCE"; anything checking headings in extracted text must be case-insensitive.
 - A page that never SELECTs a column renders nothing and throws nothing: the jobs-page questions card never appeared because `questions` wasn't selected.
 - `core/ats-rules.md` headings carry text after the name (`## Banned (these tank…)`) and the file is CRLF on Windows. Parsers of it must allow both.
+- "The master" is the most recently **updated** one (`ORDER BY updated_at DESC` in the job page, `run-match`, letters). With inline editing, editing an older master makes it the active one and marks every job's score stale. Accepted while people keep one master; order by `created_at` if that changes.
+- `fetch` follows the proxy's redirects to `/agree` or `/login`, which answer 200 HTML. A client must check the body (`data.ok === true`), not just `res.ok`, or a blocked save reads as saved.
 
 ## Status
 
-**On `main` (deploys to production), still behind the shared test password:** S1 and S2 — add
-résumé, streaming review, jobs hub, fit score with verified evidence (`/jobs/[id]`), tailoring
-with audit panel, cover letters, metric questions, AI disclosure, delete/applied, filler-phrase
-check, `/ats-check`, Word download, print-to-PDF — plus empty résumé sections skipped in all
-three renderers (`1ea5450`). Whether S2 was clicked through signed-in on the live site isn't
-recorded here.
+**On `main` (deploys to production):** S1–S4 via PRs
+[mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3) and
+[mvineethr/job-search-kit#4](https://github.com/mvineethr/job-search-kit/pull/4) (last merge
+`0ef34f2`, 2026-10-09). That covers add résumé, streaming review, jobs hub, fit score,
+tailoring with audit, cover letters, metric questions, filler-phrase check, `/ats-check`,
+Word/PDF, `/start` onboarding and guided builder, real accounts (Better Auth), `/admin`, the
+`/agree` terms gate, `/privacy`, `/terms`, `/help`, `/settings` with export and deletion. The
+shared `APP_PASSWORD` gate is gone from the code. Whether production was clicked through after
+the merge isn't recorded. LinkedIn sign-in untested (no app yet).
 
-**Built, not yet deployed (S3 + S4, branch `claude/user-profile-linkedin-resume-b26e2b`, PR
-[mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3); `main`
-merged in; `a7d4b48` committed but not pushed):** `/start` onboarding (résumé and/or LinkedIn
-PDF or export zip), guided builder `/start/build`, real accounts (`/login`, `/signup`, `/reset`,
-Better Auth), career basics, `/admin`; then the `/agree` terms gate, `/privacy`, `/terms`,
-`/help`, profile menu, `/settings` with data export and account deletion, self-hosted fonts.
-**Google sign-in works locally**; LinkedIn untested (no app yet). Vercel env set (Google keys,
-`BETTER_AUTH_*`, `ADMIN_EMAILS`). Deploying signs everyone out and starts them on empty
-accounts (decided).
+**Built, not pushed (S5, branch `claude/competitive-analysis-state-86062a`):** inline résumé
+editing on masters and tailored copies, plus a stale-score note on jobs after a master edit
+(spec `docs/superpowers/specs/2026-10-16-inline-editing-design.md`). Every task passed review
+and so did the whole branch; 141 tests, build green. **Not run in a browser yet.** The
+click-through list is in the spec.
 
 **Legal gaps:** no contact email yet (waits on the project rename; pages fall back to Settings +
 GitHub), no governing-law state, Moonshot and Neon facts in `/privacy` unverified, no lawyer
 review.
 
 **Not built:** cold email, LinkedIn fixer (two modes designed; `profiles.linkedin_text` is
-waiting for it), interview prep (mocked up), inline résumé editing, MCP server. Pages exist as
+waiting for it), interview prep (mocked up), cover-letter editing, outcome tracking, MCP server. Pages exist as
 honest "Not built yet" placeholders.
 
-**Known weaknesses:** no in-app editing, so flagged numbers, filler phrases and restored
-bullets can only be fixed by re-tailoring or after export; restored bullets go at the end of
-their role, not in their original position; the ATS check uses one extractor (unpdf), and real
-ATSs vary.
+**Known weaknesses:** restored bullets still land at the end of their role, though people can
+now move them; cover letters can't be edited in the app; editing has no undo (deletes ask
+first, and a master's original upload stays in `source_text`); the ATS check uses one extractor
+(unpdf), and real ATSs vary.
 
 ## Next
 
-1. Push `a7d4b48` to PR #3, try the preview (email sign-up, `/agree`, settings, delete), then merge; remove `APP_PASSWORD` at merge. Publish the Google OAuth app out of Testing. LinkedIn app (needs a Company Page).
-2. Rename the project (`SITE_NAME` in `lib/site.ts`), then set `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_GOVERNING_STATE`; verify Moonshot (location, retention, training) and Neon region against `/privacy`.
-3. Moonshot spend cap — sign-up is open with no limits.
-4. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
-5. Inline résumé editing: every check we add points at text the person cannot yet change.
-6. Keyword coverage on the tailored document, as a separate number from fit.
-7. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
+1. Click through inline editing on `web-localtest` (list in the spec), then push and open a PR.
+2. Publish the Google OAuth app out of Testing. LinkedIn app (needs a Company Page).
+3. Rename the project (`SITE_NAME` in `lib/site.ts`), then set `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_GOVERNING_STATE`; verify Moonshot (location, retention, training) and Neon region against `/privacy`.
+4. Moonshot spend cap — sign-up is open with no limits.
+5. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
+6. Quality series, in order (decided 2026-10-16): a prompt test set of fictional résumé/job pairs scored for invented content, keyword coverage, bullet strength and filler, then rewrite `core/` against it; the output template; a UI pass; outcome tracking (applied → heard back → interview). **Internal goal, never in copy:** résumés made here get picked more than 50% of the time, measured by outcome tracking.
+7. Keyword coverage on the tailored document, as a separate number from fit.
+8. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
 
 ## Session History
 
@@ -213,3 +218,4 @@ ATSs vary.
 - **S2** (2026-09-24) - Market research (no competitor enforces anti-fabrication; "75% auto-rejected by ATS" is a 2012 sales pitch) → dropped the planned "80% guarantee", no auto-apply, pricing on hold. Built: fit score from verified evidence (`core/job-match.md` replaces gap-questions; spread 13 → 2 pts over 4 live rounds), AI disclosure, delete/applied, filler-phrase check, restored bullets, inline number flags, elapsed counters, `/ats-check`, hand-written .docx. 81 → 108 tests; not pushed.
 - **S3** (2026-09-27 → 10-01) - Onboarding at `/start` from a résumé and/or LinkedIn (PDF or export zip via a hand-written zip/CSV reader); guided builder for people with neither (`core/resume-build.md`, answers as source, checked by `verifyTailoring`); then real accounts on Better Auth (email + password, Google, LinkedIn; user id fills `sid`), career basics, `/admin` with reset links (no domain yet for email; self-hosted BunMail rejected). 108 → 110 tests; 17 commits, not pushed.
 - **S4** (2026-10-01) - Merged `main`, pushed, opened PR #3; Google OAuth client + Vercel env, Google sign-in working locally. Legal layer: proxy-enforced `/agree` clickwrap (Terms + Privacy, AI, 16+; version recorded), `/privacy` written against the code, `/terms`, `/help`, profile menu, `/settings` with data export and one-transaction account deletion, fonts self-hosted. Contact email and state wait on a rename. 110 → 117 tests; `a7d4b48` not pushed.
+- **S5** (2026-10-16) - Competitor refresh (Sonnet subagent; prices unverified): still no rival checks for invented content; the table stakes we lack are a job tracker/extension, a LinkedIn optimizer and interview prep; recruiters distrust AI résumés. Owner wants every part improved; prompts are drafts; a 50% picked rate is the internal goal, never a claim. Built inline editing subagent-driven (spec → plan → 5 reviewed tasks → whole-branch review, which caught redirected saves showing "Saved"). 120 → 141 tests; not pushed, not clicked through.
