@@ -1,5 +1,12 @@
-import { METRIC_NEEDED, type Resume } from '../lib/resume-schema';
-import { sourceText } from '../lib/verify-tailoring';
+import { METRIC_NEEDED, ResumeSchema, type Resume } from '../lib/resume-schema';
+import { extractJsonObject } from '../lib/extract-json';
+import { sourceText, verifyTailoring, numbersIn } from '../lib/verify-tailoring';
+import { bannedPhrases, findGenericPhrases, resumeParts } from '../lib/generic-phrases';
+import { loadAtsRules } from '../lib/prompts';
+import { LetterSchema, wordCount } from '../lib/letter-schema';
+import { MatchOutputSchema, verifyEvidence, matchSource, viewMatch, band } from '../lib/match';
+import { parseFindings } from '../lib/findings-schema';
+import type { Fixture } from './fixtures';
 
 export type Score = { gates: Record<string, boolean>; metrics: Record<string, number> };
 
@@ -46,4 +53,103 @@ export function bulletStrength(bullets: string[], banned: string[]): number {
     return verbOk && (/\d/.test(b) || b.includes(METRIC_NEEDED));
   });
   return strong.length / bullets.length;
+}
+
+let banned: string[] | null = null;
+const bannedList = () => (banned ??= bannedPhrases(loadAtsRules()));
+
+const NOT_PARSED: Score = { gates: { parses: false }, metrics: {} };
+const count = (text: string, needle: string) => text.split(needle).length - 1;
+
+export function scoreParse(text: string, fx: Fixture): Score {
+  const parsed = ResumeSchema.safeParse(extractJsonObject(text));
+  if (!parsed.success) return NOT_PARSED;
+  const out = resumeWords(parsed.data);
+  const src = contentWords(fx.resumeText);
+  const expected = resumeWords(fx.resume);
+  const invented = [...out].filter((w) => !src.has(w) && !DATE_WORDS.has(w)).length;
+  const bullets = (r: typeof fx.resume) => r.experience.reduce((n, e) => n + e.bullets.length, 0);
+  return {
+    gates: { parses: true, noInventedWords: invented === 0 },
+    metrics: {
+      invented,
+      lost: [...expected].filter((w) => !out.has(w)).length,
+      rolesDiff: Math.abs(parsed.data.experience.length - fx.resume.experience.length),
+      bulletsDiff: Math.abs(bullets(parsed.data) - bullets(fx.resume)),
+    },
+  };
+}
+
+export function scoreTailor(text: string, fx: Fixture): Score {
+  const parsed = ResumeSchema.safeParse(extractJsonObject(text));
+  if (!parsed.success) return NOT_PARSED;
+  const { cleaned, audit } = verifyTailoring(parsed.data, fx.resume, fx.resumeText);
+  const out = sourceText(parsed.data); // before cleaning: a trap anywhere in the output counts
+  return {
+    gates: {
+      parses: true,
+      noRemovedSkills: audit.removedSkills.length === 0,
+      noUnsupportedNumbers: audit.unsupportedNumbers.length === 0,
+      noUnsupportedEmployers: audit.unsupportedEmployers.length === 0,
+      noTrap: !fx.truth.traps.some((t) => hasTerm(out, t)),
+    },
+    metrics: {
+      coverage: coverage(sourceText(cleaned), fx.truth.supported),
+      metricNeeded: count(sourceText(cleaned), METRIC_NEEDED.toLowerCase()),
+      filler: findGenericPhrases(resumeParts(cleaned), bannedList(), fx.description).length,
+      bulletStrength: bulletStrength(cleaned.experience.flatMap((e) => e.bullets), bannedList()),
+      bulletsRestored: audit.bulletsRestored ?? 0,
+    },
+  };
+}
+
+export function scoreLetter(text: string, fx: Fixture): Score {
+  const parsed = LetterSchema.safeParse(extractJsonObject(text));
+  if (!parsed.success) return NOT_PARSED;
+  const body = parsed.data.paragraphs.join('\n');
+  // Quoting the posting's own numbers ("your team of 12") is not invention.
+  const allowed = `${sourceText(fx.resume, fx.resumeText)} ${fx.description.toLowerCase()}`;
+  return {
+    gates: {
+      parses: true,
+      noTrap: !fx.truth.traps.some((t) => hasTerm(body, t)),
+      // numbersIn keeps a sentence's final dot ("12."); strip it before looking the number up.
+      noNewNumbers: numbersIn(body).every((n) => allowed.includes(n.toLowerCase().replace(/[.,]+$/, ''))),
+    },
+    metrics: {
+      filler: findGenericPhrases(parsed.data.paragraphs.map((p) => ({ where: 'Letter', text: p })), bannedList(), fx.description).length,
+      coverage: coverage(body, fx.truth.supported),
+      words: wordCount(parsed.data),
+    },
+  };
+}
+
+const BAND_LABEL = { high: 'Strong fit', mid: 'Partial fit', low: 'Big gaps' } as const;
+
+export function scoreMatch(text: string, fx: Fixture): Score {
+  const parsed = MatchOutputSchema.safeParse(extractJsonObject(text));
+  if (!parsed.success) return NOT_PARSED;
+  const { requirements, unverified } = verifyEvidence(parsed.data.requirements, matchSource(fx.resume, fx.resumeText));
+  const trapClaimed = requirements.some(
+    (r) => (r.status === 'met' || r.status === 'partial') && fx.truth.traps.some((t) => hasTerm(r.skill, t) || hasTerm(r.text, t)),
+  );
+  const score = viewMatch({ requirements, unverified, created_at: '' }, []).score ?? 0;
+  return {
+    gates: { parses: true, noTrapClaimed: !trapClaimed },
+    metrics: {
+      score,
+      unverified,
+      bandHit: band(score).label === BAND_LABEL[fx.truth.fitBand] ? 1 : 0,
+      requirements: requirements.length,
+    },
+  };
+}
+
+export function scoreReview(text: string, _fx: Fixture): Score {
+  const findings = parseFindings(text);
+  if (findings.length === 0) return NOT_PARSED;
+  return {
+    gates: { parses: true },
+    metrics: { findings: findings.length, critical: findings.filter((f) => f.severity === 'critical').length },
+  };
 }
