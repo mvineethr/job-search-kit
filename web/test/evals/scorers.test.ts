@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scoreParse, scoreTailor, scoreLetter, scoreMatch, scoreReview } from '@/evals/score';
+import { newNumbers, scoreParse, scoreTailor, scoreLetter, scoreMatch, scoreReview } from '@/evals/score';
 import type { Fixture } from '@/evals/fixtures';
 import { ResumeSchema, type Resume } from '@/lib/resume-schema';
 import priya from '../fixtures/priya.json';
@@ -84,5 +84,37 @@ describe('scoreReview', () => {
   it('counts findings and critical ones', () => {
     const text = 'Prose.\n' + json([{ section: 'summary', severity: 'critical', finding: 'a' }, { section: 'skills', severity: 'worth-fixing', finding: 'b' }]);
     expect(scoreReview(text, fx)).toEqual({ gates: { parses: true }, metrics: { findings: 2, critical: 1 } });
+  });
+});
+
+describe('newNumbers', () => {
+  it('uses set membership, not substring', () => {
+    expect(newNumbers('4 teams', '2024')).toEqual(['4']);
+  });
+  it('normalises dots, thousands commas and spaces before %', () => {
+    expect(newNumbers('1,200.', '1200')).toEqual([]);
+    expect(newNumbers('40 %', '40%')).toEqual([]);
+  });
+});
+
+describe('numeric gates catch short numbers', () => {
+  it('parse fails on an invented 40%', () => {
+    const bad = { ...resume, summary: resume.summary + ' Cut costs by 40%.' };
+    const s = scoreParse(json(bad), fx);
+    expect(s.gates.noInventedWords).toBe(false);
+    expect(s.metrics.invented).toBeGreaterThan(0);
+  });
+  it('tailor fails on "4 teams" when 4 only sits inside 2024 and the phone number', () => {
+    const bad = structuredClone(resume);
+    bad.experience[0].bullets[0] = 'Led 4 teams.';
+    const fx2 = { ...fx, resumeText: fx.resumeText + '\nSince 2024. (512) 555-0142' };
+    expect(scoreTailor(json(bad), fx2).gates.noUnsupportedNumbers).toBe(false);
+  });
+  it('match omits score and bandHit when every requirement is unknown', () => {
+    const r = { id: 'r', skill: 'x', text: 'x', kind: 'must', category: 'skill', status: 'unknown', evidence: '', question: '', why: '' };
+    const s = scoreMatch(json({ requirements: [r] }), fx);
+    expect('score' in s.metrics).toBe(false);
+    expect('bandHit' in s.metrics).toBe(false);
+    expect(s.metrics.requirements).toBe(1);
   });
 });

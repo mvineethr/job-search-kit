@@ -61,13 +61,29 @@ const bannedList = () => (banned ??= bannedPhrases(loadAtsRules()));
 const NOT_PARSED: Score = { gates: { parses: false }, metrics: {} };
 const count = (text: string, needle: string) => text.split(needle).length - 1;
 
+const normNum = (n: string) => n.toLowerCase().replace(/[.,]+$/, '').replace(/(?<=\d),(?=\d)/g, '').replace(/\s+%/, '%');
+
+/** Numbers in `text` that appear in none of the sources. Set membership, so "4" is not excused by "2024". */
+export function newNumbers(text: string, ...sources: string[]): string[] {
+  const known = new Set(sources.flatMap((s) => numbersIn(s)).map(normNum));
+  return numbersIn(text).filter((n) => !known.has(normNum(n)));
+}
+
+/** All the text of a résumé, including the name, contact and dates that sourceText leaves out. */
+function allText(r: Resume): string {
+  const dates = r.experience.map((e) => `${e.start} ${e.end}`).join(' ');
+  return [sourceText(r), r.name, r.targetTitle ?? '', Object.values(r.contact).filter(Boolean).join(' '), dates].join(' \n ');
+}
+
 export function scoreParse(text: string, fx: Fixture): Score {
   const parsed = ResumeSchema.safeParse(extractJsonObject(text));
   if (!parsed.success) return NOT_PARSED;
   const out = resumeWords(parsed.data);
   const src = contentWords(fx.resumeText);
   const expected = resumeWords(fx.resume);
-  const invented = [...out].filter((w) => !src.has(w) && !DATE_WORDS.has(w)).length;
+  // The word tokenizer ignores 1-2 char tokens, so numbers like "40%" are checked separately.
+  const invented =
+    [...out].filter((w) => !src.has(w) && !DATE_WORDS.has(w)).length + newNumbers(allText(parsed.data), fx.resumeText).length;
   const bullets = (r: typeof fx.resume) => r.experience.reduce((n, e) => n + e.bullets.length, 0);
   return {
     gates: { parses: true, noInventedWords: invented === 0 },
@@ -89,7 +105,7 @@ export function scoreTailor(text: string, fx: Fixture): Score {
     gates: {
       parses: true,
       noRemovedSkills: audit.removedSkills.length === 0,
-      noUnsupportedNumbers: audit.unsupportedNumbers.length === 0,
+      noUnsupportedNumbers: newNumbers(sourceText(parsed.data), fx.resumeText, sourceText(fx.resume)).length === 0,
       noUnsupportedEmployers: audit.unsupportedEmployers.length === 0,
       noTrap: !fx.truth.traps.some((t) => hasTerm(out, t)),
     },
@@ -108,13 +124,11 @@ export function scoreLetter(text: string, fx: Fixture): Score {
   if (!parsed.success) return NOT_PARSED;
   const body = parsed.data.paragraphs.join('\n');
   // Quoting the posting's own numbers ("your team of 12") is not invention.
-  const allowed = `${sourceText(fx.resume, fx.resumeText)} ${fx.description.toLowerCase()}`;
   return {
     gates: {
       parses: true,
       noTrap: !fx.truth.traps.some((t) => hasTerm(body, t)),
-      // numbersIn keeps a sentence's final dot ("12."); strip it before looking the number up.
-      noNewNumbers: numbersIn(body).every((n) => allowed.includes(n.toLowerCase().replace(/[.,]+$/, ''))),
+      noNewNumbers: newNumbers(body, sourceText(fx.resume, fx.resumeText), fx.description).length === 0,
     },
     metrics: {
       filler: findGenericPhrases(parsed.data.paragraphs.map((p) => ({ where: 'Letter', text: p })), bannedList(), fx.description).length,
@@ -133,13 +147,13 @@ export function scoreMatch(text: string, fx: Fixture): Score {
   const trapClaimed = requirements.some(
     (r) => (r.status === 'met' || r.status === 'partial') && fx.truth.traps.some((t) => hasTerm(r.skill, t) || hasTerm(r.text, t)),
   );
-  const score = viewMatch({ requirements, unverified, created_at: '' }, []).score ?? 0;
+  const score = viewMatch({ requirements, unverified, created_at: '' }, []).score;
   return {
     gates: { parses: true, noTrapClaimed: !trapClaimed },
     metrics: {
-      score,
+      // No score when every requirement is unknown: 0 would read as a real, bad result.
+      ...(score === null ? {} : { score, bandHit: band(score).label === BAND_LABEL[fx.truth.fitBand] ? 1 : 0 }),
       unverified,
-      bandHit: band(score).label === BAND_LABEL[fx.truth.fitBand] ? 1 : 0,
       requirements: requirements.length,
     },
   };
