@@ -13,53 +13,36 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
     audit.bulletsDropped === 0;
 
   return (
-    <div className="panel">
-      <div className="panel-head">
+    <div className="card">
+      <div className="card-head">
         <h2>Checked against your résumé</h2>
       </div>
-      <div className="panel-body">
+      <div className="card-body">
         {clean ? (
-          <p className="note">
+          <p className="notice">
             Every skill, number and employer in this copy traces back to your original. No
             bullets were dropped.
           </p>
         ) : null}
 
         {audit.removedSkills.length > 0 && (
-          <div
-            style={{
-              border: '1px solid var(--border)',
-              borderLeft: '3px solid var(--warn)',
-              borderRadius: 4,
-              padding: 'var(--s-3)',
-              background: 'var(--bg-page)',
-            }}
-          >
-            <p style={{ fontWeight: 600, marginBottom: 4 }}>
+          <div className="notice notice-warn stack">
+            <p className="audit-title">
               {audit.removedSkills.length}{' '}
               {audit.removedSkills.length === 1 ? 'skill was' : 'skills were'} removed
             </p>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 6 }}>
+            <p>
               The posting asks for these and your résumé does not mention them, so they were
               taken out rather than left for you to defend in an interview.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div className="row audit-tags">
               {audit.removedSkills.map((s) => (
-                <span
-                  key={s}
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    padding: '3px 8px',
-                    borderRadius: 4,
-                    background: 'var(--warn-subtle)',
-                    color: 'var(--warn)',
-                  }}
-                >
+                <span key={s} className="tag tag-warn">
                   {s}
                 </span>
               ))}
             </div>
-            <p className="note" style={{ marginTop: 'var(--s-2)' }}>
+            <p>
               If you genuinely have one of these, add it to your master résumé and tailor
               again — then it is a real claim rather than a borrowed one.
             </p>
@@ -67,52 +50,33 @@ export default function TailoringAuditPanel({ audit }: { audit: TailoringAudit }
         )}
 
         {audit.unsupportedNumbers.length > 0 && (
-          <div
-            style={{
-              border: '1px solid var(--border)',
-              borderLeft: '3px solid var(--danger)',
-              borderRadius: 4,
-              padding: 'var(--s-3)',
-              background: 'var(--bg-page)',
-            }}
-          >
-            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger)' }}>
-              Check these numbers
-            </p>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 6 }}>
+          <div className="notice notice-error stack">
+            <p className="audit-title">Check these numbers</p>
+            <p>
               These do not appear in your original résumé, and are marked in red in the
               document. Verify each one before you send this — they were left in place rather
               than edited, so you can see them.
             </p>
-            <p style={{ fontSize: 'var(--text-sm)' }}>{audit.unsupportedNumbers.join(', ')}</p>
+            <p>{audit.unsupportedNumbers.join(', ')}</p>
           </div>
         )}
 
         {audit.unsupportedEmployers.length > 0 && (
-          <div
-            style={{
-              border: '1px solid var(--danger)',
-              borderRadius: 4,
-              padding: 'var(--s-3)',
-              background: 'var(--bg-page)',
-            }}
-          >
-            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--danger)' }}>
-              An employer here is not on your original
-            </p>
-            <p style={{ fontSize: 'var(--text-sm)' }}>{audit.unsupportedEmployers.join(', ')}</p>
+          <div className="notice notice-error stack">
+            <p className="audit-title">An employer here is not on your original</p>
+            <p>{audit.unsupportedEmployers.join(', ')}</p>
           </div>
         )}
 
         {(audit.bulletsRestored ?? 0) > 0 && (
-          <p className="note">
+          <p className="notice">
             The rewrite left out {audit.bulletsRestored} of your original bullets. They have
             been put back word for word at the end of their role, so no real experience is lost.
           </p>
         )}
 
         {audit.bulletsDropped > 0 && (
-          <p className="note">
+          <p className="notice">
             {audit.bulletsDropped} {audit.bulletsDropped === 1 ? 'bullet was' : 'bullets were'}{' '}
             dropped from your original. Compare against your master before sending — real
             experience may have been left out.

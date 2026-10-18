@@ -20,16 +20,16 @@ export default async function AgreePage({
   const { next, error } = await searchParams;
   if (!(await currentUser())) redirect('/login');
 
-  const box = { display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-start' } as const;
-
   return (
-    <div className="wrap" style={{ maxWidth: 560 }}>
+    <div className="auth">
+      <div className="card auth-card auth-card-wide">
+        <div className="card-body">
       <div className="page-head">
         <h1>Before you start</h1>
         <p className="sub">The short version of what you are agreeing to. The full text is in the two links below.</p>
       </div>
 
-      <ul className="note" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)', paddingLeft: 'var(--s-6)' }}>
+      <ul className="notice agree-list">
         <li>{SITE_NAME} is a free, personal project in testing. It may change, break or shut down, and comes with no guarantees.</li>
         <li>An AI model drafts reviews, résumés and letters from what you give it. It can be wrong. You check everything before you send it, and you are responsible for what you send.</li>
         <li>It is built to never invent experience or numbers. Do not use it to claim things that are not true.</li>
@@ -38,11 +38,11 @@ export default async function AgreePage({
         <li>Nothing here guarantees an interview or a job.</li>
       </ul>
 
-      <form method="post" action="/api/consent" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)', marginTop: 'var(--s-6)' }}>
+      <form method="post" action="/api/consent" className="stack agree-form">
         <input type="hidden" name="next" value={safeNext(next)} />
 
-        <label style={box}>
-          <input type="checkbox" name="agree_terms" value="1" required style={{ marginTop: 3 }} />
+        <label className="agree-check">
+          <input type="checkbox" name="agree_terms" value="1" required />
           <span>
             I agree to the{' '}
             <Link href="/terms" target="_blank">
@@ -55,28 +55,30 @@ export default async function AgreePage({
             .
           </span>
         </label>
-        <label style={box}>
-          <input type="checkbox" name="agree_ai" value="1" required style={{ marginTop: 3 }} />
+        <label className="agree-check">
+          <input type="checkbox" name="agree_ai" value="1" required />
           <span>I understand the documents are drafted by AI and I will check them before I send them.</span>
         </label>
-        <label style={box}>
-          <input type="checkbox" name="age_ok" value="1" required style={{ marginTop: 3 }} />
+        <label className="agree-check">
+          <input type="checkbox" name="age_ok" value="1" required />
           <span>I am {MIN_AGE} or older.</span>
         </label>
 
         {error && (
-          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+          <p role="alert" className="notice notice-error">
             {error}
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: 'var(--s-2)', flexWrap: 'wrap' }}>
+        <div className="form-actions">
           <button type="submit" className="btn btn-primary">
             Agree and continue
           </button>
           <SignOutButton label="I don't agree — sign out" />
         </div>
       </form>
+        </div>
+      </div>
     </div>
   );
 }

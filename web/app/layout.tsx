@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Inter, Source_Serif_4 } from 'next/font/google';
+import { Geist, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import TopBar from '@/components/TopBar';
+import AppNav from '@/components/AppNav';
 import { currentUser } from '@/lib/auth';
 import { isAdmin } from '@/lib/admin';
 import { REPO_URL, SITE_NAME } from '@/lib/site';
 
 // Downloaded at build time and served from this site: visitors' browsers never
 // contact Google for fonts, so no IP addresses go to a third party on page load.
-const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+const sans = Geist({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 const serif = Source_Serif_4({ subsets: ['latin'], variable: '--font-serif', axes: ['opsz'], display: 'swap' });
 
 export const metadata: Metadata = {
@@ -24,20 +25,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
-        <TopBar me={me} />
-        {children}
-        <footer className="site-foot">
-          <div className="site-foot-in">
-            <span>{SITE_NAME} · free and open source</span>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/help">Help</Link>
-            <a href={REPO_URL} target="_blank" rel="noreferrer">
-              Source code
-            </a>
-            <span>Not affiliated with LinkedIn, Google or any employer.</span>
-          </div>
-        </footer>
+        {me ? <AppNav me={me} /> : <TopBar />}
+        <div className={me ? 'shell' : 'shell-public'}>
+          {children}
+          <footer className="site-foot">
+            <div className="site-foot-in">
+              <span>{SITE_NAME} · free and open source</span>
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/terms">Terms</Link>
+              <Link href="/help">Help</Link>
+              <a href={REPO_URL} target="_blank" rel="noreferrer">
+                Source code
+              </a>
+              <span>Not affiliated with LinkedIn, Google or any employer.</span>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );

@@ -8,17 +8,21 @@ export default async function ResetPage({
   const { token, error } = await searchParams;
 
   return (
-    <div className="wrap" style={{ maxWidth: 440 }}>
+    <div className="auth">
+      <div className="card auth-card">
+        <div className="card-body">
       <div className="page-head">
         <h1>Choose a new password</h1>
       </div>
       {token && !error ? (
         <ResetForm token={token} />
       ) : (
-        <p role="alert" className="note">
+        <p role="alert" className="notice notice-error">
           This reset link has expired or was already used. Ask for a new one.
         </p>
       )}
+        </div>
+      </div>
     </div>
   );
 }

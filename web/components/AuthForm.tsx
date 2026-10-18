@@ -57,38 +57,35 @@ export default function AuthForm({
   const blocked = busy;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-4)' }}>
-      <p className="note">
-        Reviews, tailored résumés and cover letters are drafted by AI. It is told never to invent
-        experience or numbers, but check everything before you send it.
-        {mode === 'signup' && (
-          <>
-            {' '}
-            After you sign up you will be asked to accept the <Link href="/terms">Terms of Service</Link> and{' '}
-            <Link href="/privacy">Privacy Policy</Link>.
-          </>
-        )}
-      </p>
+    <div className="stack stack-lg">
+      <nav className="auth-switch" aria-label="Sign in or create an account">
+        <Link href="/login" aria-current={mode === 'login' ? 'page' : undefined}>
+          Sign in
+        </Link>
+        <Link href="/signup" aria-current={mode === 'signup' ? 'page' : undefined}>
+          Create account
+        </Link>
+      </nav>
 
       {(providers.google || providers.linkedin) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-2)' }}>
+        <div className="stack stack-sm">
           {providers.google && (
-            <button type="button" className="btn" disabled={blocked} onClick={() => social('google')}>
+            <button type="button" className="btn btn-block" disabled={blocked} onClick={() => social('google')}>
               Continue with Google
             </button>
           )}
           {providers.linkedin && (
-            <button type="button" className="btn" disabled={blocked} onClick={() => social('linkedin')}>
+            <button type="button" className="btn btn-block" disabled={blocked} onClick={() => social('linkedin')}>
               Continue with LinkedIn
             </button>
           )}
-          <p className="hint" style={{ textAlign: 'center' }}>
+          <p className="hint auth-or">
             or with your email
           </p>
         </div>
       )}
 
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--s-3)' }}>
+      <form onSubmit={submit} className="stack">
         {mode === 'signup' && (
           <div className="field">
             <label htmlFor="name">Name</label>
@@ -114,26 +111,30 @@ export default function AuthForm({
         </div>
 
         {error && (
-          <p role="alert" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+          <p role="alert" className="notice notice-error">
             {error}
           </p>
         )}
 
-        <button type="submit" className="btn btn-primary" disabled={blocked} style={{ alignSelf: 'flex-start' }}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={blocked}>
           {busy ? 'One moment…' : mode === 'signup' ? 'Create my account' : 'Sign in'}
         </button>
+        {mode === 'login' && (
+          <p className="hint">Forgot your password? Ask the person who shared this with you for a reset link.</p>
+        )}
       </form>
 
-      {mode === 'login' ? (
-        <p className="note">
-          New here? <Link href="/signup">Create an account.</Link> Forgot your password? Ask the person
-          who shared this with you for a reset link.
-        </p>
-      ) : (
-        <p className="note">
-          Already have an account? <Link href="/login">Sign in.</Link>
-        </p>
-      )}
+      <p className="notice">
+        Reviews, tailored résumés and cover letters are drafted by AI. It is told never to invent
+        experience or numbers, but check everything before you send it.
+        {mode === 'signup' && (
+          <>
+            {' '}
+            After you sign up you will be asked to accept the <Link href="/terms">Terms of Service</Link> and{' '}
+            <Link href="/privacy">Privacy Policy</Link>.
+          </>
+        )}
+      </p>
     </div>
   );
 }
