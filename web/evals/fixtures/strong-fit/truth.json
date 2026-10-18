@@ -1,0 +1,1 @@
+{ "supported": ["Kubernetes", "Terraform", "AWS", "Prometheus", "Grafana", "on-call", "Python", "Go"], "traps": ["Datadog", "Kafka"], "fitBand": "high" }

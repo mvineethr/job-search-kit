@@ -1,0 +1,28 @@
+{
+  "name": "Rosa Delgado",
+  "targetTitle": "Office Manager",
+  "contact": { "location": "Tucson, AZ", "email": "rosa.delgado@example.com", "phone": "(520) 555-0164" },
+  "summary": "Office manager with eight years keeping a busy dental practice and a small design firm running.",
+  "skills": ["Scheduling", "vendor management", "invoices", "accounts payable", "Excel", "Google Workspace", "front desk", "filing"],
+  "experience": [
+    {
+      "title": "Office Manager", "company": "Sonoran Family Dental", "location": "Tucson AZ", "start": "Mar 2021", "end": "Present",
+      "bullets": [
+        "Handled scheduling for the providers and the front desk team",
+        "Managed vendors for supplies, cleaning and equipment service",
+        "Processed invoices, tracked payments in Excel and sent weekly reports to the owner",
+        "Greeted patients, answered the phones and kept the waiting area in order",
+        "Trained new hires on the check-in process"
+      ]
+    },
+    {
+      "title": "Administrative Assistant", "company": "Mesquite Design Studio", "location": "Tucson AZ", "start": "Sep 2018", "end": "Feb 2021",
+      "bullets": [
+        "Booked travel and meetings for the three partners",
+        "Ordered office supplies and dealt with vendors when deliveries were wrong",
+        "Filed contracts and kept the shared drive organized"
+      ]
+    }
+  ],
+  "education": [{ "degree": "Associate degree, Business Administration", "school": "Saguaro Community College", "year": "2018" }]
+}

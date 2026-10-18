@@ -1,0 +1,21 @@
+DANA OKAFOR
+Site Reliability Engineer | Denver, CO | dana.okafor@example.com | (303) 555-0187
+
+SUMMARY
+SRE with eight years keeping high-traffic e-commerce systems up.
+
+SKILLS
+Kubernetes, Terraform, AWS, Python, Go, Prometheus, Grafana, PagerDuty
+
+EXPERIENCE
+Senior SRE — Brightcart, Denver CO          Apr 2021 - Present
+• Cut p99 checkout latency from 1.8s to 600ms by moving session storage to Redis.
+• Ran the on-call rotation for 14 engineers; pages per week fell from 30 to 9.
+• Wrote Terraform modules now used by 11 teams to create AWS accounts.
+
+Site Reliability Engineer — Larkspur Media, Remote      Jan 2018 - Mar 2021
+• Moved 60 services from VMs to Kubernetes over nine months.
+• Built Prometheus and Grafana dashboards for every tier-one service.
+
+EDUCATION
+B.S. Computer Science, Front Range State University, 2017

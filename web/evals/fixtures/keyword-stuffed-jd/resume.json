@@ -1,0 +1,32 @@
+{
+  "name": "Ravi Menon",
+  "targetTitle": "DevOps Engineer",
+  "contact": { "location": "Atlanta, GA", "email": "ravi.menon@example.com", "phone": "404-555-0152" },
+  "summary": "DevOps engineer, twelve years. I build the pipelines and servers other engineers don't want to think about.",
+  "skills": ["Docker", "Jenkins", "Ansible", "Terraform", "Linux", "Bash", "Git", "AWS", "Python", "Nagios"],
+  "experience": [
+    {
+      "title": "DevOps Engineer", "company": "Peachtree Payments", "location": "Atlanta GA", "start": "Oct 2020", "end": "Present",
+      "bullets": [
+        "Moved the build system from hand-edited Jenkins jobs to Jenkins pipelines kept in Git; build times fell from 40 to 14 minutes",
+        "Wrote Ansible roles to patch 220 Linux servers; the quarterly patch window dropped from 2 days to 3 hours",
+        "Containerised 18 services with Docker and deployed them to AWS ECS",
+        "Terraform for the VPC, subnets and IAM roles in all three AWS accounts"
+      ]
+    },
+    {
+      "title": "Systems Administrator", "company": "Blue Ridge Insurance", "location": "Atlanta GA", "start": "2016", "end": "2020",
+      "bullets": [
+        "Administered about 150 Linux servers, mostly RHEL",
+        "Wrote Bash scripts for backups, log rotation and user provisioning",
+        "Set up Nagios alerts and carried the pager one week in four",
+        "Helped the dev team adopt Git"
+      ]
+    },
+    {
+      "title": "Help Desk Technician", "company": "Southern Tech Staffing", "location": "Marietta GA", "start": "2014", "end": "2016",
+      "bullets": ["Resolved 25+ tickets a day for 400 users"]
+    }
+  ],
+  "education": [{ "degree": "B.S. Information Systems", "school": "Magnolia State University", "year": "2014" }]
+}

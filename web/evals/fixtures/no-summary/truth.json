@@ -1,0 +1,1 @@
+{ "supported": ["reconciliations", "month-end close", "GAAP", "Excel"], "traps": ["NetSuite", "CPA"], "fitBand": "mid" }

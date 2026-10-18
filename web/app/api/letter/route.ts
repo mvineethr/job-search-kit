@@ -5,6 +5,7 @@ import { loadPrompt } from '@/lib/prompts';
 import { completeText } from '@/lib/provider';
 import { extractJsonObject } from '@/lib/extract-json';
 import { LetterSchema } from '@/lib/letter-schema';
+import { letterMessage } from '@/lib/messages';
 import { backWithError, redirectTo } from '@/lib/redirect';
 
 export const runtime = 'nodejs';
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'user',
-          content: `MY RESUME:\n${resumeText}\n\nTHE JOB (${job.company} — ${job.role}):\n${job.description}`,
+          content: letterMessage(resumeText, `${job.company} — ${job.role}`, job.description),
         },
       ],
     });

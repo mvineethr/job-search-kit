@@ -1,0 +1,27 @@
+RAVI MENON
+DevOps Engineer | Atlanta, GA | ravi.menon@example.com | 404-555-0152
+
+SUMMARY
+DevOps engineer, twelve years. I build the pipelines and servers other engineers don't want to think about.
+
+SKILLS
+Docker, Jenkins, Ansible, Terraform, Linux, Bash, Git, AWS, Python, Nagios
+
+EXPERIENCE
+DevOps Engineer — Peachtree Payments, Atlanta GA          Oct 2020 - Present
+• Moved the build system from hand-edited Jenkins jobs to Jenkins pipelines kept in Git; build times fell from 40 to 14 minutes
+• Wrote Ansible roles to patch 220 Linux servers; the quarterly patch window dropped from 2 days to 3 hours
+• Containerised 18 services with Docker and deployed them to AWS ECS
+• Terraform for the VPC, subnets and IAM roles in all three AWS accounts
+
+Systems Administrator — Blue Ridge Insurance, Atlanta GA          2016 – 2020
+* Administered about 150 Linux servers, mostly RHEL
+- Wrote Bash scripts for backups, log rotation and user provisioning
+- Set up Nagios alerts and carried the pager one week in four
+- Helped the dev team adopt Git
+
+Help Desk Technician — Southern Tech Staffing, Marietta GA          2014 – 2016
+• Resolved 25+ tickets a day for 400 users
+
+EDUCATION
+B.S. Information Systems, Magnolia State University, 2014

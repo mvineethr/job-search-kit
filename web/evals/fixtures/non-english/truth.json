@@ -1,0 +1,1 @@
+{ "supported": ["SQL", "Tableau", "Python", "dashboards"], "traps": ["dbt", "Looker"], "fitBand": "high" }

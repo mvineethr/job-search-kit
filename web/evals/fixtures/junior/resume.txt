@@ -1,0 +1,25 @@
+AISHA KHAN
+aisha.khan@example.com | 617-555-0109 | Somerville, MA
+
+EDUCATION
+B.S. Computer Science, Harborview University, May 2025
+Relevant coursework: Databases, Algorithms, Operating Systems, Web Development
+
+SKILLS
+Python, Java, SQL, PostgreSQL, REST, Flask, Git, Docker, pytest
+
+EXPERIENCE
+Software Engineering Intern, Fernhill Health, Boston MA          Jun 2024 - Aug 2024
+• Built 3 REST endpoints in Flask for the appointment reminder service
+• Wrote pytest tests that took coverage of the module from 40% to 78%
+• Fixed 12 bugs from the support backlog and shipped them in two releases
+
+Backend Intern, Quillpad (startup), Remote          06/2023 - 08/2023
+- Added PostgreSQL full-text search to the notes API; search results came back in under 200ms
+- Used Git branches and pull requests with a team of 4
+* Helped write the API docs
+
+Project: Campus Bike Share (class capstone)          Jan 2025 - Apr 2025
+• Built a bike checkout app with Python, Flask and PostgreSQL for a team of 5; used by 60 classmates
+  during the final demo week
+• Designed the REST API and the database schema

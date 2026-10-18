@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { parseFindings, stripFindings, type Finding } from '@/lib/findings-schema';
 import { parseEventLines } from '@/lib/ndjson';
+import { reviewMessage } from '@/lib/messages';
 import FindingsList from './FindingsList';
 
 /** The last line of the model's thinking, as a live sign of progress. */
@@ -35,7 +36,7 @@ export default function AssistantPanel({ resumeText }: { resumeText: string }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           capability: 'resume-review',
-          messages: [{ role: 'user', content: resumeText }],
+          messages: [{ role: 'user', content: reviewMessage(resumeText) }],
         }),
         signal: ac.signal,
       });

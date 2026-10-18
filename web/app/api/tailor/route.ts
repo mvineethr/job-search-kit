@@ -8,6 +8,7 @@ import { ResumeSchema, type Resume } from '@/lib/resume-schema';
 import { backWithError, redirectTo } from '@/lib/redirect';
 import { verifyTailoring } from '@/lib/verify-tailoring';
 import { answerDetailText, answersForPrompt, claimableSkills, loadAnswers } from '@/lib/answers';
+import { tailorMessage } from '@/lib/messages';
 
 export const runtime = 'nodejs';
 // Fluid Compute gives Hobby up to 300s. Tailoring measured at ~51s on kimi-k3, plus
@@ -89,10 +90,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'user',
-          content:
-            `MY RESUME:\n${base}\n\n` +
-            `THE JOB (${job.company} — ${job.role}):\n${job.description}` +
-            answersForPrompt(answers),
+          content: tailorMessage(base, `${job.company} — ${job.role}`, job.description, answersForPrompt(answers)),
         },
       ],
     });

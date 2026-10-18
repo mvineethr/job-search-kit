@@ -1,0 +1,31 @@
+{
+  "name": "Tara Whitfield",
+  "targetTitle": "Marketing Specialist",
+  "contact": { "location": "Raleigh, NC", "email": "tara.whitfield@example.com", "phone": "919-555-0191" },
+  "summary": "Marketing specialist with five years in B2B software, returning to work after two years of family caregiving.",
+  "skills": ["SEO", "email campaigns", "HubSpot", "content marketing", "WordPress", "paid social", "copywriting", "reporting"],
+  "experience": [
+    {
+      "title": "Family caregiving", "company": "career break", "start": "2023", "end": "2025",
+      "bullets": ["Full-time caregiver for a family member. Kept up with the industry through the HubSpot Academy courses."]
+    },
+    {
+      "title": "Marketing Specialist", "company": "Greenlane Software", "location": "Raleigh NC", "start": "Apr 2020", "end": "Nov 2022",
+      "bullets": [
+        "Grew organic blog traffic from 8,000 to 31,000 monthly visits through an SEO and content plan",
+        "Ran 24 email campaigns in HubSpot; average open rate was 38%",
+        "Wrote the case studies and landing pages for 3 product launches",
+        "Managed a $15,000 quarterly paid social budget"
+      ]
+    },
+    {
+      "title": "Marketing Coordinator", "company": "Brightwater Tech", "location": "Durham NC", "start": "2018", "end": "Mar 2020",
+      "bullets": [
+        "Scheduled social posts and built the weekly newsletter",
+        "Updated the website in WordPress",
+        "Pulled monthly reports for the marketing director on web traffic and leads"
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.A. Communications", "school": "Piedmont State University", "year": "2018" }]
+}

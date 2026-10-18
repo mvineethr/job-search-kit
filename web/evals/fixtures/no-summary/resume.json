@@ -1,0 +1,34 @@
+{
+  "name": "Claire Dubois",
+  "targetTitle": "Accountant",
+  "contact": { "location": "Minneapolis, MN", "email": "claire.dubois@example.com", "phone": "612-555-0183" },
+  "summary": "",
+  "skills": ["GAAP", "month-end close", "reconciliations", "accounts receivable", "Excel", "pivot tables", "QuickBooks", "audit support"],
+  "experience": [
+    {
+      "title": "Staff Accountant", "company": "Northstar Foods", "location": "Minneapolis MN", "start": "Jan 2022", "end": "Present",
+      "bullets": [
+        "Complete the month-end close for 3 entities within 5 business days, down from 9.",
+        "Prepare bank and credit card reconciliations; cleared a backlog of 140 old reconciling items.",
+        "Built an Excel model that forecasts cash by week; finance team uses it every Monday.",
+        "Support the annual audit and provide schedules to the external auditors."
+      ]
+    },
+    {
+      "title": "Accounts Receivable Specialist", "company": "Lakeshore Furniture", "location": "Edina MN", "start": "Jun 2020", "end": "Dec 2021",
+      "bullets": [
+        "Applied about 300 customer payments a week and chased overdue invoices",
+        "Cut invoices over 60 days past due from 18% to 9% of the balance",
+        "Posted journal entries under GAAP for revenue and returns"
+      ]
+    },
+    {
+      "title": "Accounting Intern", "company": "Harmon & Ostrom LLP", "location": "Minneapolis MN", "start": "Summer 2019", "end": "",
+      "bullets": [
+        "Assisted with client reconciliations and tax workpapers",
+        "Entered data into Excel and QuickBooks"
+      ]
+    }
+  ],
+  "education": [{ "degree": "B.S. Accounting", "school": "St. Aldric University", "year": "2020" }]
+}

@@ -1,0 +1,22 @@
+Nguyễn Thị Lan
+Data Analyst | São Paulo, Brasil | lan.nguyen@example.com | +55 11 5550-0148
+
+RESUMO
+Analista de dados com sete anos de experiência em logística e varejo. Data analyst with seven years in logistics and retail.
+
+SKILLS
+SQL, Tableau, Python, Excel, dashboards, ETL, estatística
+
+EXPERIENCE
+Analista de Dados — Café Mãe Logística, São Paulo          Mar 2022 - Present
+• Built 12 Tableau dashboards that track delivery time, fuel cost and late orders for 8 regional hubs.
+• Wrote SQL queries and Python scripts that replaced a weekly manual Excel report (6 hours saved every week).
+• Found that 70% of late deliveries came from three routes; the route change cut late orders by 22%.
+
+Junior Data Analyst — Zürich Datenwerk, Zürich          09/2019 - 02/2022
+- Maintained SQL reports for retail customers in Switzerland and Germany
+- Built a monthly sales dashboard in Tableau used by the account managers
+- Cleaned and validated customer data before every quarterly review
+
+EDUCATION
+B.Sc. Estatística, Universidade de São Paulo, 2019
