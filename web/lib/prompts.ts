@@ -20,6 +20,14 @@ function resolveCoreDir(): string {
 /** Capabilities the web app can run. Adding one means adding a core/<name>.md file. */
 const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-build', 'resume-tailor', 'cover-letter', 'job-match', 'metric-questions', 'metric-fill']);
 
+/**
+ * Reasoning effort for prompts that need more than the tier's default. Measured on the
+ * review (2 résumés × 2 runs): at low, 78% of rewrites passed the fabrication check but many
+ * that passed padded the line with invented scope; at medium, 87% passed and read cleanly,
+ * at ~63s instead of ~30s. Set here so the route and the prompt test set agree.
+ */
+export const PROMPT_EFFORT: Partial<Record<string, string>> = { 'resume-review': 'medium' };
+
 const cache = new Map<string, string>();
 
 /** The shared ATS rules on their own — also read by code that enforces them. */

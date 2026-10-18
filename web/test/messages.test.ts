@@ -11,7 +11,7 @@ describe('message builders', () => {
     expect(letterMessage('R', 'Acme — SRE', 'D')).toBe('MY RESUME:\nR\n\nTHE JOB (Acme — SRE):\nD');
   });
   it('review: the pasted text as is', () => {
-    expect(reviewMessage('plain text')).toBe('plain text');
+    expect(reviewMessage('plain text', new Date(Date.UTC(2026, 9, 17)))).toBe('TODAY: Oct 2026\n\nplain text');
   });
   it('match: TODAY line first, and still exported from run-match', () => {
     const d = new Date('2026-10-16T12:00:00Z');

@@ -106,6 +106,7 @@ export async function completeText(opts: {
   system: string;
   messages: ChatMessage[];
   tier?: 'primary' | 'fast';
+  effort?: string;
 }): Promise<{ text: string; degraded: boolean }> {
   const collect = async (stream: AsyncIterable<StreamEvent>) => {
     let out = '';
@@ -121,9 +122,12 @@ export async function streamCompletion(opts: {
   system: string;
   messages: ChatMessage[];
   tier?: 'primary' | 'fast';
+  /** Overrides the tier's configured effort. The fallback keeps its own: it is a different model. */
+  effort?: string;
 }): Promise<{ stream: AsyncIterable<StreamEvent>; degraded: boolean }> {
   // An unset fast tier quietly means "use the primary", so it is opt-in.
-  const chosen = (opts.tier === 'fast' && pickConfig('fast')) || pickConfig('primary')!;
+  const tierConfig = (opts.tier === 'fast' && pickConfig('fast')) || pickConfig('primary')!;
+  const chosen = opts.effort ? { ...tierConfig, effort: opts.effort } : tierConfig;
 
   try {
     const s = await open(chosen, opts.system, opts.messages);

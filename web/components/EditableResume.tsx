@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Resume, Role } from '@/lib/resume-schema';
 import { moveBullet } from '@/lib/resume-edit';
+import { APPLY_EVENT, applyFixes, type ApplyRequest } from '@/lib/review-fixes';
 import { DOCUMENT_CSS } from '@/styles/document';
 import EditableText from './EditableText';
 import MarkedText from './MarkedText';
@@ -175,6 +176,18 @@ export default function EditableResume({ id, initial, flags: initialFlags }: { i
     setResume(next);
     void save(next);
   }
+
+  // Fixes applied from the review panel go through the same state and save queue as typing.
+  useEffect(() => {
+    function onApply(e: Event) {
+      const { fixes, done } = (e as CustomEvent<ApplyRequest>).detail;
+      const r = applyFixes(resume, fixes);
+      if (r.applied.some(Boolean)) change(r.resume);
+      done(r.applied);
+    }
+    window.addEventListener(APPLY_EVENT, onApply);
+    return () => window.removeEventListener(APPLY_EVENT, onApply);
+  });
 
   const setRole = (i: number, patch: Partial<Role>) =>
     change({ ...resume, experience: replaceAt(resume.experience, i, { ...resume.experience[i], ...patch }) });

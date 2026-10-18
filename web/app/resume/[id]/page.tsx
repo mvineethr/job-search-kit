@@ -164,7 +164,7 @@ export default async function ResumePage({
               </div>
             </div>
           )}
-          <AssistantPanel resumeText={forReview} />
+          <AssistantPanel resumeText={forReview} resume={resume} />
         </div>
       </main>
     </>

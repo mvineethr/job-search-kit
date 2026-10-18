@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import type { Finding } from '@/lib/findings-schema';
+import MarkedText from './MarkedText';
+
+/** What happened to a finding's suggested fix. */
+export type FixState = 'applied' | 'dismissed' | 'stale';
 
 const SECTION_LABEL: Record<Finding['section'], string> = {
   summary: 'Summary',
@@ -35,7 +39,17 @@ function jump(section: Finding['section']) {
   }, 2200);
 }
 
-export default function FindingsList({ findings }: { findings: Finding[] }) {
+export default function FindingsList({
+  findings,
+  fixState,
+  onApply,
+  onDismiss,
+}: {
+  findings: Finding[];
+  fixState: Record<number, FixState>;
+  onApply?: (i: number) => void;
+  onDismiss: (i: number) => void;
+}) {
   // Checked after mount, because the targets are rendered by the document beside us.
   const [jumpable, setJumpable] = useState<Set<string>>(new Set());
 
@@ -59,6 +73,30 @@ export default function FindingsList({ findings }: { findings: Finding[] }) {
           <div className="stack find-body">
             <p className="find-where">{SECTION_LABEL[f.section]}</p>
             <p>{f.finding}</p>
+            {f.before && f.after && fixState[i] !== 'dismissed' && (
+              <div className="fix stack">
+                <p className="fix-before">{f.before}</p>
+                <p className="fix-after">
+                  <MarkedText text={f.after} numbers={[]} />
+                </p>
+                {fixState[i] === 'applied' && <p className="fix-note">Applied to your résumé.</p>}
+                {fixState[i] === 'stale' && (
+                  <p className="fix-note">That line has changed since the review, so this was not applied.</p>
+                )}
+                {!fixState[i] && (
+                  <div className="row">
+                    {onApply && (
+                      <button onClick={() => onApply(i)} className="btn btn-sm btn-primary">
+                        Apply
+                      </button>
+                    )}
+                    <button onClick={() => onDismiss(i)} className="btn btn-sm">
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {jumpable.has(f.section) && (
               <button onClick={() => jump(f.section)} className="btn btn-sm self-start">
                 Jump to {SECTION_LABEL[f.section]}
