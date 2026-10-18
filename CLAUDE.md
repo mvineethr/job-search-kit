@@ -172,24 +172,27 @@ cd web && npm run build                    # prebuild copies ../core first
 - `core/ats-rules.md` headings carry text after the name (`## Banned (these tank…)`) and the file is CRLF on Windows. Parsers of it must allow both.
 - "The master" is the most recently **updated** one (`ORDER BY updated_at DESC` in the job page, `run-match`, letters). With inline editing, editing an older master makes it the active one and marks every job's score stale. Accepted while people keep one master; order by `created_at` if that changes.
 - `fetch` follows the proxy's redirects to `/agree` or `/login`, which answer 200 HTML. A client must check the body (`data.ok === true`), not just `res.ok`, or a blocked save reads as saved.
+- In the desktop app's browser pane, clicks by screen position can land on the wrong element, and `blur()` does not fire while the pane is in the background. Drive inline-edit tests through the elements themselves (`click()`, then a `focusout` event).
+- New worktrees get no `web/.env.local`. A `.worktreeinclude` in the main checkout (untracked) lists it, so Claude Code copies the main checkout's copy into each new worktree.
 
 ## Status
 
-**On `main` (deploys to production):** S1–S4 via PRs
-[mvineethr/job-search-kit#3](https://github.com/mvineethr/job-search-kit/pull/3) and
-[mvineethr/job-search-kit#4](https://github.com/mvineethr/job-search-kit/pull/4) (last merge
-`0ef34f2`, 2026-10-09). That covers add résumé, streaming review, jobs hub, fit score,
-tailoring with audit, cover letters, metric questions, filler-phrase check, `/ats-check`,
-Word/PDF, `/start` onboarding and guided builder, real accounts (Better Auth), `/admin`, the
-`/agree` terms gate, `/privacy`, `/terms`, `/help`, `/settings` with export and deletion. The
-shared `APP_PASSWORD` gate is gone from the code. Whether production was clicked through after
-the merge isn't recorded. LinkedIn sign-in untested (no app yet).
+**On `main` (deploys to production):**
+- **S1–S4**, via PRs #3 and #4 (merged by 2026-10-09):
+  - résumés: add, streaming review, tailoring with audit, cover letters, metric questions, filler-phrase check, `/ats-check`, Word/PDF
+  - jobs hub and fit score
+  - onboarding: `/start` and the guided builder
+  - accounts: real accounts (Better Auth), `/admin`, the `/agree` terms gate, `/privacy`, `/terms`, `/help`, `/settings` with export and deletion
+- **S5:**
+  - inline résumé editing plus a stale-score note: [mvineethr/job-search-kit#5](https://github.com/mvineethr/job-search-kit/pull/5)
+  - sign-in and create-account side by side, with dark-mode inputs and links fixed: [mvineethr/job-search-kit#6](https://github.com/mvineethr/job-search-kit/pull/6)
+  - the full **Workbench** redesign (sidebar layout, Geist, cobalt; spec `docs/superpowers/specs/2026-10-17-workbench-redesign-design.md`): [mvineethr/job-search-kit#7](https://github.com/mvineethr/job-search-kit/pull/7), merged 2026-10-17
 
-**Built, not pushed (S5, branch `claude/competitive-analysis-state-86062a`):** inline résumé
-editing on masters and tailored copies, plus a stale-score note on jobs after a master edit
-(spec `docs/superpowers/specs/2026-10-16-inline-editing-design.md`). Every task passed review
-and so did the whole branch; 141 tests, build green. Clicked through locally on 2026-10-17;
-what was and wasn't covered is in the spec.
+Production was not checked after these merges. LinkedIn sign-in is untested (no app yet).
+
+**Held off `main` (S5):**
+- `claude/profile-location-dropdowns` (`73a15cd`, unpushed; the owner asked to hold it): a state dropdown plus a city `datalist` (`lib/places.ts`, `components/LocationFields.tsx`), and a "how did you find us" list. It was written against the pre-Workbench `AboutForm.tsx` and `globals.css`, so it needs a rebase.
+- `claude/distracted-mendeleev-256d1d` (16 local commits, another session): the prompt test set (a runner, scoring, a before/after table, blind A/B pages). It waits for the owner's yes before its first paid run.
 
 **Legal gaps:** no contact email yet (waits on the project rename; pages fall back to Settings +
 GitHub), no governing-law state, Moonshot and Neon facts in `/privacy` unverified, no lawyer
@@ -206,12 +209,17 @@ first, and a master's original upload stays in `source_text`); the ATS check use
 
 ## Next
 
-1. Push inline editing and open a PR (clicked through locally 2026-10-17).
+1. Check production after PRs #5–#7, and compare a résumé's print preview with the export: the redesign must not change the document. Then rebase and push `claude/profile-location-dropdowns`, and delete the S5 throwaway accounts (`edit-test-1017@example.com`, `edit-test-other-1017@example.com`).
 2. Publish the Google OAuth app out of Testing. LinkedIn app (needs a Company Page).
 3. Rename the project (`SITE_NAME` in `lib/site.ts`), then set `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_GOVERNING_STATE`; verify Moonshot (location, retention, training) and Neon region against `/privacy`.
 4. Moonshot spend cap — sign-up is open with no limits.
 5. Buy a domain, verify it in Resend, set `EMAIL_FROM`: turns on emailed password resets.
-6. Quality series, in order (decided 2026-10-16): a prompt test set of fictional résumé/job pairs scored for invented content, keyword coverage, bullet strength and filler, then rewrite `core/` against it; the output template; a UI pass; outcome tracking (applied → heard back → interview). **Internal goal, never in copy:** résumés made here get picked more than 50% of the time, measured by outcome tracking.
+6. Quality series, in order (decided 2026-10-16):
+   - inline editing: done
+   - a prompt test set of fictional résumé/job pairs scored for invented content, keyword coverage, bullet strength and filler: built, held; then rewrite `core/` against it
+   - the output template
+   - a UI pass: done as the Workbench redesign
+   - outcome tracking (applied → heard back → interview). **Internal goal, never in copy:** résumés made here get picked more than 50% of the time, measured by outcome tracking.
 7. Keyword coverage on the tailored document, as a separate number from fit.
 8. Cold email, then the LinkedIn fixer (reads `profiles.linkedin_text`).
 
@@ -222,4 +230,4 @@ first, and a master's original upload stays in `source_text`); the ATS check use
 - **S2** (2026-09-24) - Market research (no competitor enforces anti-fabrication; "75% auto-rejected by ATS" is a 2012 sales pitch) → dropped the planned "80% guarantee", no auto-apply, pricing on hold. Built: fit score from verified evidence (`core/job-match.md` replaces gap-questions; spread 13 → 2 pts over 4 live rounds), AI disclosure, delete/applied, filler-phrase check, restored bullets, inline number flags, elapsed counters, `/ats-check`, hand-written .docx. 81 → 108 tests; not pushed.
 - **S3** (2026-09-27 → 10-01) - Onboarding at `/start` from a résumé and/or LinkedIn (PDF or export zip via a hand-written zip/CSV reader); guided builder for people with neither (`core/resume-build.md`, answers as source, checked by `verifyTailoring`); then real accounts on Better Auth (email + password, Google, LinkedIn; user id fills `sid`), career basics, `/admin` with reset links (no domain yet for email; self-hosted BunMail rejected). 108 → 110 tests; 17 commits, not pushed.
 - **S4** (2026-10-01) - Merged `main`, pushed, opened PR #3; Google OAuth client + Vercel env, Google sign-in working locally. Legal layer: proxy-enforced `/agree` clickwrap (Terms + Privacy, AI, 16+; version recorded), `/privacy` written against the code, `/terms`, `/help`, profile menu, `/settings` with data export and one-transaction account deletion, fonts self-hosted. Contact email and state wait on a rename. 110 → 117 tests; `a7d4b48` not pushed.
-- **S5** (2026-10-16) - Competitor refresh (Sonnet subagent; prices unverified): still no rival checks for invented content; the table stakes we lack are a job tracker/extension, a LinkedIn optimizer and interview prep; recruiters distrust AI résumés. Owner wants every part improved; prompts are drafts; a 50% picked rate is the internal goal, never a claim. Built inline editing subagent-driven (spec → plan → 5 reviewed tasks → whole-branch review, which caught redirected saves showing "Saved"). 120 → 141 tests; not pushed, not clicked through.
+- **S5** (2026-10-16 → 10-17) - Competitor refresh (Sonnet subagent; prices unverified): still no rival checks for invented content; the table stakes we lack are a job tracker/extension, a LinkedIn optimizer and interview prep; recruiters distrust AI résumés. Owner wants every part improved; prompts are drafts; a 50% picked rate is the internal goal, never a claim. Built inline editing subagent-driven (spec → plan → 5 reviewed tasks → whole-branch review, which caught redirected saves showing "Saved"), clicked through live, merged (PR #5); auth switch + dark-mode fixes (PR #6); location/source dropdowns (held branch); the Workbench redesign ran in a parallel session (PR #7). 120 → 141 tests here, 178 after the redesign.
