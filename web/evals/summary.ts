@@ -61,7 +61,7 @@ export function summarize(records: RunRecord[], meta: Meta): Summary {
     }
 
     prompts[name] = {
-      gatesPassed: failures.length === 0,
+      gatesPassed: scored.length > 0 && failures.length === 0,
       failures,
       errors: all.filter((r) => !r.ok).length,
       degraded: all.filter((r) => r.ok && r.degraded).length,

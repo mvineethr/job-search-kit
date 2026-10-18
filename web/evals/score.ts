@@ -100,14 +100,20 @@ export function scoreTailor(text: string, fx: Fixture): Score {
   const parsed = ResumeSchema.safeParse(extractJsonObject(text));
   if (!parsed.success) return NOT_PARSED;
   const { cleaned, audit } = verifyTailoring(parsed.data, fx.resume, fx.resumeText);
-  const out = sourceText(parsed.data); // before cleaning: a trap anywhere in the output counts
+  const out = allText(parsed.data); // before cleaning: a trap anywhere in the output counts, titles and dates included
+  const norm = (s: string) => s.trim().toLowerCase();
+  const datesUnchanged = parsed.data.experience.every((r) => {
+    const o = fx.resume.experience.find((x) => norm(x.company) === norm(r.company));
+    return !o || (o.start === r.start && o.end === r.end);
+  });
   return {
     gates: {
       parses: true,
       noRemovedSkills: audit.removedSkills.length === 0,
-      noUnsupportedNumbers: newNumbers(sourceText(parsed.data), fx.resumeText, sourceText(fx.resume)).length === 0,
+      noUnsupportedNumbers: newNumbers(out, fx.resumeText, sourceText(fx.resume)).length === 0,
       noUnsupportedEmployers: audit.unsupportedEmployers.length === 0,
       noTrap: !fx.truth.traps.some((t) => hasTerm(out, t)),
+      datesUnchanged,
     },
     metrics: {
       coverage: coverage(sourceText(cleaned), fx.truth.supported),

@@ -68,7 +68,37 @@ async function main() {
   const startedAt = new Date().toISOString();
 
   const records: RunRecord[] = [];
+  const meta: Meta = {
+    label,
+    startedAt,
+    gitSha,
+    models: { primary: primary.model, fast: fast.model },
+    effort: primary.effort ?? 'default',
+    coreHashes,
+    calls,
+  };
+  // Saves whatever has been scored so far; runs once, from the loop's finally or from SIGINT.
+  let written = false;
+  const finish = () => {
+    if (written) return;
+    written = true;
+    const summary = summarize(records, meta);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
+    for (const [name, s] of Object.entries(summary.prompts)) {
+      console.log(`${name}: ${Object.keys(s.fixtures).length === 0 ? 'no scored runs' : 'gates ' + (s.gatesPassed ? 'PASS' : 'FAIL')}${s.errors ? `, ${s.errors} errors` : ''}${s.degraded ? `, ${s.degraded} degraded` : ''}`);
+      for (const f of s.failures) console.log(`  ${f.fixture} #${f.run}: ${f.gate}`);
+    }
+    console.log(`
+Wrote ${outDir}`);
+  };
+  process.once('SIGINT', () => {
+    finish();
+    process.exit(130);
+  });
+
   let n = 0;
+  try {
   for (const name of names) {
     const p = PROMPTS[name];
     for (const fx of fixtures) {
@@ -103,24 +133,9 @@ async function main() {
       }
     }
   }
-
-  const meta: Meta = {
-    label,
-    startedAt,
-    gitSha,
-    models: { primary: primary.model, fast: fast.model },
-    effort: primary.effort ?? 'default',
-    coreHashes,
-    calls,
-  };
-  const summary = summarize(records, meta);
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
-  for (const [name, s] of Object.entries(summary.prompts)) {
-    console.log(`${name}: ${Object.keys(s.fixtures).length === 0 ? 'no scored runs' : 'gates ' + (s.gatesPassed ? 'PASS' : 'FAIL')}${s.errors ? `, ${s.errors} errors` : ''}${s.degraded ? `, ${s.degraded} degraded` : ''}`);
-    for (const f of s.failures) console.log(`  ${f.fixture} #${f.run}: ${f.gate}`);
+  } finally {
+    finish();
   }
-  console.log(`\nWrote ${outDir}`);
 }
 
 main().catch((err) => {

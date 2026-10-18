@@ -1,1 +1,1 @@
-{ "supported": ["inventory", "logistics", "supervised", "safety"], "traps": ["SAP", "Lean Six Sigma"], "fitBand": "mid" }
+{ "supported": ["inventory", "logistics", "supervised", "safety"], "traps": ["SAP", "Six Sigma"], "fitBand": "mid" }

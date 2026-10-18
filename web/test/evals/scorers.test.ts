@@ -48,6 +48,21 @@ describe('scoreTailor', () => {
     bad.experience[0].bullets[0] = 'Ran Datadog for 40 services.';
     expect(scoreTailor(json(bad), fx).gates.noTrap).toBe(false);
   });
+  it('fails when a role date is changed', () => {
+    const bad = structuredClone(resume);
+    bad.experience[0].start = 'Mar 2020';
+    const s = scoreTailor(json(bad), fx);
+    expect(s.gates.datesUnchanged).toBe(false);
+    expect(scoreTailor(json(resume), fx).gates.datesUnchanged).toBe(true);
+  });
+  it('checks the target title for invented numbers and traps', () => {
+    const num = structuredClone(resume);
+    num.targetTitle = 'Senior SRE, 99 teams';
+    expect(scoreTailor(json(num), fx).gates.noUnsupportedNumbers).toBe(false);
+    const trap = structuredClone(resume);
+    trap.targetTitle = 'Datadog Engineer';
+    expect(scoreTailor(json(trap), fx).gates.noTrap).toBe(false);
+  });
   it('fails on an invented number', () => {
     const bad = structuredClone(resume);
     bad.experience[0].bullets[0] = 'Cut deploy time by 73%.';

@@ -24,4 +24,11 @@ describe('summarize', () => {
     expect(s.prompts.match).toMatchObject({ errors: 1, degraded: 1, gatesPassed: true });
     expect(s.prompts.match.fixtures.a.score.values).toEqual([50]);
   });
+  it('a prompt with no scored runs does not pass its gates', () => {
+    const s = summarize([rec({ ok: false, error: '500', gates: {}, metrics: {} }), rec({ run: 2, degraded: true })], meta);
+    expect(s.prompts.match.gatesPassed).toBe(false);
+  });
+  it('summarizing no records does not crash', () => {
+    expect(summarize([], meta).prompts).toEqual({});
+  });
 });
