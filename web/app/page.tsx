@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import PageBar from '@/components/PageBar';
+import Landing from '@/components/Landing';
 import { ensureSchema, sql, type ResumeRow, type JobRow } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const user = await currentUser();
-  if (!user) return null;
+  if (!user) return <Landing />;
   const sid = user.id;
 
   await ensureSchema();

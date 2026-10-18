@@ -20,6 +20,136 @@ read the same prompts from `core/`.
 
 ---
 
+## Session 2026-10-17: a public landing page, purple, and top navigation
+
+Builds on the Workbench redesign in the session below (PR #7). The branch
+`claude/ai-writing-assistant-landing-17d468` was cut from `1abe6c4` (the PR #7 merge). It
+picked up `main`'s S5 handover (PR #8) by a merge, `5b84995`, before this entry was written.
+**PR [mvineethr/job-search-kit#9](https://github.com/mvineethr/job-search-kit/pull/9), not
+merged; nothing deployed.**
+
+### What was asked
+
+1. "An AI writing assistant landing page with minimal chrome, live writing demo, use case
+   showcases, integration options, and subscription tiers. Neutral with AI purple accent.
+   Integrate it with my application."
+2. Commit, then open a PR.
+3. Resolve the PR's review comments (two from the Codex bot).
+4. After seeing it: sync the rest of the UI with the landing page. A screenshot of `/start`
+   had the sidebar boxed in red, marked "I didn't like that". The user's name goes in the
+   right corner, and the tabs go on top, not on the side.
+
+### Research and decisions
+
+- **Where it lives:** `/` for signed-out visitors. `proxy.ts` redirected every session-less
+  request to `/login`, `/` included, so the home page's `if (!user) return null` never ran.
+  The proxy now returns `next()` for exactly `/` without a session, and the page returns
+  `<Landing />` there. A forged cookie gets past the proxy, but `currentUser()` returns null,
+  so that visitor sees the landing page too.
+- **The demo is scripted, not live:** a fictional bullet, a finding, and a rewrite that types
+  itself out and ends in `[METRIC NEEDED]`. A live call would spend Moonshot money on
+  anonymous traffic (no spend cap yet) and could show a bad answer on the front page.
+- **Honest template:** use cases are features that exist; the MCP server says *Planned*;
+  the plans are Free ($0, live), Pro ("Not offered yet", "Pricing undecided", no button) and
+  Self-host (MIT). No paid tiers were invented. **Open:** the owner's external docs say the
+  project is zero-monetization (H-1B), so even an unpriced Pro card hints at a paid plan.
+  It should probably go before merge. This is flagged, not decided.
+- **Purple:** first scoped to the landing page via `.landing`, then `body:has(.landing)`,
+  because the top bar sits outside the wrapper and its button stayed blue. After the owner
+  saw it, purple became the app-wide accent in the `:root` token blocks:
+  - light `#6d28d9`, hover/text `#5b21b6`, subtle `#f3effd`
+  - dark `#a78bfa`, hover/text `#c4b5fd`, subtle `#251a47`
+
+  `test/tokens.test.ts` checks them for AA contrast, and they pass. This overrides the
+  Workbench spec's cobalt; the spec file itself was not updated.
+- **Top navigation:** one sticky header for signed-in pages. Brand and tabs on the left,
+  avatar and name on the right, opening the existing account menu. Below 1024px the tabs move
+  into that menu, so there's one `<details>` menu instead of the old sidebar menu plus mobile
+  menu.
+
+### What was built
+
+- `5a10ba1` feat(web): landing page for signed-out visitors at `/`
+  - `web/components/Landing.tsx` (server): hero; "What it writes" (review, tailor, cover
+    letter, ATS check); "Works with" (Word and PDF, LinkedIn export, Google sign-in, MCP
+    Planned); "Plans". Reuses `.entries`/`.entry`/`.card`/`.tag`/`.btn`/`.soon-list`.
+  - `web/components/WritingDemo.tsx` (client): `setInterval` typing at 45ms per character,
+    a pause of about 40 ticks on the finished line, then a loop. The finished line goes
+    through `MarkedText`, so `[METRIC NEEDED]` renders as a chip. `prefers-reduced-motion`
+    shows the finished line at once.
+  - `web/app/page.tsx` returns `<Landing />` when signed out; `web/proxy.ts` exempts exactly `/`.
+  - Landing CSS appended to `globals.css`: `.land-hero`, `.demo-*`, `.land-tiers`, `.tier*`.
+- `52b8f65` fix(web): landing copy matches what the deployment offers. Both fixes answer
+  Codex P2 findings:
+  - The Google sign-in card is filtered on `enabledProviders().google`, the same rule
+    `AuthForm` uses on `/login` and `/signup`.
+  - "Export any résumé as .docx" became "Export a résumé read into sections as .docx or a
+    single-column PDF". When parsing fails, `saveMaster()` keeps the résumé as plain text
+    (`content: null`), and that résumé has no Word download.
+  - I replied on both threads and resolved them via GraphQL `resolveReviewThread`.
+- `74a1f60` feat(web): top navigation and purple accent across the app
+  - `git mv web/components/Sidebar.tsx web/components/AppNav.tsx`, rewritten as a header
+    on `.topbar`/`.topbar-in`. It keeps `useDetailsClose` and the `initials` helper. Its
+    parts:
+    - `.top-nav` holds the `.nav-link` tabs.
+    - `.account` (pushed right) holds the avatar and `.account-name`.
+    - The menu holds a `.menu-nav` copy of the tabs, shown below 1024px only, plus the
+      existing who/Profile/Settings/Help/Admin/Sign out.
+  - `globals.css`:
+    - removed `--sidebar-w`, `.sidebar`, `.side-*`, `.mobile-bar`, `.menu-up` and the shell's
+      left margin
+    - `.page-bar` is sticky at `top:56px`, padded to line up with the 1200px header
+      (`max(24px, calc((100% - 1200px) / 2 + 24px))`)
+    - the print rule was updated
+  - `layout.tsx` renders `<AppNav>`. Comments were updated in `TopBar.tsx` and `lib/nav.ts`,
+    and the module map in `CLAUDE.md`.
+
+### Bugs found live, and how
+
+- **Blue button on a purple page:** the first scoping (`.landing`) missed the layout's
+  `TopBar`, found in the first screenshot. Fixed with `body:has(.landing)` (later replaced by
+  app-wide tokens).
+- **Tabs overflowing at 800px:** the first top bar hid the tabs only below 768px. The
+  browser pane was 800px wide, and the name was cut off with a horizontal scrollbar on
+  `/agree`. Moved the breakpoint to 1024px, where the old sidebar collapsed.
+- **Misaligned page bar at 1440px:** the breadcrumb row ran edge to edge under a centred
+  1200px header. Fixed with the padding formula above.
+- **Over-claiming copy:** Codex's two findings above. Copy written from memory of the
+  features, not from the code paths.
+
+### Verified
+
+- `npm ci` (the worktree had no `node_modules`, about 2 minutes), `tsc` clean, 178/178 tests
+  after each commit and after the merge from `main`.
+- `web-localtest` (port 3001) in the in-app browser, signed out:
+  - dark at desktop width and light at 375px; no horizontal scroll (`scrollWidth` 378 =
+    `innerWidth`)
+  - the demo types and loops
+  - `/jobs` still redirects (`opaqueredirect`)
+  - no console errors
+- Signed in on a throwaway account, created from the console via
+  `/api/auth/sign-up/email` (`navtest-<timestamp>@example.com`, "Nav Test Person",
+  password generated in the page and never printed). Its `/agree` boxes were accepted on that
+  account only. Checked:
+  - `/start` at 800px, menu closed and open (tabs, then who, then links)
+  - `/resumes` at 1440px, dark and light (tabs on top, current tab purple, name top-right,
+    page bar aligned)
+  - no console errors
+  - then signed out.
+- Not checked: the landing page with Google unconfigured (it's configured locally), and
+  production.
+
+### Pending
+
+- Decide on the Plans section (remove the Pro card, or the whole section) given zero
+  monetization; then merge PR #9 and check production signed out and signed in.
+- Delete the throwaway account above if `.env.local` points at production.
+- Update `docs/superpowers/specs/2026-10-17-workbench-redesign-design.md` to purple and top
+  navigation.
+- Codex may review the later commits on PR #9.
+
+---
+
 ## Session 2026-10-16 → 10-17: competitor refresh, inline editing, auth pages, and the Workbench redesign
 
 Builds on everything below. PRs #3 (accounts, onboarding, legal layer: the 2026-09-27 → 10-01

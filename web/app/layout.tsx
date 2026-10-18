@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Geist, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import TopBar from '@/components/TopBar';
-import Sidebar from '@/components/Sidebar';
+import AppNav from '@/components/AppNav';
 import { currentUser } from '@/lib/auth';
 import { isAdmin } from '@/lib/admin';
 import { REPO_URL, SITE_NAME } from '@/lib/site';
@@ -25,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
-        {me ? <Sidebar me={me} /> : <TopBar />}
+        {me ? <AppNav me={me} /> : <TopBar />}
         <div className={me ? 'shell' : 'shell-public'}>
           {children}
           <footer className="site-foot">
