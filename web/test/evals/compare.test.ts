@@ -57,6 +57,22 @@ describe('writeBlind', () => {
     writeBlind(join(root, 'before'), join(root, 'after'), 4);
     expect(readdirSync(join(root, 'after', 'blind'))).not.toContain('old');
   });
+  it('pairs the lowest run that is clean in both versions, never a degraded one', () => {
+    const root = mkdtempSync(join(tmpdir(), 'blind-'));
+    const put = (run: string, file: string, text: string) => {
+      mkdirSync(join(root, run, 'raw', 'tailor', 'junior'), { recursive: true });
+      writeFileSync(join(root, run, 'raw', 'tailor', 'junior', file), text);
+    };
+    put('before', '1.degraded.txt', 'FALLBACK'); // run 1 fell back to another model
+    put('before', '2.txt', 'OLD2');
+    put('after', '1.txt', 'NEW1');
+    put('after', '2.txt', 'NEW2');
+    expect(writeBlind(join(root, 'before'), join(root, 'after'), 4)).toBe(1);
+    const page = readFileSync(join(root, 'after', 'blind', 'tailor', 'junior.md'), 'utf8');
+    expect(page).toContain('OLD2');
+    expect(page).toContain('NEW2');
+    expect(page).not.toContain('FALLBACK');
+  });
   it('writes A/B pairs and a key, with labels assigned by the rng', () => {
     const root = mkdtempSync(join(tmpdir(), 'blind-'));
     for (const [run, text] of [['before', 'OLD'], ['after', 'NEW']]) {

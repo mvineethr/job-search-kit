@@ -125,7 +125,8 @@ Wrote ${outDir}`);
         const ms = Date.now() - started;
         const dir = join(outDir, 'raw', name, fx.slug);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${run}.txt`), text);
+        // Degraded output (fallback model) is kept but named apart, so blind pages never pick it.
+        writeFileSync(join(dir, `${run}${degraded ? '.degraded' : ''}.txt`), text);
         const s = p.score(text, fx);
         records.push({ prompt: name, fixture: fx.slug, run, ok: true, degraded, gates: s.gates, metrics: { ...s.metrics, ms } });
         const failed = Object.entries(s.gates).filter(([, ok]) => !ok).map(([g]) => g);

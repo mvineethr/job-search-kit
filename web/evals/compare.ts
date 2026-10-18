@@ -63,14 +63,22 @@ export function writeBlind(beforeDir: string, afterDir: string, count: number, r
   rmSync(join(afterDir, 'blind'), { recursive: true, force: true }); // stale pages would leak the previous pairing
   let written = 0;
   for (const prompt of readdirSync(rawA)) {
-    const both = readdirSync(join(rawA, prompt)).filter((fx) => existsSync(join(beforeDir, 'raw', prompt, fx, '1.txt')) && existsSync(join(rawA, prompt, fx, '1.txt')));
+    // Errored runs write no raw file and degraded ones write <n>.degraded.txt, so a plain <n>.txt
+    // is a clean run; use the lowest run number clean in both versions.
+    const clean = (dir: string) => (existsSync(dir) ? readdirSync(dir).filter((f) => /^\d+\.txt$/.test(f)) : []);
+    const shared = (fx: string) => {
+      const b = new Set(clean(join(beforeDir, 'raw', prompt, fx)));
+      return clean(join(rawA, prompt, fx)).filter((f) => b.has(f)).sort((x, y) => parseInt(x) - parseInt(y))[0];
+    };
+    const both = readdirSync(join(rawA, prompt)).filter((fx) => shared(fx));
     // Fisher–Yates with the injected rng, then take the first `count`.
     for (let i = both.length - 1; i > 0; i--) {
       const j = Math.floor(rng() * (i + 1));
       [both[i], both[j]] = [both[j], both[i]];
     }
     for (const fx of both.slice(0, count)) {
-      const versions = { before: readFileSync(join(beforeDir, 'raw', prompt, fx, '1.txt'), 'utf8'), after: readFileSync(join(rawA, prompt, fx, '1.txt'), 'utf8') };
+      const file = shared(fx)!;
+      const versions = { before: readFileSync(join(beforeDir, 'raw', prompt, fx, file), 'utf8'), after: readFileSync(join(rawA, prompt, fx, file), 'utf8') };
       const order: ['before' | 'after', 'before' | 'after'] = rng() < 0.5 ? ['before', 'after'] : ['after', 'before'];
       key[`${prompt}/${fx}`] = { A: order[0], B: order[1] };
       const dir = join(afterDir, 'blind', prompt);

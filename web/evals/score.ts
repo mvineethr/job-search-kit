@@ -102,9 +102,11 @@ export function scoreTailor(text: string, fx: Fixture): Score {
   const { cleaned, audit } = verifyTailoring(parsed.data, fx.resume, fx.resumeText);
   const out = allText(parsed.data); // before cleaning: a trap anywhere in the output counts, titles and dates included
   const norm = (s: string) => s.trim().toLowerCase();
+  // Every role must keep an original employer's exact name and its dates: a renamed company
+  // ("Brightcart" → "Bright") slips past the substring employer check, so no match is a failure.
   const datesUnchanged = parsed.data.experience.every((r) => {
     const o = fx.resume.experience.find((x) => norm(x.company) === norm(r.company));
-    return !o || (o.start === r.start && o.end === r.end);
+    return !!o && o.start === r.start && o.end === r.end;
   });
   return {
     gates: {

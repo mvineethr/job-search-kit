@@ -54,6 +54,11 @@ describe('scoreTailor', () => {
     const s = scoreTailor(json(bad), fx);
     expect(s.gates.datesUnchanged).toBe(false);
     expect(scoreTailor(json(resume), fx).gates.datesUnchanged).toBe(true);
+    // A shortened employer name is a substring of the source, so only this gate catches it.
+    const renamed = structuredClone(resume);
+    renamed.experience[0].company = renamed.experience[0].company.split(' ')[0];
+    renamed.experience[0].start = 'Mar 2020';
+    expect(scoreTailor(json(renamed), fx).gates.datesUnchanged).toBe(false);
   });
   it('checks the target title for invented numbers and traps', () => {
     const num = structuredClone(resume);

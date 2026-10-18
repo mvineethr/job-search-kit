@@ -4,6 +4,8 @@ import { contentWords, resumeWords, hasTerm, DATE_WORDS } from '@/evals/score';
 
 const SLUGS = ['changer-military', 'changer-teacher', 'gap-year', 'junior', 'keyword-stuffed-jd', 'no-metrics', 'no-summary', 'non-english', 'non-tech', 'senior', 'strong-fit', 'weak-fit'];
 const fixtures = loadFixtures();
+// Section headings are structure, not content: the JSON holds them as field names.
+const HEADING_WORDS = new Set(['summary', 'professional', 'resumo', 'skills', 'experience', 'military', 'education', 'licenses', 'certifications']);
 
 describe('prompt test set fixtures', () => {
   it('has exactly the twelve planned pairs', () => {
@@ -15,6 +17,10 @@ describe('prompt test set fixtures', () => {
       it('resume.json is a transcription of resume.txt (no word it lacks)', () => {
         const src = contentWords(fx.resumeText);
         expect([...resumeWords(fx.resume)].filter((w) => !src.has(w) && !DATE_WORDS.has(w))).toEqual([]);
+      });
+      it('resume.json keeps every word of resume.txt (section headings aside)', () => {
+        const json = resumeWords(fx.resume);
+        expect([...contentWords(fx.resumeText)].filter((w) => !json.has(w) && !HEADING_WORDS.has(w))).toEqual([]);
       });
       it('every trap is absent from the résumé and present in the posting', () => {
         for (const t of fx.truth.traps) {
