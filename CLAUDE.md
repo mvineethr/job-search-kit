@@ -24,7 +24,7 @@ descriptions; **never fabricate** — missing numbers are the literal `[METRIC N
 ```
 core/                    agent-agnostic prompts — THE source of truth
   ats-rules.md           ATS rules (from shared/ats-rules.md minus Python mechanics)
-  resume-review.md       diagnostic → prose + {section,severity,finding} JSON
+  resume-review.md       diagnostic → prose + {section,severity,finding,before?,after?} JSON (one-line fixes)
   resume-parse.md        pasted text → résumé JSON (transcription only, never improves)
   resume-build.md        guided-builder answers → résumé JSON (rephrase only; [METRIC NEEDED], never a number)
   resume-tailor.md       résumé + JD → tailored JSON + {matched,missing,requirements}
@@ -49,7 +49,8 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 |---|---|
 | `resume-schema.ts` | Zod résumé schema, `METRIC_NEEDED`, `SECTION_HEADINGS`. Lenient on summary/dates, strict on name/roles/bullets |
 | `render-resume.ts` | JSON → ATS-safe HTML (export); `dateRange()`; escapes all content |
-| `prompts.ts` | `loadPrompt(name)` — reads `core/`, substitutes `{{ATS_RULES}}`; `KNOWN` allowlist |
+| `prompts.ts` | `loadPrompt(name)` — reads `core/`, substitutes `{{ATS_RULES}}`; `KNOWN` allowlist; `PROMPT_EFFORT` (review runs at medium). Prompts are cached per process: restart the dev server after editing `core/` |
+| `review-fixes.ts` | review fixes: `checkFix` (a bullet's rewrite may add no number, name or outcome its line lacks; the summary may draw on the whole résumé and "N years" the dates support; no unfillable holes), `applyFix(es)`, `requestApply` (window event the editor listens to) |
 | `provider.ts` | OpenAI-compatible client; tiers `primary`/`fast`/`fallback`; `streamCompletion`, `completeText`; emits `{type:'reasoning'|'content'}` events |
 | `ndjson.ts` | wire format for streamed events; buffers lines split across chunks |
 | `extract-json.ts` | `extractJsonObject`, `extractJsonArray`, `proseBefore` — use the one matching the prompt's output shape |

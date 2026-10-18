@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { loadPrompt } from '@/lib/prompts';
+import { loadPrompt, PROMPT_EFFORT } from '@/lib/prompts';
+
+describe('PROMPT_EFFORT', () => {
+  it('names only prompts that exist, so a renamed prompt cannot silently lose its effort', () => {
+    for (const name of Object.keys(PROMPT_EFFORT)) expect(() => loadPrompt(name)).not.toThrow();
+    expect(PROMPT_EFFORT['resume-review']).toBe('medium');
+  });
+});
 
 describe('loadPrompt', () => {
   it('loads the review prompt', () => {

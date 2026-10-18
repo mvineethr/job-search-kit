@@ -4,6 +4,8 @@
  * own copy would silently measure a different message the day a route changes.
  */
 
+const monthYear = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+
 const resumeAndJob = (resumeText: string, title: string, description: string) =>
   `MY RESUME:\n${resumeText}\n\nTHE JOB (${title}):\n${description}`;
 
@@ -15,8 +17,9 @@ export function letterMessage(resumeText: string, title: string, description: st
   return resumeAndJob(resumeText, title, description);
 }
 
-export function reviewMessage(resumeText: string): string {
-  return resumeText;
+/** Dated for the same reason as the match: the summary rewrite may say how many years. */
+export function reviewMessage(resumeText: string, today = new Date()): string {
+  return `TODAY: ${monthYear(today)}\n\n${resumeText}`;
 }
 
 /**
@@ -24,6 +27,5 @@ export function reviewMessage(resumeText: string): string {
  * Present" was counted as under seven years in some runs and over in others.
  */
 export function matchMessage(resumeText: string, title: string, description: string, today = new Date()): string {
-  const month = today.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-  return `TODAY: ${month}\n\n${resumeAndJob(resumeText, title, description)}`;
+  return `TODAY: ${monthYear(today)}\n\n${resumeAndJob(resumeText, title, description)}`;
 }

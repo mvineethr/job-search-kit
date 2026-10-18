@@ -10,7 +10,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
-import { loadPrompt } from '../lib/prompts';
+import { loadPrompt, PROMPT_EFFORT } from '../lib/prompts';
 import { completeText, pickConfig } from '../lib/provider';
 import { loadFixtures } from './fixtures';
 import { PROMPTS, type PromptName } from './registry';
@@ -111,6 +111,7 @@ Wrote ${outDir}`);
             system: loadPrompt(p.core),
             messages: [{ role: 'user', content: p.message(fx) }],
             tier: p.tier,
+            effort: PROMPT_EFFORT[p.core],
           });
         } catch (err) {
           // Status or error name only: provider messages are not printed in case they echo request details.

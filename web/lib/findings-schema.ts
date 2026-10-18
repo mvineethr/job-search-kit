@@ -11,6 +11,9 @@ export const FindingSchema = z.object({
   ]),
   severity: z.enum(['critical', 'worth-fixing']),
   finding: z.string().min(1),
+  // A suggested rewrite of one line. A malformed one is dropped, not the whole review.
+  before: z.string().min(1).optional().catch(undefined),
+  after: z.string().min(1).optional().catch(undefined),
 });
 
 export type Finding = z.infer<typeof FindingSchema>;

@@ -1,5 +1,5 @@
 import { requireSid } from '@/lib/auth';
-import { loadPrompt } from '@/lib/prompts';
+import { loadPrompt, PROMPT_EFFORT } from '@/lib/prompts';
 import { streamCompletion, type ChatMessage } from '@/lib/provider';
 import { encodeEvent } from '@/lib/ndjson';
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
   let result: Awaited<ReturnType<typeof streamCompletion>>;
   try {
-    result = await streamCompletion({ system, messages });
+    result = await streamCompletion({ system, messages, effort: PROMPT_EFFORT[capability] });
   } catch (err) {
     console.error('[chat] provider failed', err);
     return new Response(
