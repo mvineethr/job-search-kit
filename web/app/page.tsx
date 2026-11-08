@@ -67,18 +67,14 @@ export default async function Home() {
               <span>Upload a résumé PDF and see the plain text a tracking system pulls out of it.</span>
             </Link>
 
-            <Link href="/email" className="entry entry-soon">
-              <strong>
-                Write a cold email <span className="tag tag-soon">Soon</span>
-              </strong>
+            <Link href="/email" className="entry">
+              <strong>Write a cold email</strong>
               <span>A short, specific note to a hiring manager or someone who could refer you.</span>
             </Link>
 
-            <Link href="/linkedin" className="entry entry-soon">
-              <strong>
-                Fix my LinkedIn <span className="tag tag-soon">Soon</span>
-              </strong>
-              <span>Headline, About, experience bullets, and what to post.</span>
+            <Link href="/linkedin" className="entry">
+              <strong>Fix my LinkedIn</strong>
+              <span>An audit of your profile, then a headline, About section and experience bullets to paste back.</span>
             </Link>
           </div>
         </div>

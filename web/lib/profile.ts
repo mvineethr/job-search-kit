@@ -61,3 +61,10 @@ export async function getProfile(sid: string): Promise<Profile | null> {
     FROM profiles WHERE sid = ${sid}`) as Profile[];
   return rows[0] ?? null;
 }
+
+/** The stored LinkedIn export text, for the LinkedIn page. Never merged into a résumé. */
+export async function getLinkedInText(sid: string): Promise<string | null> {
+  await ensureSchema();
+  const rows = (await sql()`SELECT linkedin_text FROM profiles WHERE sid = ${sid}`) as { linkedin_text: string | null }[];
+  return rows[0]?.linkedin_text ?? null;
+}

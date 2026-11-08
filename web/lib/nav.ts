@@ -2,8 +2,8 @@ export const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: '/', label: 'Home' },
   { href: '/resumes', label: 'Résumés' },
   { href: '/jobs', label: 'Jobs' },
-  { href: '/linkedin', label: 'LinkedIn', soon: true },
-  { href: '/email', label: 'Cold email', soon: true },
+  { href: '/linkedin', label: 'LinkedIn' },
+  { href: '/email', label: 'Cold email' },
 ];
 
 // Pages that live under another section's nav item.

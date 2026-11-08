@@ -75,7 +75,7 @@ export default async function JobPage({
     SELECT id FROM resumes WHERE sid = ${sid} AND job_id = ${id} AND parent_id IS NOT NULL
     ORDER BY updated_at DESC LIMIT 1`) as unknown as ResumeRow[])[0];
   const letter = ((await q`
-    SELECT id FROM letters WHERE sid = ${sid} AND job_id = ${id}
+    SELECT id FROM letters WHERE sid = ${sid} AND job_id = ${id} AND kind = 'cover'
     ORDER BY created_at DESC LIMIT 1`) as unknown as LetterRow[])[0];
 
   const match = readMatch(job.match);
@@ -121,6 +121,12 @@ export default async function JobPage({
         ) : master ? (
           <GenerateButton action="/api/letter" jobId={job.id} label="Write a cover letter" busyLabel="Writing… about a minute" />
         ) : null}
+
+        {master && (
+          <Link href={`/email?job=${job.id}`} className="btn btn-sm">
+            Cold email
+          </Link>
+        )}
 
         {tailored ? (
           <Link href={`/resume/${tailored.id}`} className="btn btn-sm">

@@ -32,7 +32,7 @@ export default async function JobsPage({
     FROM resumes WHERE sid = ${sid} ORDER BY updated_at DESC`) as unknown as ResumeRow[];
   const letters = (await q`
     SELECT id, kind, job_id, resume_id, content, created_at
-    FROM letters WHERE sid = ${sid} ORDER BY created_at DESC`) as unknown as LetterRow[];
+    FROM letters WHERE sid = ${sid} AND kind = 'cover' ORDER BY created_at DESC`) as unknown as LetterRow[];
 
   const master = resumes.find((r) => !r.parent_id);
   const tailoredByJob = new Map<string, ResumeRow>();

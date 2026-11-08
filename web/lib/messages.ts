@@ -29,3 +29,34 @@ export function reviewMessage(resumeText: string, today = new Date()): string {
 export function matchMessage(resumeText: string, title: string, description: string, today = new Date()): string {
   return `TODAY: ${monthYear(today)}\n\n${resumeAndJob(resumeText, title, description)}`;
 }
+
+const line = (label: string, value: string | null | undefined) => `${label}: ${value?.trim() || '(blank)'}`;
+
+export function emailMessage(o: {
+  situation: string;
+  to: string;
+  why: string;
+  aimingFor: string | null;
+  resumeText: string;
+  job?: { title: string; description: string } | null;
+}): string {
+  const head = [line('SITUATION', o.situation), line('TO', o.to), line('WHY THEM', o.why), line('AIMING FOR', o.aimingFor)].join('\n');
+  const body = o.job ? resumeAndJob(o.resumeText, o.job.title, o.job.description) : `MY RESUME:\n${o.resumeText}`;
+  return `${head}\n\n${body}`;
+}
+
+export function linkedinMessage(o: {
+  aimingFor: string | null;
+  savedRoles: string[];
+  linkedinText: string;
+  resumeText: string;
+}): string {
+  return [
+    line('AIMING FOR', o.aimingFor),
+    line('ROLES THEY SAVED', o.savedRoles.join('; ')),
+    '',
+    `MY LINKEDIN:\n${o.linkedinText.trim() || '(blank)'}`,
+    '',
+    `MY RESUME:\n${o.resumeText}`,
+  ].join('\n');
+}

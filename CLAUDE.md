@@ -32,6 +32,8 @@ core/                    agent-agnostic prompts — THE source of truth
   job-match.md           JD vs résumé → requirements {kind,category,status,evidence,question}; replaced gap-questions
   metric-questions.md    [METRIC NEEDED] bullets → questions (array)
   metric-fill.md         answers → résumé with holes filled
+  cold-email.md          situation + recipient + résumé (+ job) → {subject,paragraphs,facts,gaps}; app writes the greeting
+  linkedin-profile.md    LinkedIn text + résumé → {identity,audit,headline,about,experience,skills}
 skills/ commands/        plugin; skills/resume-review/SKILL.md now points at core/
 web/
   app/                   routes (App Router); api/* are form-post or NDJSON endpoints
@@ -72,6 +74,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `redirect.ts` | `redirectTo`, `backWithError` for form posts |
 | `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
 | `nav.ts` | top-nav items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
+| `outreach.ts` / `load-master.ts` | cold email + LinkedIn: schemas, `greetingFor` (name only from what the person typed), `unsupportedNumbers`, `verifyLinkedIn` (drops skills/roles not in source and quotes not in the LinkedIn text); `loadMaster` gives the active master as prompt text and check source. Both store in `letters` with `kind` `email`/`linkedin`; cover-letter queries filter `kind = 'cover'` |
 | `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
 | `components/AppNav.tsx` | the signed-in top bar: sections on the left, account menu on the right; on phones the sections move into the menu (client; uses `NAV`) |
 | `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
@@ -210,8 +213,9 @@ Production was not checked after these merges. LinkedIn sign-in is untested (no 
 GitHub), no governing-law state, Moonshot and Neon facts in `/privacy` unverified, no lawyer
 review.
 
-**Not built:** cold email, LinkedIn fixer (two modes designed; `profiles.linkedin_text` is
-waiting for it), interview prep (mocked up), cover-letter editing, outcome tracking, MCP server. Pages exist as
+**Cold email and LinkedIn** (`/email`, `/linkedin`): built on branch `claude/linkedin-cold-email-nu929x`, not yet run against the live model.
+
+**Not built:** interview prep (mocked up), cover-letter editing, outcome tracking, MCP server. Pages exist as
 honest "Not built yet" placeholders.
 
 **Known weaknesses:** restored bullets still land at the end of their role, though people can
