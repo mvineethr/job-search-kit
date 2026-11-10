@@ -36,6 +36,7 @@ describe('verifyLinkedIn', () => {
     experience: [
       { title: 'SRE', company: 'Halcyon Payments', bullets: ['Ran on-call for 12 services'] },
       { title: 'Lead', company: 'Made Up Corp', bullets: ['x'] },
+      { title: 'CEO', company: 'Halcyon Payments', bullets: ['y'] },
     ],
     skills: ['Kubernetes', 'Rust'],
   });
@@ -44,7 +45,7 @@ describe('verifyLinkedIn', () => {
 
   it('drops roles and skills absent from the source', () => {
     expect(v.experience.map((r) => r.company)).toEqual(['Halcyon Payments']);
-    expect(v.removedRoles).toEqual(['Lead, Made Up Corp']);
+    expect(v.removedRoles).toEqual(['Lead, Made Up Corp', 'CEO, Halcyon Payments']);
     expect(v.skills).toEqual(['Kubernetes']);
     expect(v.removedSkills).toEqual(['Rust']);
   });

@@ -87,8 +87,10 @@ export function verifyLinkedIn(
   const src = norm(`${resumeSource}\n${linkedinText}`);
   const li = norm(linkedinText);
   const removedSkills = out.skills.filter((s) => !src.includes(norm(s)));
-  const removedRoles = out.experience.filter((r) => !src.includes(norm(r.company))).map((r) => `${r.title}, ${r.company}`);
-  const experience = out.experience.filter((r) => src.includes(norm(r.company)));
+  // Both the title and the employer must be the person's own: "CEO, Acme" is not supported by "Engineer, Acme".
+  const real = (r: { title: string; company: string }) => src.includes(norm(r.company)) && src.includes(norm(r.title));
+  const removedRoles = out.experience.filter((r) => !real(r)).map((r) => `${r.title}, ${r.company}`);
+  const experience = out.experience.filter(real);
   const audit = out.audit.map((a) => (a.quote && !li.includes(norm(a.quote)) ? { ...a, quote: '' } : a));
   // "Current" text shown back to the person must really be theirs.
   const headline = { ...out.headline, current: li.includes(norm(out.headline.current)) ? out.headline.current : '' };
