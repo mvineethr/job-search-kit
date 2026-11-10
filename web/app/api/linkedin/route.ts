@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         {
           role: 'user',
           content: linkedinMessage({
-            aimingFor: profile?.target_role ?? null,
+            profile,
             savedRoles: saved.map((j) => j.role),
             linkedinText: linkedinText ?? '',
             resumeText: master.text,

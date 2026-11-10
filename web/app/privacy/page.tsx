@@ -41,7 +41,10 @@ export default async function PrivacyPage() {
           </li>
           <li>
             <strong>Optional profile details:</strong> the role you are aiming for, years of experience, where you
-            are based, where you are in your search, and how you found us — only if you fill them in.
+            are based, where you are in your search, how you found us, and what you want next (your field, the
+            roles and level you want, your goals, interests and strengths, how and where you want to work, whether
+            you need visa sponsorship, the lowest pay you would accept, and your dealbreakers) — only if you fill
+            them in. Sponsorship, pay, places and dealbreakers are never sent to the AI provider.
           </li>
           <li>
             <strong>Your agreement:</strong> which version of these terms you accepted, and when.

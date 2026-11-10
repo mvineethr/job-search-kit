@@ -52,7 +52,7 @@ export async function POST(req: Request) {
             situation,
             to,
             why,
-            aimingFor: profile?.target_role ?? null,
+            profile,
             resumeText: master.text,
             job: job ? { title: `${job.company} — ${job.role}`, description: job.description } : null,
           }),

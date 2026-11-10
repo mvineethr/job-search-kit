@@ -1,5 +1,5 @@
 import { requireSid } from '@/lib/auth';
-import { saveAbout, YEARS, SEARCH_STATUS } from '@/lib/profile';
+import { parsePreferences, saveAbout, YEARS, SEARCH_STATUS } from '@/lib/profile';
 import { redirectTo } from '@/lib/redirect';
 
 export const runtime = 'nodejs';
@@ -30,6 +30,7 @@ export async function POST(req: Request) {
     location: text(form, 'location'),
     search_status: choice(form, 'search_status', SEARCH_STATUS),
     heard_from: text(form, 'heard_from'),
+    preferences: parsePreferences(form),
   });
   return redirectTo(req, '/start?saved=1');
 }

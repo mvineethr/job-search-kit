@@ -1,3 +1,5 @@
+import type { PromptProfile } from './profile';
+
 /**
  * The user message each prompt receives. Kept in one place so the routes and the
  * prompt test set (web/evals) send exactly the same text: a test that builds its
@@ -32,27 +34,41 @@ export function matchMessage(resumeText: string, title: string, description: str
 
 const line = (label: string, value: string | null | undefined) => `${label}: ${value?.trim() || '(blank)'}`;
 
+/** The person's own words about themselves, for the prompts that write in their voice. */
+export function profileLines(p: PromptProfile | null): string {
+  const pr = p?.preferences;
+  const aiming = [p?.target_role, ...(pr?.target_roles ?? [])].filter(Boolean).join('; ');
+  return [
+    line('AIMING FOR', aiming),
+    line('FIELD', pr?.field),
+    line('SENIORITY', pr?.seniority),
+    line('GOALS', pr?.goals),
+    line('INTERESTS', pr?.interests),
+    line('STRENGTHS IN THEIR WORDS', pr?.strengths),
+  ].join('\n');
+}
+
 export function emailMessage(o: {
   situation: string;
   to: string;
   why: string;
-  aimingFor: string | null;
+  profile: PromptProfile | null;
   resumeText: string;
   job?: { title: string; description: string } | null;
 }): string {
-  const head = [line('SITUATION', o.situation), line('TO', o.to), line('WHY THEM', o.why), line('AIMING FOR', o.aimingFor)].join('\n');
+  const head = [line('SITUATION', o.situation), line('TO', o.to), line('WHY THEM', o.why), profileLines(o.profile)].join('\n');
   const body = o.job ? resumeAndJob(o.resumeText, o.job.title, o.job.description) : `MY RESUME:\n${o.resumeText}`;
   return `${head}\n\n${body}`;
 }
 
 export function linkedinMessage(o: {
-  aimingFor: string | null;
+  profile: PromptProfile | null;
   savedRoles: string[];
   linkedinText: string;
   resumeText: string;
 }): string {
   return [
-    line('AIMING FOR', o.aimingFor),
+    profileLines(o.profile),
     line('ROLES THEY SAVED', o.savedRoles.join('; ')),
     '',
     `MY LINKEDIN:\n${o.linkedinText.trim() || '(blank)'}`,
