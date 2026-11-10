@@ -19,8 +19,8 @@ describe('navCurrent', () => {
   it('lights Jobs on a cover letter', () => {
     expect(navCurrent('/letter/abc', '/jobs')).toBe(true);
   });
-  it('lists Home, Résumés, Jobs, then the two placeholders', () => {
+  it('lists Home, Résumés, Jobs, LinkedIn, Cold email, none marked soon', () => {
     expect(NAV.map((n) => n.href)).toEqual(['/', '/resumes', '/jobs', '/linkedin', '/email']);
-    expect(NAV.filter((n) => n.soon).map((n) => n.href)).toEqual(['/linkedin', '/email']);
+    expect(NAV.filter((n) => n.soon)).toEqual([]);
   });
 });

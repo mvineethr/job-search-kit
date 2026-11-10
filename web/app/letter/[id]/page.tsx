@@ -33,7 +33,7 @@ export default async function LetterPage({ params }: { params: Promise<{ id: str
   await ensureSchema();
   const rows = (await sql()`
     SELECT id, kind, job_id, resume_id, content, created_at
-    FROM letters WHERE id = ${id} AND sid = ${sid}`) as unknown as LetterRow[];
+    FROM letters WHERE id = ${id} AND sid = ${sid} AND kind = 'cover'`) as unknown as LetterRow[];
   const row = rows[0];
   if (!row) notFound();
 
