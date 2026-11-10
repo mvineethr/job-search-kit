@@ -74,13 +74,15 @@ describe('cold email', () => {
     expect(emailWords({ paragraphs: ['one two', 'three'] })).toBe(3);
   });
   it('message lists the blanks plainly and includes the job only when given', () => {
-    const m = emailMessage({ situation: 'referral', to: '', why: '', aimingFor: 'SRE', resumeText: 'R' });
-    expect(m).toBe('SITUATION: referral\nTO: (blank)\nWHY THEM: (blank)\nAIMING FOR: SRE\n\nMY RESUME:\nR');
-    expect(emailMessage({ situation: 'referral', to: 'Sam', why: '', aimingFor: null, resumeText: 'R', job: { title: 'Acme — SRE', description: 'D' } })).toContain('THE JOB (Acme — SRE):\nD');
+    const m = emailMessage({ situation: 'referral', to: '', why: '', profile: { target_role: 'SRE' }, resumeText: 'R' });
+    expect(m).toBe(
+      'SITUATION: referral\nTO: (blank)\nWHY THEM: (blank)\nAIMING FOR: SRE\nFIELD: (blank)\nSENIORITY: (blank)\nGOALS: (blank)\nINTERESTS: (blank)\nSTRENGTHS IN THEIR WORDS: (blank)\n\nMY RESUME:\nR',
+    );
+    expect(emailMessage({ situation: 'referral', to: 'Sam', why: '', profile: null, resumeText: 'R', job: { title: 'Acme — SRE', description: 'D' } })).toContain('THE JOB (Acme — SRE):\nD');
   });
   it('linkedin message has every section', () => {
-    expect(linkedinMessage({ aimingFor: null, savedRoles: ['SRE'], linkedinText: '', resumeText: 'R' })).toBe(
-      'AIMING FOR: (blank)\nROLES THEY SAVED: SRE\n\nMY LINKEDIN:\n(blank)\n\nMY RESUME:\nR',
+    expect(linkedinMessage({ profile: null, savedRoles: ['SRE'], linkedinText: '', resumeText: 'R' })).toBe(
+      'AIMING FOR: (blank)\nFIELD: (blank)\nSENIORITY: (blank)\nGOALS: (blank)\nINTERESTS: (blank)\nSTRENGTHS IN THEIR WORDS: (blank)\nROLES THEY SAVED: SRE\n\nMY LINKEDIN:\n(blank)\n\nMY RESUME:\nR',
     );
   });
   it('both prompts load with the ATS rules filled in', () => {

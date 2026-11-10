@@ -7,7 +7,60 @@ export type Profile = {
   location: string | null;
   search_status: string | null;
   heard_from: string | null;
+  preferences: Preferences | null;
 };
+
+export const SENIORITY = ['Entry level', 'Mid level', 'Senior', 'Lead or principal', 'Manager or above'] as const;
+export const WORK_SETUP = ['Remote', 'Hybrid', 'On-site'] as const;
+
+/** Who the person is and what they want, in their own words. Every field is optional. */
+export type Preferences = {
+  field: string | null;
+  target_roles: string[];
+  seniority: string | null;
+  goals: string | null;
+  interests: string | null;
+  work_setup: string[];
+  places: string | null;
+  needs_sponsorship: 'yes' | 'no' | null;
+  pay_floor: string | null;
+  dealbreakers: string | null;
+  strengths: string | null;
+};
+
+const text = (form: FormData, key: string, max: number): string | null => {
+  const v = String(form.get(key) ?? '').trim().slice(0, max);
+  return v || null;
+};
+
+/** Trust boundary for the profile form: free text is trimmed and capped, choices accept only their listed values. */
+export function parsePreferences(form: FormData): Preferences {
+  const seniority = String(form.get('seniority') ?? '');
+  const sponsorship = String(form.get('needs_sponsorship') ?? '');
+  return {
+    field: text(form, 'field', 200),
+    target_roles: String(form.get('target_roles') ?? '')
+      .split(/[,\n]/)
+      .map((r) => r.trim().slice(0, 100))
+      .filter(Boolean)
+      .slice(0, 5),
+    seniority: (SENIORITY as readonly string[]).includes(seniority) ? seniority : null,
+    goals: text(form, 'goals', 1000),
+    interests: text(form, 'interests', 500),
+    work_setup: form.getAll('work_setup').map(String).filter((w) => (WORK_SETUP as readonly string[]).includes(w)),
+    places: text(form, 'places', 300),
+    needs_sponsorship: sponsorship === 'yes' || sponsorship === 'no' ? sponsorship : null,
+    pay_floor: text(form, 'pay_floor', 100),
+    dealbreakers: text(form, 'dealbreakers', 500),
+    strengths: text(form, 'strengths', 1000),
+  };
+}
+
+/**
+ * What the writing prompts are told about the person. Sponsorship, pay, places and
+ * dealbreakers are left out: they are for filtering jobs, and a letter has no use for them.
+ */
+export type PromptProfile = Pick<Profile, 'target_role'> & { preferences?: Preferences | null };
 
 export const YEARS = ['Under 1', '1–2', '3–5', '6–10', 'More than 10'] as const;
 export const SEARCH_STATUS = ['Actively looking', 'Open to offers', 'Just exploring'] as const;
@@ -23,20 +76,21 @@ export async function upsertProfile(sid: string, name: string, linkedinText?: st
       linkedin_text = COALESCE(EXCLUDED.linkedin_text, profiles.linkedin_text)`;
 }
 
-export type About = Pick<Profile, 'target_role' | 'years_experience' | 'location' | 'search_status' | 'heard_from'>;
+export type About = Pick<Profile, 'target_role' | 'years_experience' | 'location' | 'search_status' | 'heard_from' | 'preferences'>;
 
 /** Career basics, all optional. Saving the form replaces them; blanks clear a field. */
 export async function saveAbout(sid: string, a: About): Promise<void> {
   await ensureSchema();
   await sql()`
-    INSERT INTO profiles (sid, target_role, years_experience, location, search_status, heard_from)
-    VALUES (${sid}, ${a.target_role}, ${a.years_experience}, ${a.location}, ${a.search_status}, ${a.heard_from})
+    INSERT INTO profiles (sid, target_role, years_experience, location, search_status, heard_from, preferences)
+    VALUES (${sid}, ${a.target_role}, ${a.years_experience}, ${a.location}, ${a.search_status}, ${a.heard_from}, ${a.preferences ? JSON.stringify(a.preferences) : null})
     ON CONFLICT (sid) DO UPDATE SET
       target_role = EXCLUDED.target_role,
       years_experience = EXCLUDED.years_experience,
       location = EXCLUDED.location,
       search_status = EXCLUDED.search_status,
-      heard_from = EXCLUDED.heard_from`;
+      heard_from = EXCLUDED.heard_from,
+      preferences = EXCLUDED.preferences`;
 }
 
 /** Records that this person agreed to the given Terms/Privacy version, now. */
@@ -57,7 +111,7 @@ export async function acceptedTermsVersion(sid: string): Promise<string | null> 
 export async function getProfile(sid: string): Promise<Profile | null> {
   await ensureSchema();
   const rows = (await sql()`
-    SELECT name, target_role, years_experience, location, search_status, heard_from
+    SELECT name, target_role, years_experience, location, search_status, heard_from, preferences
     FROM profiles WHERE sid = ${sid}`) as Profile[];
   return rows[0] ?? null;
 }

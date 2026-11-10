@@ -12,7 +12,11 @@ You are given:
   - `no-posting`: no open role is posted; they are asking about the team's work and whether there is a fit
 - `TO`: who they are writing to, in the person's own words. May be blank.
 - `WHY THEM`: what the person knows about the recipient or the company, in their own words. May be blank.
-- `AIMING FOR`: the role they want, from their profile. May be blank.
+- `AIMING FOR`: the roles they want, from their profile. May be blank.
+- `FIELD`, `SENIORITY`, `GOALS`, `INTERESTS`, `STRENGTHS IN THEIR WORDS`: what they told us about
+  themselves, from their profile. Any may be blank. Use them to choose what to lead with and to
+  frame where they are heading. They are not evidence: a skill, number, employer or achievement
+  still has to be in the résumé (or LinkedIn) before you write it.
 - `MY RESUME`, and optionally `THE JOB`.
 
 ## The rules you work within

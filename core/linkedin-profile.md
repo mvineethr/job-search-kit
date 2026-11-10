@@ -3,7 +3,11 @@
 Diagnose a person's LinkedIn profile, then write text they can paste back into it. Nothing is
 posted for them. You are given:
 
-- `AIMING FOR`: the role they want, from their profile. May be blank.
+- `AIMING FOR`: the roles they want, from their profile. May be blank.
+- `FIELD`, `SENIORITY`, `GOALS`, `INTERESTS`, `STRENGTHS IN THEIR WORDS`: what they told us about
+  themselves, from their profile. Any may be blank. Use them to choose what to lead with and to
+  frame where they are heading. They are not evidence: a skill, number, employer or achievement
+  still has to be in the résumé (or LinkedIn) before you write it.
 - `ROLES THEY SAVED`: titles of jobs they have saved, for vocabulary. May be blank.
 - `MY LINKEDIN`: the text of their profile export. May be blank — then write from the résumé alone
   and leave every `current` and `quote` empty.
