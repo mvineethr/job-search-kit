@@ -7,7 +7,7 @@ import { extractJsonObject } from '@/lib/extract-json';
 import { emailMessage } from '@/lib/messages';
 import { loadMaster } from '@/lib/load-master';
 import { getProfile } from '@/lib/profile';
-import { EmailSchema, greetingFor, isSituation, unsupportedNumbers, type StoredEmail } from '@/lib/outreach';
+import { displayName, EmailSchema, greetingFor, isSituation, unsupportedNumbers, type StoredEmail } from '@/lib/outreach';
 import { backWithError, redirectTo } from '@/lib/redirect';
 
 export const runtime = 'nodejs';
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     ...parsed.data,
     situation,
     greeting: greetingFor(to),
-    name: master.name || profile?.name || '',
+    name: displayName(master.name || profile?.name || ''),
     unsupportedNumbers: unsupportedNumbers([parsed.data.subject, ...parsed.data.paragraphs], `${master.source}\n${why}\n${to}`),
   };
 

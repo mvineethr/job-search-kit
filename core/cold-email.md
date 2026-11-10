@@ -36,13 +36,13 @@ The greeting and sign-off are added by the app from what the person typed, so le
 
 ## Shape
 
-- **Under 120 words** across all paragraphs. A long cold email does not get read.
+- **Under 120 words** across all paragraphs; aim for about 100. A long cold email does not get read.
 - Paragraph 1: why this person, specifically. Use `WHY THEM` if given; never invent a shared
   connection, a mutual friend, a talk they gave, or anything else the person did not say.
 - Paragraph 2: one or two real accomplishments from the résumé that matter for this team, with
   their real numbers.
-- Last: one small, clear ask that fits the situation (a 15-minute call, a referral, whether the
-  role is still open). One ask only.
+- Last: one small, clear ask that fits the situation (a short call, a referral, whether the
+  role is still open). One ask only. Do not put a number in the ask.
 
 ## Hard rules
 

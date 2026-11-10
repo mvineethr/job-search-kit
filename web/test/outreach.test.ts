@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { greetingFor, unsupportedNumbers, verifyLinkedIn, EmailSchema, LinkedInSchema, emailWords } from '@/lib/outreach';
+import { greetingFor, unsupportedNumbers, verifyLinkedIn, EmailSchema, LinkedInSchema, emailWords, displayName } from '@/lib/outreach';
+import { numbersIn, hasNumber } from '@/lib/verify-tailoring';
 import { emailMessage, linkedinMessage } from '@/lib/messages';
 import { loadPrompt } from '@/lib/prompts';
 
@@ -14,6 +15,13 @@ describe('greetingFor', () => {
 describe('unsupportedNumbers', () => {
   it('flags numbers the source never states', () => {
     expect(unsupportedNumbers(['Cut latency 41% for 1,200 users'], 'cut p99 latency 41%')).toEqual(['1,200']);
+  });
+  it('drops trailing punctuation and matches whole numbers only', () => {
+    expect(numbersIn('from 30 a week to 9, and 1.8s.')).toEqual(['30', '9', '1.8']);
+    expect(hasNumber('latency 1.8s', '8')).toBe(false);
+    expect(hasNumber('latency 1.8s', '1.8')).toBe(true);
+    expect(hasNumber('pages to 9, then', '9')).toBe(true);
+    expect(hasNumber('400 nodes', '40')).toBe(false);
   });
 });
 
@@ -32,7 +40,7 @@ describe('verifyLinkedIn', () => {
     skills: ['Kubernetes', 'Rust'],
   });
   const source = 'sre halcyon payments kubernetes on-call for 12 services';
-  const v = verifyLinkedIn(out, source + '\nEngineer at Halcyon', 'Engineer at Halcyon');
+  const v = verifyLinkedIn(out, source, 'Engineer at Halcyon');
 
   it('drops roles and skills absent from the source', () => {
     expect(v.experience.map((r) => r.company)).toEqual(['Halcyon Payments']);
@@ -48,9 +56,18 @@ describe('verifyLinkedIn', () => {
   it('flags invented numbers in what it wrote', () => {
     expect(v.unsupportedNumbers).toEqual(['99.99%']);
   });
+  it('checks numbers against the résumé only, including the identity line', () => {
+    const w = verifyLinkedIn({ ...out, identity: 'Cut AWS spend 35%' }, source, 'Cut our AWS bill by 35%');
+    expect(w.unsupportedNumbers).toEqual(['35%', '99.99%']);
+  });
 });
 
 describe('cold email', () => {
+  it('fixes an all-caps name only', () => {
+    expect(displayName('DANA OKAFOR')).toBe('Dana Okafor');
+    expect(displayName("MARY-JANE O'NEIL")).toBe("Mary-Jane O'Neil");
+    expect(displayName('Dana McKay')).toBe('Dana McKay');
+  });
   it('schema needs a subject and a paragraph', () => {
     expect(EmailSchema.safeParse({ subject: 'Hi', paragraphs: [] }).success).toBe(false);
     expect(emailWords({ paragraphs: ['one two', 'three'] })).toBe(3);

@@ -60,7 +60,7 @@ export default async function LinkedInView({ params }: { params: Promise<{ id: s
 
         {(n.length > 0 || li.removedSkills.length > 0 || li.removedRoles.length > 0) && (
           <div className="notice notice-warn stack card-gap">
-            {n.length > 0 && <p>Numbers not in your résumé or profile, marked below: {n.join(', ')}. Check or remove them.</p>}
+            {n.length > 0 && <p>Numbers your résumé does not state, marked below: {n.join(', ')}. Check or remove them.</p>}
             {li.removedSkills.length > 0 && <p>Removed skills you never listed: {li.removedSkills.join(', ')}.</p>}
             {li.removedRoles.length > 0 && <p>Removed roles that are not in your résumé: {li.removedRoles.join('; ')}.</p>}
           </div>
@@ -68,11 +68,15 @@ export default async function LinkedInView({ params }: { params: Promise<{ id: s
 
         {(li.identity || li.audit.length > 0) && (
           <Section title="What is wrong now">
-            {li.identity && <p>{li.identity}</p>}
+            {li.identity && (
+              <p>
+                <MarkedText text={li.identity} numbers={n} />
+              </p>
+            )}
             <ul className="facts-list">
               {li.audit.map((a, i) => (
                 <li key={i}>
-                  <span className="tag">{a.area}</span> {a.problem}
+                  <span className="tag">{a.area}</span> <MarkedText text={a.problem} numbers={n} />
                   {a.quote && <span className="fix-before"> “{a.quote}”</span>}
                 </li>
               ))}
@@ -93,6 +97,7 @@ export default async function LinkedInView({ params }: { params: Promise<{ id: s
         </Section>
 
         <Section title="About" copy={li.about.suggested}>
+          {li.about.current && <p className="fix-before" style={{ whiteSpace: 'pre-line' }}>{li.about.current}</p>}
           <p style={{ whiteSpace: 'pre-line' }}>
             <MarkedText text={li.about.suggested} numbers={n} />
           </p>

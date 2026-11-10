@@ -94,7 +94,11 @@ export default async function EmailView({ params }: { params: Promise<{ id: stri
                 <h2>What it chose not to claim</h2>
               </div>
               <div className="card-body">
-                <p>{email.gaps.join(', ')}</p>
+                <ul className="facts-list">
+                  {email.gaps.map((g) => (
+                    <li key={g}>{g}</li>
+                  ))}
+                </ul>
               </div>
             </div>
           )}

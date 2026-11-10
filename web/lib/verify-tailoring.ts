@@ -95,7 +95,14 @@ function countBullets(resume: Resume): number {
 
 /** Numbers and percentages, e.g. "34", "41%", "1,200". */
 export function numbersIn(text: string): string[] {
-  return [...text.matchAll(/\b\d[\d,.]*\s?%?/g)].map((m) => m[0].trim());
+  // Separators count only between digits: "to 9, and" is "9", not "9,".
+  return [...text.matchAll(/\b\d+(?:[.,]\d+)*\s?%?/g)].map((m) => m[0].trim());
+}
+
+/** Whole-number match: "8" is not in "1.8s", "40" is not in "400". */
+export function hasNumber(source: string, n: string): boolean {
+  const esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\d.,])${esc}(?![\\d]|[.,]\\d)`).test(source);
 }
 
 /**
@@ -135,7 +142,7 @@ export function verifyTailoring(
 
   const tailoredText = sourceText(tailored);
   const unsupportedNumbers = [...new Set(numbersIn(tailoredText))].filter(
-    (n) => !source.includes(n.toLowerCase()),
+    (n) => !hasNumber(source, n),
   );
 
   const originalCompanies = new Set(

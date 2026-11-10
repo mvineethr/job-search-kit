@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { numbersIn } from './verify-tailoring';
+import { hasNumber, numbersIn } from './verify-tailoring';
 
 /** Cold emails and LinkedIn rewrites: model output shapes and the checks run on them. */
 
@@ -56,13 +56,18 @@ const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 /** Numbers in the text that the person's own material never states. Flagged, never rewritten. */
 export function unsupportedNumbers(texts: string[], source: string): string[] {
   const src = source.toLowerCase();
-  return [...new Set(texts.flatMap(numbersIn))].filter((n) => !src.includes(n.toLowerCase()));
+  return [...new Set(texts.flatMap(numbersIn))].filter((n) => !hasNumber(src, n));
 }
 
 /** The app writes the greeting so the model can never invent a name: only the first word the person typed. */
 export function greetingFor(to: string): string {
   const first = to.trim().split(/[\s,(]/)[0]?.replace(/[^\p{L}'-]/gu, '');
   return first ? `Hi ${first},` : 'Hello,';
+}
+
+/** "DANA OKAFOR" → "Dana Okafor"; a name already in mixed case is left alone. */
+export function displayName(name: string): string {
+  return name === name.toUpperCase() ? name.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (c) => c.toUpperCase()) : name;
 }
 
 export function emailWords(e: Pick<Email, 'paragraphs'>): number {
@@ -76,10 +81,10 @@ export function emailWords(e: Pick<Email, 'paragraphs'>): number {
  */
 export function verifyLinkedIn(
   out: LinkedIn,
-  source: string,
+  resumeSource: string,
   linkedinText: string,
 ): Omit<StoredLinkedIn, 'fromLinkedIn'> {
-  const src = norm(source);
+  const src = norm(`${resumeSource}\n${linkedinText}`);
   const li = norm(linkedinText);
   const removedSkills = out.skills.filter((s) => !src.includes(norm(s)));
   const removedRoles = out.experience.filter((r) => !src.includes(norm(r.company))).map((r) => `${r.title}, ${r.company}`);
@@ -89,7 +94,8 @@ export function verifyLinkedIn(
   const headline = { ...out.headline, current: li.includes(norm(out.headline.current)) ? out.headline.current : '' };
   const about = { ...out.about, current: li.includes(norm(out.about.current)) ? out.about.current : '' };
 
-  const written = [...headline.suggested, about.suggested, ...experience.flatMap((r) => r.bullets)];
+  // Numbers are checked against the résumé alone: a profile claim the résumé never makes gets flagged, not amplified.
+  const written = [out.identity, ...out.audit.map((a) => a.problem), ...headline.suggested, about.suggested, ...experience.flatMap((r) => r.bullets)];
   return {
     ...out,
     audit,
@@ -97,7 +103,7 @@ export function verifyLinkedIn(
     about,
     experience,
     skills: out.skills.filter((s) => src.includes(norm(s))),
-    unsupportedNumbers: unsupportedNumbers(written, source),
+    unsupportedNumbers: unsupportedNumbers(written, resumeSource),
     removedSkills,
     removedRoles,
   };

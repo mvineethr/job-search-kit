@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
   const li = linkedinText ?? '';
   const content: StoredLinkedIn = {
-    ...verifyLinkedIn(parsed.data, `${master.source}\n${li}`, li),
+    ...verifyLinkedIn(parsed.data, master.source, li),
     fromLinkedIn: Boolean(li),
   };
 
