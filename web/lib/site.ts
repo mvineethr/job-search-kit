@@ -16,9 +16,9 @@ export const GOVERNING_STATE = process.env.NEXT_PUBLIC_GOVERNING_STATE?.trim() |
  * Bump when the Terms or Privacy Policy change in substance. Everyone is asked to
  * accept again on their next visit, and the version they accepted is recorded.
  */
-export const TERMS_VERSION = '2026-11-10';
+export const TERMS_VERSION = '2026-11-11';
 /** Shown on both legal pages. */
-export const TERMS_UPDATED = '10 November 2026';
+export const TERMS_UPDATED = '11 November 2026';
 
 /** People under this age may not use the service (GDPR's default age of digital consent). */
 export const MIN_AGE = 16;

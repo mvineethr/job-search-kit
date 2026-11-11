@@ -41,6 +41,14 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const p = rows[0];
   if (!p) return backWithError(req, '/jobs/openings', 'That opening has closed.');
   if (p.job_id) return redirectTo(req, `/jobs/${p.job_id}`);
+  // Same bar as adding a job by hand: the fit check and tailoring need the posting's text.
+  if (p.description.trim().length < 80) {
+    return backWithError(
+      req,
+      '/jobs/openings',
+      `The feed for “${p.title}” has no description. Open the posting and add it from Jobs by pasting its text.`,
+    );
+  }
 
   const jobId = randomUUID();
   // The link goes at the end so the job page, the letter and the person can find the posting.
