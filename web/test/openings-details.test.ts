@@ -46,3 +46,31 @@ describe('search profile message', () => {
     expect(m).toContain('MY LINKEDIN:\nHeadline: Data engineer');
   });
 });
+
+import { workingKnowledge } from '@/lib/answers';
+import { renderResumeBody as renderResume } from '@/lib/render-resume';
+
+describe('working knowledge', () => {
+  const answers = [
+    { skill: 'Azure', level: 'some' as const, detail: '' },
+    { skill: 'GCP', level: 'none' as const, detail: '' },
+    { skill: 'Terraform', level: 'some' as const, detail: '' },
+    { skill: 'Kafka', level: 'solid' as const, detail: '' },
+  ];
+  it('lists only "tried it" skills the posting names', () => {
+    expect(workingKnowledge(answers, 'Experience with Azure, GCP and Kafka', ['AWS'])).toEqual(['Azure']);
+  });
+  it('renders under its own label, never inside Skills', () => {
+    const html = renderResume({
+      name: 'Test Person',
+      contact: {},
+      summary: '',
+      skills: ['AWS'],
+      workingKnowledge: ['Azure'],
+      experience: [{ title: 'Engineer', company: 'Acme', start: '2020', end: 'Present', bullets: ['Ran things'] }],
+      education: [],
+    });
+    expect(html).toContain('<p>AWS</p>');
+    expect(html).toContain('<p>Working knowledge: Azure</p>');
+  });
+});

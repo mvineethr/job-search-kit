@@ -39,15 +39,22 @@ export default async function OpeningsPage({
   const companies = (await q`
     SELECT id, sid, ats, token, name, checked_at, check_error FROM companies
     WHERE sid = ${sid} ORDER BY name`) as unknown as CompanyRow[];
-  const postings = (await q`
-    SELECT id, company_id, title, location, url, posted_at, pay, first_seen, job_id,
-           first_seen > now() - interval '7 days' AS fresh
-    FROM postings
-    WHERE sid = ${sid} ORDER BY COALESCE(posted_at, first_seen) DESC`) as unknown as (PostingRow & { fresh: boolean })[];
-
   const profile = await getProfile(sid);
   const spRows = (await q`SELECT search_profile FROM profiles WHERE sid = ${sid}`) as { search_profile: unknown }[];
   const sp = readSearchProfile(spRows[0]?.search_profile);
+  const skills = (sp?.skills ?? []).map((x) => x.toLowerCase());
+  // Openings that mention more of the person's skills come first; ties stay newest first.
+  const postings = (await q`
+    SELECT id, company_id, title, location, url, posted_at, pay, first_seen, job_id,
+           first_seen > now() - interval '7 days' AS fresh,
+           (SELECT count(*)::int FROM jsonb_array_elements_text(${JSON.stringify(skills)}::jsonb) s
+             WHERE position(s IN lower(description)) > 0) AS skill_hits
+    FROM postings
+    WHERE sid = ${sid}
+    ORDER BY skill_hits DESC, COALESCE(posted_at, first_seen) DESC`) as unknown as (PostingRow & {
+    fresh: boolean;
+    skill_hits: number;
+  })[];
   const roles = wantedRoles(sp, profile);
   // What changed since the profile was built: the active master or a skill answer.
   const [changed] = (await q`
@@ -212,7 +219,7 @@ export default async function OpeningsPage({
             {filtering && (
               <p className="hint">
                 Matching your roles: {roles.slice(0, 6).join(', ')}
-                {roles.length > 6 && '…'}.{' '}
+                {roles.length > 6 && '…'}.{skills.length > 0 && ' Those that mention more of your skills come first.'}{' '}
                 <Link href={href({ all: '1' })}>Show all {inScope.length}</Link>
               </p>
             )}
@@ -265,6 +272,7 @@ export default async function OpeningsPage({
                         {p.location && ` · ${p.location}`}
                         {p.pay && ` · ${p.pay}`}
                         {p.posted_at && ` · posted ${day(p.posted_at)}`}
+                        {p.skill_hits > 0 && ` · mentions ${p.skill_hits} of your skills`}
                       </span>
                     </div>
                     {p.fresh && !p.job_id && <span className="tag">New</span>}
@@ -433,7 +441,7 @@ function SearchProfileCard({ sp, behind }: { sp: SearchProfile | null; behind: b
               </select>
             </div>
             <div className="field">
-              <label htmlFor="sp-skills">Skills to search for (up to 12)</label>
+              <label htmlFor="sp-skills">Skills (up to 12; openings that mention them come first)</label>
               <input id="sp-skills" name="skills" type="text" defaultValue={sp.skills.join(', ')} />
             </div>
             <div className="row">

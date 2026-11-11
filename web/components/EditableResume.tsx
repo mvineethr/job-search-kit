@@ -281,6 +281,23 @@ export default function EditableResume({ id, initial, flags: initialFlags }: { i
             ))}
             <AddText label="Add a skill" onAdd={(v) => change({ ...resume, skills: [...resume.skills, v] })} />
           </p>
+          {resume.workingKnowledge && resume.workingKnowledge.length > 0 && (
+            <p>
+              Working knowledge:{' '}
+              {resume.workingKnowledge.map((s, i, all) => (
+                <span key={i}>
+                  {i > 0 && ', '}
+                  {s}
+                  <Ctl
+                    label={`Remove ${s} from working knowledge`}
+                    onClick={() => change({ ...resume, workingKnowledge: removeAt(all, i) })}
+                  >
+                    ×
+                  </Ctl>
+                </span>
+              ))}
+            </p>
+          )}
         </section>
 
         <section id="sec-experience">

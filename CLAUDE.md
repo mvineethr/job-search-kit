@@ -63,7 +63,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `docx.ts` | hand-written .docx (zip via `node:zlib` crc32/deflate, no dependency); single-column paragraphs, same section order as the PDF |
 | `ats-check.ts` | checks on extracted PDF text: readable, no font garbage, email/phone, headings (case-insensitive), dates |
 | `generic-phrases.ts` | flags the `## Banned` words from `ats-rules.md` in résumés/letters, skipping words the posting uses |
-| `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
+| `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText`, `workingKnowledge` ("tried it" skills the posting names → the résumé's labelled `workingKnowledge` line, set by the tailor route, never by the model, never merged into Skills; owner's call 2026-11-11) |
 | `messages.ts` | the user message each prompt receives (`tailorMessage`, `letterMessage`, `reviewMessage`, `matchMessage`); routes and `evals/` share it |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
 | `db.ts` | Neon via plain SQL; `ensureSchema()` creates tables on demand |

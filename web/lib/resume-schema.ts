@@ -47,6 +47,8 @@ export const ResumeSchema = z.object({
   }),
   summary: z.string().default(''), // many résumés have none
   skills: z.array(z.string().min(1)).default([]),
+  /** Skills the person rated "tried it": shown only under this label, never as experience. Set by code, not the model. */
+  workingKnowledge: z.array(z.string().min(1)).optional(),
   experience: z.array(RoleSchema).min(1),
   education: z.array(EducationSchema).default([]),
   certifications: z.array(z.string().min(1)).optional(),

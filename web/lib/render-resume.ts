@@ -48,9 +48,13 @@ export function renderResumeBody(resume: Resume): string {
     .join(' | ');
 
   // Empty sections are skipped: a bare heading reads as a missing section.
-  const skills = resume.skills.length
-    ? `  <h2>Skills</h2>\n  <p>${resume.skills.map(text).join(', ')}</p>\n\n`
-    : '';
+  const wk = resume.workingKnowledge ?? [];
+  const skills =
+    resume.skills.length || wk.length
+      ? `  <h2>Skills</h2>\n${resume.skills.length ? `  <p>${resume.skills.map(text).join(', ')}</p>\n` : ''}${
+          wk.length ? `  <p>Working knowledge: ${wk.map(text).join(', ')}</p>\n` : ''
+        }\n`
+      : '';
 
   const education = resume.education.length
     ? `

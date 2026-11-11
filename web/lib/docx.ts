@@ -43,7 +43,10 @@ export function resumeDocumentXml(r: Resume): string {
   ];
 
   if (r.summary.trim()) body.push(heading('Summary'), para(run(r.summary)));
-  if (r.skills.length) body.push(heading('Skills'), para(run(r.skills.join(', '))));
+  const wk = r.workingKnowledge ?? [];
+  if (r.skills.length || wk.length) body.push(heading('Skills'));
+  if (r.skills.length) body.push(para(run(r.skills.join(', '))));
+  if (wk.length) body.push(para(run(`Working knowledge: ${wk.join(', ')}`)));
 
   body.push(heading('Experience'));
   for (const role of r.experience) {

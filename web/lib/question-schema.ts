@@ -28,7 +28,7 @@ export const LEVEL_LABEL: Record<Level, string> = {
 
 export const LEVEL_HELP: Record<Level, string> = {
   none: 'Stays off your résumé, and is listed as a real gap.',
-  some: 'Stays off your résumé. Worth a sentence in a cover letter if asked.',
+  some: 'Not claimed as experience. Listed under “Working knowledge” when a job asks for it.',
   solid: 'Can go on your résumé for this job.',
   deep: 'Can go on your résumé and lead the Skills list.',
 };
