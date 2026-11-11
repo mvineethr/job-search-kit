@@ -456,3 +456,9 @@ fieldset.field legend{padding:0; margin-bottom:var(--s-1)}
 
 /* An opening's description, as plain text from the feed. */
 .posting-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+ul.stack{padding-left:0; list-style:none; margin:0}
+form[role="search"] input[type="search"]{
+  font:inherit; min-height:32px; padding:var(--s-1) var(--s-3); border-radius:var(--r-md); flex:1 1 180px; min-width:0;
+  border:1px solid var(--border-strong); background:var(--bg-surface); color:var(--text);
+}
+form[role="search"] input[type="search"]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}

@@ -104,7 +104,9 @@ function ApplyCard({ url, form, tailored, letter }: { url: string; form: FormQue
  */
 function ImproveCard({ view, jobId, tailored }: { view: MatchView; jobId: string; tailored: boolean }) {
   const missing = view.requirements.filter((r) => r.kind === 'must' && r.status === 'missing');
-  const partial = view.requirements.filter((r) => r.status === 'partial');
+  const partial = view.requirements.filter((r) => r.status === 'partial' && !r.answered);
+  // Answered "tried it": shown honestly on the tailored résumé, never as experience.
+  const tried = view.requirements.filter((r) => r.answered && r.status === 'partial');
   const steps: React.ReactNode[] = [];
   if (view.openQuestions.length > 0)
     steps.push(
@@ -127,6 +129,13 @@ function ImproveCard({ view, jobId, tailored }: { view: MatchView; jobId: string
       <>
         Partly shown: {partial.map((r) => r.text).join('; ')}. Make the bullet that touches each one say it plainly,
         with the result it had.
+      </>,
+    );
+  if (tried.length > 0)
+    steps.push(
+      <>
+        You said you have tried: {tried.map((r) => r.skill ?? r.text).join(', ')}. The tailored résumé lists these under
+        “Working knowledge”, not as experience, so the keyword is there and you can stand behind every word.
       </>,
     );
   if (!tailored)
