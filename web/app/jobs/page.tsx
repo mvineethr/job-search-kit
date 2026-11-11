@@ -93,7 +93,12 @@ export default async function JobsPage({
             </p>
           )}
 
-          <AddJobForm />
+          <div className="row">
+            <AddJobForm />
+            <Link href="/jobs/openings" className="btn">
+              Openings from companies you follow
+            </Link>
+          </div>
 
           {jobs.length === 0 && (
             <p className="notice">

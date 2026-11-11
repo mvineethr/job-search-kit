@@ -35,7 +35,7 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // everything except pages anyone may read, the auth flow, Next internals and static files
-    '/((?!login|signup|reset|privacy|terms|help|api/auth|_next/static|_next/image|favicon.ico).*)',
+    // everything except pages anyone may read, the auth flow, the cron (checks its own secret), Next internals and static files
+    '/((?!login|signup|reset|privacy|terms|help|api/auth|api/cron|_next/static|_next/image|favicon.ico).*)',
   ],
 };

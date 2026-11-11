@@ -75,6 +75,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
 | `nav.ts` | top-nav items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
 | `outreach.ts` / `load-master.ts` | cold email + LinkedIn: schemas, `greetingFor` (name only from what the person typed), `unsupportedNumbers`, `verifyLinkedIn` (drops skills/roles not in source and quotes not in the LinkedIn text); `loadMaster` gives the active master as prompt text and check source. Both store in `letters` with `kind` `email`/`linkedin`; cover-letter queries filter `kind = 'cover'` |
+| `job-sources.ts` / `pool.ts` | followed companies' job feeds: `parseBoardUrl` (Greenhouse/Lever/Ashby careers link → board), `readFeed`, `fetchBoard`; `refreshCompany` upserts a company's postings and removes closed unsaved ones. Daily via `/api/cron/pool` (`CRON_SECRET`, `vercel.json`), the one cross-`sid` route besides `/admin` |
 | `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
 | `components/AppNav.tsx` | the signed-in top bar: sections on the left, account menu on the right; on phones the sections move into the menu (client; uses `NAV`) |
 | `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
@@ -95,13 +96,14 @@ Résumé editing: `/resume/[id]` renders `components/EditableResume.tsx` (fields
   - For tailored rows, `source_text` holds JSON `{note, audit}`; older rows hold plain prose.
   - Masters from the guided builder hold the flattened answers (`answersToText`) in `source_text`: the person's words are the original.
 - `letters(id, sid, kind, job_id, resume_id, content jsonb)`
+- `companies(id, sid, ats, token, name, checked_at, check_error)` and `postings(id, sid, company_id, external_id, title, location, url, description, posted_at, first_seen, job_id)`: followed boards and their open jobs, copied per `sid` (no shared table). Saving a posting creates a `jobs` row and sets `postings.job_id`
 - `skill_answers(sid, skill_key, skill, level, detail)` — **per person, not per job**
 - `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from, terms_version, terms_accepted_at)` — LinkedIn text is stored, never merged into the résumé; the terms columns are the record of agreement
 - Better Auth's `user`, `session`, `account`, `verification` (camelCase quoted columns: `"userId"`, `"providerId"`, `"createdAt"`). `sid` everywhere = `user.id`. Rows from the old shared-password sessions remain, unreachable.
 
 ## Hard rules
 
-- **Every query filters by `sid`** (the account's user id). It is the only thing separating people's data. The one exception is `/admin`, gated by `isAdmin`.
+- **Every query filters by `sid`** (the account's user id). It is the only thing separating people's data. The exceptions are `/admin`, gated by `isAdmin`, and `/api/cron/pool`, gated by `CRON_SECRET`, which reads every followed company but writes each one's postings under its own `sid`.
 - **No tool calling.** Models return text/JSON; the server renders.
 - **`core/` is the source of truth.** Change prompts there, never in a route. New capability = new `core/<name>.md` + add to `KNOWN` in `prompts.ts`.
 - **Fabrication is enforced in code, not just prompts.** Tailored and guided-builder output must go through `verifyTailoring` (the builder passes its answers text as the source). Unsupported skills are removed; numbers/employers are flagged, never silently rewritten.

@@ -159,6 +159,40 @@ async function createSchema(): Promise<void> {
   // The verified requirement list from core/job-match.md. The score is computed from it on render.
   await q`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS match JSONB`;
 
+  // Companies the person follows, by their public job feed (lib/job-sources.ts).
+  // Per person, like everything else: postings are copied per sid rather than
+  // shared, so the "every query filters by sid" rule holds without an exception.
+  await q`
+    CREATE TABLE IF NOT EXISTS companies (
+      id          TEXT PRIMARY KEY,
+      sid         TEXT NOT NULL,
+      ats         TEXT NOT NULL,
+      token       TEXT NOT NULL,
+      name        TEXT NOT NULL,
+      checked_at  TIMESTAMPTZ,
+      check_error TEXT,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (sid, ats, token)
+    )`;
+  // Open postings from followed companies. A posting that leaves the feed is deleted
+  // on the next check; once saved as a job (job_id) the job keeps its own copy.
+  await q`
+    CREATE TABLE IF NOT EXISTS postings (
+      id          TEXT PRIMARY KEY,
+      sid         TEXT NOT NULL,
+      company_id  TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      external_id TEXT NOT NULL,
+      title       TEXT NOT NULL,
+      location    TEXT NOT NULL DEFAULT '',
+      url         TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      posted_at   TIMESTAMPTZ,
+      first_seen  TIMESTAMPTZ NOT NULL DEFAULT now(),
+      job_id      TEXT REFERENCES jobs(id) ON DELETE SET NULL,
+      UNIQUE (company_id, external_id)
+    )`;
+  await q`CREATE INDEX IF NOT EXISTS postings_sid_idx ON postings (sid, first_seen DESC)`;
+
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;
   await q`CREATE INDEX IF NOT EXISTS resumes_sid_idx ON resumes (sid, updated_at DESC)`;
