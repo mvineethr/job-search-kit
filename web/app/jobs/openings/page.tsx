@@ -5,6 +5,11 @@ import { matchesSearch, type CompanyRow, type PostingRow } from '@/lib/pool';
 import PageBar from '@/components/PageBar';
 import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
+import { getProfile } from '@/lib/profile';
+import { parseBoardUrl } from '@/lib/job-sources';
+import { wantedTitle } from '@/lib/apply';
+import { FIELDS, INDUSTRIES, SENIORITIES, readSearchProfile, wantedRoles, type SearchProfile } from '@/lib/search-profile';
+import { suggestCompanies, STARTER_COMPANIES } from '@/lib/starter-companies';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,9 +20,9 @@ const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 
 export default async function OpeningsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; q?: string; company?: string }>;
+  searchParams: Promise<{ error?: string; q?: string; company?: string; all?: string; profile?: string }>;
 }) {
-  const { error, q: search = '', company: only = '' } = await searchParams;
+  const { error, q: search = '', company: only = '', all, profile: profileNote } = await searchParams;
   const sid = await currentSid();
   if (!sid) return null;
 
@@ -32,10 +37,19 @@ export default async function OpeningsPage({
     FROM postings
     WHERE sid = ${sid} ORDER BY COALESCE(posted_at, first_seen) DESC`) as unknown as (PostingRow & { fresh: boolean })[];
 
+  const profile = await getProfile(sid);
+  const spRows = (await q`SELECT search_profile FROM profiles WHERE sid = ${sid}`) as { search_profile: unknown }[];
+  const sp = readSearchProfile(spRows[0]?.search_profile);
+  const roles = wantedRoles(sp, profile);
+  const { forYou, more } = suggestCompanies(sp?.industries ?? [], companies, parseBoardUrl);
+
   const byCompany = new Map(companies.map((c) => [c.id, c]));
   const counts = new Map<string, number>();
   for (const p of postings) counts.set(p.company_id, (counts.get(p.company_id) ?? 0) + 1);
-  const shown = postings.filter((p) => (!only || p.company_id === only) && matchesSearch(p, search));
+  const inScope = postings.filter((p) => (!only || p.company_id === only) && matchesSearch(p, search));
+  // With roles to go on, show the jobs that fit them first; "Show all" lifts the filter.
+  const filtering = roles.length > 0 && !all;
+  const shown = filtering ? inScope.filter((p) => wantedTitle(p.title, roles)) : inScope;
 
   return (
     <>
@@ -63,6 +77,45 @@ export default async function OpeningsPage({
             <p role="alert" className="notice notice-error">
               {error}
             </p>
+          )}
+
+          {profileNote && (
+            <p className="notice notice-ok">
+              {profileNote === 'built'
+                ? 'Your search profile is ready. Check it below and change anything that is not you.'
+                : 'Saved your search profile.'}
+            </p>
+          )}
+
+          <SearchProfileCard sp={sp} />
+
+          {(forYou.length > 0 || more.length > 0) && (
+            <section className="card">
+              <div className="card-head">
+                <h2>Companies to follow</h2>
+              </div>
+              <div className="card-body stack">
+                {forYou.length > 0 && (
+                  <>
+                    <p className="hint">In the industries from your search profile.</p>
+                    <CompanyButtons list={forYou} />
+                  </>
+                )}
+                {more.length > 0 &&
+                  (forYou.length > 0 ? (
+                    <details>
+                      <summary>More companies ({more.length})</summary>
+                      <CompanyButtons list={more} />
+                    </details>
+                  ) : (
+                    <CompanyButtons list={more} />
+                  ))}
+                <p className="hint">
+                  A short starting list of {STARTER_COMPANIES.length} companies. Add any other company below by its
+                  careers link.
+                </p>
+              </div>
+            </section>
           )}
 
           <form method="post" action="/api/companies" className="card">
@@ -131,9 +184,19 @@ export default async function OpeningsPage({
               {only && byCompany.get(only) ? `Open at ${byCompany.get(only)!.name}` : 'Open jobs'}{' '}
               <span className="count tnum">{shown.length}</span>
             </h2>
+            {filtering && (
+              <p className="hint">
+                Matching your roles: {roles.slice(0, 6).join(', ')}
+                {roles.length > 6 && '…'}.{' '}
+                <Link href={`/jobs/openings?all=1${only ? `&company=${only}` : ''}${search ? `&q=${encodeURIComponent(search)}` : ''}`}>
+                  Show all {inScope.length}
+                </Link>
+              </p>
+            )}
 
             <form method="get" className="row" role="search">
               {only && <input type="hidden" name="company" value={only} />}
+              {all && <input type="hidden" name="all" value="1" />}
               <label htmlFor="q" className="sr-only">
                 Search titles and places
               </label>
@@ -189,5 +252,151 @@ export default async function OpeningsPage({
         )}
       </div>
     </>
+  );
+}
+
+function CompanyButtons({ list }: { list: { name: string; url: string }[] }) {
+  return (
+    <div className="row">
+      {list.map((c) => (
+        <form key={c.url} method="post" action="/api/companies">
+          <input type="hidden" name="op" value="follow" />
+          <input type="hidden" name="url" value={c.url} />
+          <button type="submit" className="btn btn-sm">
+            Follow {c.name}
+          </button>
+        </form>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * What the app searches for on the person's behalf. Drafted from the résumé by AI,
+ * every part editable, and used only to find and rank openings.
+ */
+function SearchProfileCard({ sp }: { sp: SearchProfile | null }) {
+  const build = (label: string) => (
+    <GenerateButton
+      action="/api/profile/search"
+      jobId=""
+      op="build"
+      label={label}
+      busyLabel="Reading your résumé… about 20 seconds"
+      primary={!sp}
+    />
+  );
+  if (!sp) {
+    return (
+      <section className="card">
+        <div className="card-head">
+          <h2>Your search profile</h2>
+        </div>
+        <div className="card-body stack">
+          <p className="hint">
+            The app reads your résumé and what you told it in your profile, and drafts the job titles, nearby roles
+            and industries to look for. You can change all of it. It is only used to find and sort openings, never
+            shown to employers or added to your résumé.
+          </p>
+          <div className="row">{build('Build it from my résumé')}</div>
+        </div>
+      </section>
+    );
+  }
+  const chips = (xs: string[]) =>
+    xs.length ? (
+      <span className="row">
+        {xs.map((x) => (
+          <span key={x} className="tag">
+            {x}
+          </span>
+        ))}
+      </span>
+    ) : (
+      <span className="hint">None</span>
+    );
+  return (
+    <section className="card">
+      <div className="card-head">
+        <h2>Your search profile</h2>
+      </div>
+      <div className="card-body stack">
+        {sp.summary && <p>{sp.summary}</p>}
+        <dl className="sp-list">
+          <dt>Roles</dt>
+          <dd>{chips(sp.roles)}</dd>
+          <dt>Nearby roles</dt>
+          <dd>{chips(sp.nearby_roles)}</dd>
+          <dt>Fields</dt>
+          <dd>{chips(sp.fields)}</dd>
+          <dt>Industries</dt>
+          <dd>{chips(sp.industries)}</dd>
+          {sp.seniority && (
+            <>
+              <dt>Level</dt>
+              <dd>{sp.seniority}</dd>
+            </>
+          )}
+          <dt>Skills</dt>
+          <dd>{chips(sp.skills)}</dd>
+        </dl>
+        <details>
+          <summary>Change it</summary>
+          <form method="post" action="/api/profile/search" className="stack">
+            <input type="hidden" name="op" value="save" />
+            <div className="field">
+              <label htmlFor="sp-roles">Roles you want (comma separated, up to 5)</label>
+              <input id="sp-roles" name="roles" type="text" defaultValue={sp.roles.join(', ')} />
+            </div>
+            <div className="field">
+              <label htmlFor="sp-nearby">Nearby roles to include (up to 6)</label>
+              <input id="sp-nearby" name="nearby_roles" type="text" defaultValue={sp.nearby_roles.join(', ')} />
+            </div>
+            <fieldset className="field">
+              <legend>Fields (up to 3)</legend>
+              <div className="row">
+                {FIELDS.map((f) => (
+                  <label key={f}>
+                    <input type="checkbox" name="fields" value={f} defaultChecked={sp.fields.includes(f)} /> {f}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="field">
+              <legend>Industries (up to 3)</legend>
+              <div className="row">
+                {INDUSTRIES.map((f) => (
+                  <label key={f}>
+                    <input type="checkbox" name="industries" value={f} defaultChecked={sp.industries.includes(f)} /> {f}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="field">
+              <label htmlFor="sp-level">Level</label>
+              <select id="sp-level" name="seniority" defaultValue={sp.seniority}>
+                <option value="">Not set</option>
+                {SENIORITIES.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="sp-skills">Skills to search for (up to 12)</label>
+              <input id="sp-skills" name="skills" type="text" defaultValue={sp.skills.join(', ')} />
+            </div>
+            <div className="row">
+              <button type="submit" className="btn btn-primary">
+                Save
+              </button>
+            </div>
+          </form>
+        </details>
+        <div className="row">
+          {build('Rebuild from my résumé')}
+          {sp.edited && <span className="hint">Rebuilding replaces your changes.</span>}
+        </div>
+      </div>
+    </section>
   );
 }

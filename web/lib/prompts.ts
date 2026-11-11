@@ -18,7 +18,7 @@ function resolveCoreDir(): string {
 }
 
 /** Capabilities the web app can run. Adding one means adding a core/<name>.md file. */
-const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-build', 'resume-tailor', 'cover-letter', 'job-match', 'metric-questions', 'metric-fill', 'cold-email', 'linkedin-profile']);
+const KNOWN = new Set(['resume-review', 'resume-parse', 'resume-build', 'resume-tailor', 'cover-letter', 'job-match', 'metric-questions', 'metric-fill', 'cold-email', 'linkedin-profile', 'search-profile']);
 
 /**
  * Reasoning effort for prompts that need more than the tier's default. Measured on the

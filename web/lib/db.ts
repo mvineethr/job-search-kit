@@ -148,6 +148,8 @@ async function createSchema(): Promise<void> {
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS heard_from TEXT`;
   // Who they are and what they want (lib/profile.ts Preferences), all optional.
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferences JSONB`;
+  // Search terms built from the résumé and preferences (lib/search-profile.ts); the person can edit them.
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS search_profile JSONB`;
   // Record of agreement: which Terms/Privacy version, and when. Kept for as long as the account exists.
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_version TEXT`;
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ`;

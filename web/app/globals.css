@@ -251,6 +251,9 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 .nav-bell{margin-left:auto; display:flex; align-items:center; gap:var(--s-1); font-size:var(--text-sm); white-space:nowrap}
 .nav-bell + .account{margin-left:0}
 .bell-count{min-width:20px; padding:0 var(--s-1); border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:var(--text-xs); text-align:center}
+.sp-list{display:grid; grid-template-columns:max-content 1fr; gap:var(--s-2) var(--s-4); margin:0; align-items:start}
+.sp-list dt{font-size:var(--text-sm); color:var(--text-muted)}
+.sp-list dd{margin:0}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 .col-640{max-width:640px}
 .col-720{max-width:720px}

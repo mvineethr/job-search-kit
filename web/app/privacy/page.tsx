@@ -54,6 +54,11 @@ export default async function PrivacyPage() {
             jobs and applications waiting for you.
           </li>
           <li>
+            <strong>Your search profile:</strong> job titles, nearby roles, fields, industries, level and skills to
+            search for. When you ask, the AI provider drafts it from your résumé and the profile details it is
+            allowed to see; you can change all of it. It is only used to find and sort job openings for you.
+          </li>
+          <li>
             <strong>Your agreement:</strong> which version of these terms you accepted, and when.
           </li>
           <li>

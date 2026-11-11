@@ -2,6 +2,7 @@ import { sql } from './db';
 import { fetchBoard, type Ats, type Posting } from './job-sources';
 import { wantedTitle } from './apply';
 import { notify } from './notifications';
+import { readSearchProfile, wantedRoles } from './search-profile';
 
 export type CompanyRow = {
   id: string;
@@ -88,7 +89,7 @@ export function matchesSearch(p: { title: string; location: string }, search: st
 
 /**
  * After a daily check: one notification per company that posted jobs for the roles
- * the person wants (their target role and wanted roles). With no roles set, any new job counts.
+ * the person wants (their own roles and the search profile's). With no roles set, any new job counts.
  */
 export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<void> {
   const q = sql();
@@ -96,11 +97,13 @@ export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<voi
     SELECT title FROM postings WHERE sid = ${c.sid} AND company_id = ${c.id} AND first_seen >= ${since.toISOString()}`) as {
     title: string;
   }[];
-  const [p] = (await q`SELECT target_role, preferences FROM profiles WHERE sid = ${c.sid}`) as {
+  const [p] = (await q`SELECT target_role, preferences, search_profile FROM profiles WHERE sid = ${c.sid}`) as {
     target_role: string | null;
-    preferences: { target_roles?: string[] } | null;
+    preferences: { target_roles: string[] } | null;
+    search_profile: unknown;
   }[];
-  const roles = [p?.target_role ?? '', ...(p?.preferences?.target_roles ?? [])].filter((r) => r.trim());
+  // Their own roles plus the search profile's roles and nearby roles.
+  const roles = wantedRoles(readSearchProfile(p?.search_profile), p ? { target_role: p.target_role, preferences: p.preferences as never } : null);
   const hits = roles.length ? fresh.filter((f) => wantedTitle(f.title, roles)) : fresh;
   if (hits.length === 0) return;
   const text =
