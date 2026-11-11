@@ -18,6 +18,7 @@ describe('readGreenhouseForm', () => {
     ],
     location_questions: [{ label: 'Location (City)', required: true, fields: [{ name: 'location' }] }],
     compliance: [{ type: 'eeoc', questions: [{ label: 'Gender', required: false, fields: [{ name: 'gender' }] }] }],
+    demographic_questions: { header: 'Voluntary', questions: [{ label: 'Pronouns', required: false, answer_options: [] }] },
   };
 
   it('puts standard fields in the kit and everything about the person with them', () => {
@@ -27,6 +28,7 @@ describe('readGreenhouseForm', () => {
       { label: 'LinkedIn Profile', required: false, who: 'you' },
       { label: 'Will you now or in the future require visa sponsorship?', required: true, who: 'you' },
       { label: 'Location (City)', required: true, who: 'you' },
+      { label: 'Pronouns', required: false, who: 'you' },
       { label: 'Gender', required: false, who: 'you' },
     ]);
   });

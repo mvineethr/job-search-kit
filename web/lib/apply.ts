@@ -42,7 +42,12 @@ const KIT_FIELDS = new Set([
  * answer there is a false statement made in their name.
  */
 export function readGreenhouseForm(data: unknown): FormQuestion[] {
-  const d = (data ?? {}) as { questions?: unknown; location_questions?: unknown; compliance?: unknown };
+  const d = (data ?? {}) as {
+    questions?: unknown;
+    location_questions?: unknown;
+    compliance?: unknown;
+    demographic_questions?: unknown;
+  };
   const out: FormQuestion[] = [];
   const add = (raw: unknown, forceYou = false) => {
     const q = (raw ?? {}) as { label?: unknown; required?: unknown; fields?: unknown; description?: unknown };
@@ -56,6 +61,9 @@ export function readGreenhouseForm(data: unknown): FormQuestion[] {
   };
   for (const q of Array.isArray(d.questions) ? d.questions : []) add(q);
   for (const q of Array.isArray(d.location_questions) ? d.location_questions : []) add(q, true);
+  // Greenhouse Inclusion questions live in their own object.
+  const demo = (d.demographic_questions as { questions?: unknown } | null | undefined)?.questions;
+  for (const q of Array.isArray(demo) ? demo : []) add(q, true);
   for (const c of Array.isArray(d.compliance) ? d.compliance : []) {
     const qs = (c as { questions?: unknown })?.questions;
     for (const q of Array.isArray(qs) ? qs : []) add(q, true);
