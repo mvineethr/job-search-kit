@@ -4,8 +4,10 @@ import { loadPrompt } from './prompts';
 import { completeText } from './provider';
 import { extractJsonObject } from './extract-json';
 import { loadMaster } from './load-master';
-import { getProfile, type PromptProfile } from './profile';
+import { getLinkedInText, getProfile, type PromptProfile } from './profile';
 import { profileLines } from './messages';
+import { answerDetailText, claimableSkills, loadAnswers } from './answers';
+import type { Answer } from './question-schema';
 
 /** Job functions. Fixed so the model's answer can be checked and filtered on. */
 export const FIELDS = [
@@ -82,7 +84,7 @@ export function verifySearchProfile(raw: unknown, source: string): SearchProfile
     fields: pick(p.fields, FIELDS, 3),
     industries: pick(p.industries, INDUSTRIES, 3),
     seniority: (SENIORITIES as readonly string[]).includes(p.seniority) ? p.seniority : '',
-    skills: clean(p.skills, 12, 60).filter((s) => source.includes(s.toLowerCase())),
+    skills: clean(p.skills, 12, 60).filter((s) => source.toLowerCase().includes(s.toLowerCase())),
     built_at: new Date().toISOString(),
     edited: false,
   };
@@ -118,8 +120,26 @@ export function wantedRoles(sp: SearchProfile | null, profile: PromptProfile | n
   );
 }
 
-export function searchProfileMessage(resumeText: string, profile: PromptProfile | null): string {
-  return `${profileLines(profile)}\n\nMY RESUME:\n${resumeText}`;
+// shortcut: LinkedIn text is cut at this length; raise if long profiles lose roles.
+const LINKEDIN_MAX = 6000;
+
+/** Everything the person has told the app, so it never has to ask again. */
+export function searchProfileMessage(
+  resumeText: string,
+  profile: PromptProfile | null,
+  answers: Answer[] = [],
+  linkedinText = '',
+): string {
+  const told = answers.map((a) => `- ${a.skill}: ${a.level}${a.detail ? ` (${a.detail})` : ''}`).join('\n');
+  return [
+    profileLines(profile),
+    '',
+    `MY RESUME:\n${resumeText}`,
+    told && `\nWHAT I TOLD YOU ABOUT MY SKILLS (my level, in my words):\n${told}`,
+    linkedinText.trim() && `\nMY LINKEDIN:\n${linkedinText.trim().slice(0, LINKEDIN_MAX)}`,
+  ]
+    .filter((x) => x !== '')
+    .join('\n');
 }
 
 /**
@@ -128,15 +148,25 @@ export function searchProfileMessage(resumeText: string, profile: PromptProfile 
  * leaves them out). Returns null when there is no résumé or the answer is unusable.
  */
 export async function buildSearchProfile(sid: string): Promise<SearchProfile | null> {
-  const [master, profile] = await Promise.all([loadMaster(sid), getProfile(sid)]);
+  const [master, profile, answers, linkedin] = await Promise.all([
+    loadMaster(sid),
+    getProfile(sid),
+    loadAnswers(sid),
+    getLinkedInText(sid),
+  ]);
   if (!master) return null;
+  // A skill counts as theirs if the résumé, their LinkedIn or a skill they said they can defend names it.
+  const defended = answers.filter((a) => claimableSkills([a]).length > 0);
+  const source = [master.source, linkedin ?? '', answerDetailText(defended)]
+    .join('\n')
+    .toLowerCase();
   try {
     const { text } = await completeText({
       system: loadPrompt('search-profile'),
       tier: 'fast', // search terms, not claims: the fast model is enough, and skills are checked below
-      messages: [{ role: 'user', content: searchProfileMessage(master.text, profile) }],
+      messages: [{ role: 'user', content: searchProfileMessage(master.text, profile, answers, linkedin ?? '') }],
     });
-    const sp = verifySearchProfile(extractJsonObject(text), master.source);
+    const sp = verifySearchProfile(extractJsonObject(text), source);
     if (!sp) {
       console.error('[search-profile] output did not match the schema');
       return null;
@@ -147,6 +177,22 @@ export async function buildSearchProfile(sid: string): Promise<SearchProfile | n
     console.error('[search-profile] failed', err);
     return null;
   }
+}
+
+/**
+ * Keeps the profile current without asking anything: called after the person adds a
+ * résumé, answers skill questions or changes their profile. A profile they edited by
+ * hand is left alone; the Openings page offers a rebuild instead.
+ */
+export async function refreshSearchProfile(sid: string): Promise<void> {
+  const rows = (await sql()`SELECT search_profile FROM profiles WHERE sid = ${sid}`) as { search_profile: unknown }[];
+  if (readSearchProfile(rows[0]?.search_profile)?.edited) return;
+  await buildSearchProfile(sid);
+}
+
+/** True when the résumé or the skill answers changed after the profile was built. */
+export function isSearchProfileBehind(sp: SearchProfile, latestChange: string | null): boolean {
+  return Boolean(latestChange && new Date(latestChange).getTime() > new Date(sp.built_at).getTime());
 }
 
 export async function saveSearchProfile(sid: string, sp: SearchProfile): Promise<void> {

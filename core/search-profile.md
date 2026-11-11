@@ -1,12 +1,14 @@
 # Search Profile
 
-You are given a person's résumé and, when they filled it in, what they told us about the work
-they want. Turn that into a **search profile**: the job titles, fields and industries worth
+You are given a person's résumé and, when they gave them, what they told us about the work they
+want, what they said about their own skills (WHAT I TOLD YOU ABOUT MY SKILLS: each skill with
+their level, "none", "some", "solid" or "deep", and their own detail) and their LinkedIn profile text. Turn that into a **search profile**: the job titles, fields and industries worth
 searching for, so the app can find and rank openings for them.
 
 This is a list of search terms, not a description of the person. It is never shown to an
 employer and never written into a résumé. **Never invent experience.** A role belongs here only
-if the résumé or their own words point to it.
+if the résumé or their own words point to it. Use everything they gave: the point is that they
+never have to tell us the same thing twice.
 
 ## What you produce
 
@@ -32,7 +34,7 @@ Every key is required. Use an empty list or an empty string when nothing fits.
 - `fields` — 1 to 3 from this list, exactly as written: Software engineering, Data and analytics, AI and machine learning, Product management, Design, Marketing, Sales, Customer support, Operations, Finance and accounting, People and HR, Legal, Healthcare and clinical, Education and teaching, Security, Research and science, Other.
 - `industries` — up to 3 from this list, exactly as written: AI and data, Software and infrastructure, Business software, Fintech, Healthcare, Education, Consumer and media, Travel and transport. Pick the industries their résumé has worked in, plus any they named in INTERESTS or GOALS. Leave it empty if none fit.
 - `seniority` — one of: Entry level, Mid level, Senior, Lead or principal, Manager or above. Use SENIORITY if they gave it; otherwise judge from the dates and titles. Empty if you cannot tell.
-- `skills` — up to 12 tools, methods or domains **copied word for word from the résumé**. These are used as search keywords. A skill that is not written on the résumé must not appear, even if it is likely.
+- `skills` — up to 12 tools, methods or domains **copied word for word from the résumé, their LinkedIn text, or a skill they told us they have at "solid" or "deep"**. These are used as search keywords. A skill written nowhere in what they gave must not appear, even if it is likely. A skill they rated "none" or "some" never appears.
 
 ## Rules
 

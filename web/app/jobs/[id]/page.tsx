@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow, type ResumeRow, type LetterRow } from '@/lib/db';
 import { loadAnswers } from '@/lib/answers';
-import { readMatch, viewMatch, type MatchedRequirement } from '@/lib/match';
+import { readMatch, viewMatch, type MatchedRequirement, type MatchView } from '@/lib/match';
 import { isMatchStale } from '@/lib/resume-edit';
 import FitMeter from '@/components/FitMeter';
 import PageBar from '@/components/PageBar';
@@ -98,6 +98,56 @@ function ApplyCard({ url, form, tailored, letter }: { url: string; form: FormQue
   );
 }
 
+/**
+ * Plain next steps from the verified requirements. Nothing here suggests a claim:
+ * a gap is either something they did and can say (the questions) or a real gap.
+ */
+function ImproveCard({ view, jobId, tailored }: { view: MatchView; jobId: string; tailored: boolean }) {
+  const missing = view.requirements.filter((r) => r.kind === 'must' && r.status === 'missing');
+  const partial = view.requirements.filter((r) => r.status === 'partial');
+  const steps: React.ReactNode[] = [];
+  if (view.openQuestions.length > 0)
+    steps.push(
+      <>
+        <Link href={`/jobs/${jobId}/questions`}>Answer {Math.min(view.openQuestions.length, 8)} quick questions</Link> about
+        things the posting asks for. If you have done them, your score goes up and the tailored résumé can show them.
+        You only answer each skill once; every later job reuses it.
+      </>,
+    );
+  if (missing.length > 0)
+    steps.push(
+      <>
+        Must-haves your résumé does not show: {missing.map((r) => r.text).join('; ')}. If you have done one, add it
+        to your résumé in your own words. If not, it is a real gap: say how you would close it in the cover letter
+        rather than claim it.
+      </>,
+    );
+  if (partial.length > 0)
+    steps.push(
+      <>
+        Partly shown: {partial.map((r) => r.text).join('; ')}. Make the bullet that touches each one say it plainly,
+        with the result it had.
+      </>,
+    );
+  if (!tailored)
+    steps.push(<>Tailor your résumé for this job. It leads with what this posting asks for and keeps only what is true.</>);
+  if (steps.length === 0) return null;
+  return (
+    <section className="card">
+      <div className="card-head">
+        <h2>How to improve your match</h2>
+      </div>
+      <div className="card-body">
+        <ol className="apply-list">
+          {steps.map((x, i) => (
+            <li key={i}>{x}</li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
 export default async function JobPage({
   params,
   searchParams,
@@ -128,9 +178,12 @@ export default async function JobPage({
     ORDER BY created_at DESC LIMIT 1`) as unknown as LetterRow[])[0];
   // Set when the job was saved from a followed company's openings.
   const posting = ((await q`
-    SELECT url, form FROM postings WHERE sid = ${sid} AND job_id = ${id} LIMIT 1`) as {
+    SELECT id, url, form, location, pay FROM postings WHERE sid = ${sid} AND job_id = ${id} LIMIT 1`) as {
+    id: string;
     url: string;
     form: FormQuestion[] | null;
+    location: string;
+    pay: string;
   }[])[0];
 
   const match = readMatch(job.match);
@@ -202,7 +255,11 @@ export default async function JobPage({
       <div className="wrap job">
         <div className="page-head">
           <h1>{job.role}</h1>
-          <p className="sub">{job.company}</p>
+          <p className="sub">
+            {job.company}
+            {posting?.location && ` · ${posting.location}`}
+            {posting && ` · ${posting.pay || 'Pay not listed'}`}
+          </p>
         </div>
 
         {error && (
@@ -274,15 +331,7 @@ export default async function JobPage({
               </div>
             </aside>
             <div className="stack">
-              {view.openQuestions.length > 0 && (
-                <Link href={`/jobs/${job.id}/questions`} className="notice notice-info notice-link">
-                  <strong>Answer {Math.min(view.openQuestions.length, 8)} questions about your experience</strong>
-                  <span className="notice-sub">
-                    Your résumé may leave out things you have done. Answers you can back up raise the
-                    score and let the tailored version use them.
-                  </span>
-                </Link>
-              )}
+              <ImproveCard view={view} jobId={job.id} tailored={Boolean(tailored)} />
               {view.checkYourself.length > 0 && (
                 <p className="notice">
                   <strong>Check these yourself.</strong> Résumés do not usually say them, so they
@@ -294,6 +343,23 @@ export default async function JobPage({
             </div>
           </div>
         )}
+
+        <details className="card col-720 job-description">
+          <summary className="card-head">
+            <h2>Job description</h2>
+          </summary>
+          <div className="card-body">
+            {posting && (
+              <p className="hint">
+                <Link href={`/jobs/openings/${posting.id}`}>Opening details</Link> ·{' '}
+                <a href={posting.url} target="_blank" rel="noopener noreferrer">
+                  Posting on the company&apos;s site
+                </a>
+              </p>
+            )}
+            <div className="posting-text">{job.description}</div>
+          </div>
+        </details>
       </div>
     </>
   );

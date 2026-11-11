@@ -453,3 +453,6 @@ fieldset.field legend{padding:0; margin-bottom:var(--s-1)}
 .tier .btn{align-self:flex-start}
 .tier-lead{border-color:var(--accent)}
 @media (max-width:480px){.land-hero{grid-template-columns:1fr; padding-block:var(--s-8)}}
+
+/* An opening's description, as plain text from the feed. */
+.posting-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }

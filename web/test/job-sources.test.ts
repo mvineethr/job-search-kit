@@ -23,9 +23,9 @@ describe('parseBoardUrl', () => {
   });
 
   it('builds the feed URL for each', () => {
-    expect(feedUrl({ ats: 'greenhouse', token: 'acme' })).toBe('https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true');
+    expect(feedUrl({ ats: 'greenhouse', token: 'acme' })).toBe('https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&pay_transparency=true');
     expect(feedUrl({ ats: 'lever', token: 'acme' })).toBe('https://api.lever.co/v0/postings/acme?mode=json');
-    expect(feedUrl({ ats: 'ashby', token: 'Acme' })).toBe('https://api.ashbyhq.com/posting-api/job-board/Acme');
+    expect(feedUrl({ ats: 'ashby', token: 'Acme' })).toBe('https://api.ashbyhq.com/posting-api/job-board/Acme?includeCompensation=true');
   });
 });
 
@@ -58,6 +58,7 @@ describe('readFeed', () => {
       url: 'https://boards.greenhouse.io/acme/jobs/7995153',
       description: 'Build & run things.',
       postedAt: '2026-06-10T12:50:56.000Z',
+      pay: '',
     });
   });
 

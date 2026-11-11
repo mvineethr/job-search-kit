@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { refreshSearchProfile } from '@/lib/search-profile';
 import { requireSid } from '@/lib/auth';
 import { saveMaster } from '@/lib/save-master';
 
@@ -24,5 +26,6 @@ export async function POST(req: Request) {
   }
 
   const { id } = await saveMaster(sid, text, title);
+  after(() => refreshSearchProfile(sid)); // the search profile learns from this without asking anything
   return new Response(null, { status: 303, headers: { location: new URL(`/resume/${id}`, req.url).toString() } });
 }

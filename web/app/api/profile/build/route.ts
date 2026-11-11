@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { refreshSearchProfile } from '@/lib/search-profile';
 import { randomUUID } from 'node:crypto';
 import { requireSid } from '@/lib/auth';
 import { ensureSchema, sql } from '@/lib/db';
@@ -56,6 +58,7 @@ export async function POST(req: Request) {
       INSERT INTO resumes (id, sid, title, source_text, content)
       VALUES (${id}, ${sid}, 'My résumé', ${source}, ${JSON.stringify(cleaned)})`;
     await upsertProfile(sid, answers.name);
+    after(() => refreshSearchProfile(sid)); // the search profile learns from this without asking anything
     return Response.json({ id });
   } catch (err) {
     console.error('[profile/build] failed', err);

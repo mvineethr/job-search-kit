@@ -196,6 +196,8 @@ async function createSchema(): Promise<void> {
   await q`CREATE INDEX IF NOT EXISTS postings_sid_idx ON postings (sid, first_seen DESC)`;
   // The application form's questions, read when the posting is saved (lib/apply.ts). Null: not readable.
   await q`ALTER TABLE postings ADD COLUMN IF NOT EXISTS form JSONB`;
+  // Pay exactly as the feed or the posting's own text gives it; '' when it gives none.
+  await q`ALTER TABLE postings ADD COLUMN IF NOT EXISTS pay TEXT NOT NULL DEFAULT ''`;
 
   // Things waiting for the person: new openings for roles they want, jobs only they can apply to.
   await q`

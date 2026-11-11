@@ -1,14 +1,22 @@
 import Link from 'next/link';
 import { currentSid } from '@/lib/auth';
 import { ensureSchema, sql } from '@/lib/db';
-import { matchesSearch, type CompanyRow, type PostingRow } from '@/lib/pool';
+import { inPlace, matchesSearch, placeChoices, type CompanyRow, type PostingRow } from '@/lib/pool';
 import PageBar from '@/components/PageBar';
 import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
 import { getProfile } from '@/lib/profile';
 import { parseBoardUrl } from '@/lib/job-sources';
 import { wantedTitle } from '@/lib/apply';
-import { FIELDS, INDUSTRIES, SENIORITIES, readSearchProfile, wantedRoles, type SearchProfile } from '@/lib/search-profile';
+import {
+  FIELDS,
+  INDUSTRIES,
+  SENIORITIES,
+  isSearchProfileBehind,
+  readSearchProfile,
+  wantedRoles,
+  type SearchProfile,
+} from '@/lib/search-profile';
 import { suggestCompanies, STARTER_COMPANIES } from '@/lib/starter-companies';
 
 export const dynamic = 'force-dynamic';
@@ -20,9 +28,9 @@ const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 
 export default async function OpeningsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; q?: string; company?: string; all?: string; profile?: string }>;
+  searchParams: Promise<{ error?: string; q?: string; company?: string; all?: string; profile?: string; loc?: string }>;
 }) {
-  const { error, q: search = '', company: only = '', all, profile: profileNote } = await searchParams;
+  const { error, q: search = '', company: only = '', all, profile: profileNote, loc = '' } = await searchParams;
   const sid = await currentSid();
   if (!sid) return null;
 
@@ -32,7 +40,7 @@ export default async function OpeningsPage({
     SELECT id, sid, ats, token, name, checked_at, check_error FROM companies
     WHERE sid = ${sid} ORDER BY name`) as unknown as CompanyRow[];
   const postings = (await q`
-    SELECT id, company_id, title, location, url, posted_at, first_seen, job_id,
+    SELECT id, company_id, title, location, url, posted_at, pay, first_seen, job_id,
            first_seen > now() - interval '7 days' AS fresh
     FROM postings
     WHERE sid = ${sid} ORDER BY COALESCE(posted_at, first_seen) DESC`) as unknown as (PostingRow & { fresh: boolean })[];
@@ -41,12 +49,29 @@ export default async function OpeningsPage({
   const spRows = (await q`SELECT search_profile FROM profiles WHERE sid = ${sid}`) as { search_profile: unknown }[];
   const sp = readSearchProfile(spRows[0]?.search_profile);
   const roles = wantedRoles(sp, profile);
+  // What changed since the profile was built: the active master or a skill answer.
+  const [changed] = (await q`
+    SELECT GREATEST(
+      (SELECT max(updated_at) FROM resumes WHERE sid = ${sid} AND parent_id IS NULL),
+      (SELECT max(updated_at) FROM skill_answers WHERE sid = ${sid})) AS at`) as { at: string | null }[];
+  const behind = sp ? isSearchProfileBehind(sp, changed?.at ?? null) : false;
+  const places = placeChoices(profile?.location ?? null, profile?.preferences?.places ?? null);
+  if (loc && !places.some((x) => x.toLowerCase() === loc.toLowerCase())) places.push(loc);
+  // Links keep the other filters.
+  const href = (over: Record<string, string>) => {
+    const sp2 = new URLSearchParams({ ...(only && { company: only }), ...(search && { q: search }), ...(all && { all: '1' }), ...(loc && { loc }), ...over });
+    for (const [k, v] of [...sp2]) if (!v) sp2.delete(k);
+    const s = sp2.toString();
+    return `/jobs/openings${s ? `?${s}` : ''}`;
+  };
   const { forYou, more } = suggestCompanies(sp?.industries ?? [], companies, parseBoardUrl);
 
   const byCompany = new Map(companies.map((c) => [c.id, c]));
   const counts = new Map<string, number>();
   for (const p of postings) counts.set(p.company_id, (counts.get(p.company_id) ?? 0) + 1);
-  const inScope = postings.filter((p) => (!only || p.company_id === only) && matchesSearch(p, search));
+  const inScope = postings.filter(
+    (p) => (!only || p.company_id === only) && matchesSearch(p, search) && (!loc || inPlace(p.location, loc)),
+  );
   // With roles to go on, show the jobs that fit them first; "Show all" lifts the filter.
   const filtering = roles.length > 0 && !all;
   const shown = filtering ? inScope.filter((p) => wantedTitle(p.title, roles)) : inScope;
@@ -87,7 +112,7 @@ export default async function OpeningsPage({
             </p>
           )}
 
-          <SearchProfileCard sp={sp} />
+          <SearchProfileCard sp={sp} behind={behind} />
 
           {(forYou.length > 0 || more.length > 0) && (
             <section className="card">
@@ -188,15 +213,31 @@ export default async function OpeningsPage({
               <p className="hint">
                 Matching your roles: {roles.slice(0, 6).join(', ')}
                 {roles.length > 6 && '…'}.{' '}
-                <Link href={`/jobs/openings?all=1${only ? `&company=${only}` : ''}${search ? `&q=${encodeURIComponent(search)}` : ''}`}>
-                  Show all {inScope.length}
-                </Link>
+                <Link href={href({ all: '1' })}>Show all {inScope.length}</Link>
               </p>
             )}
+
+            <nav aria-label="Location" className="row loc-tabs">
+              <Link href={href({ loc: '' })} className={`btn btn-sm${loc ? '' : ' btn-primary'}`} aria-current={loc ? undefined : 'page'}>
+                Anywhere
+              </Link>
+              {places.map((x) => {
+                const on = x.toLowerCase() === loc.toLowerCase();
+                return (
+                  <Link key={x} href={href({ loc: x })} className={`btn btn-sm${on ? ' btn-primary' : ''}`} aria-current={on ? 'page' : undefined}>
+                    {x}
+                  </Link>
+                );
+              })}
+            </nav>
 
             <form method="get" className="row" role="search">
               {only && <input type="hidden" name="company" value={only} />}
               {all && <input type="hidden" name="all" value="1" />}
+              <label htmlFor="loc" className="sr-only">
+                Location
+              </label>
+              <input id="loc" name="loc" type="search" defaultValue={loc} placeholder="City, state or Remote" />
               <label htmlFor="q" className="sr-only">
                 Search titles and places
               </label>
@@ -204,7 +245,7 @@ export default async function OpeningsPage({
               <button type="submit" className="btn btn-sm">
                 Search
               </button>
-              {(search || only) && (
+              {(search || only || loc) && (
                 <Link href="/jobs/openings" className="btn btn-sm">
                   Show all
                 </Link>
@@ -216,12 +257,13 @@ export default async function OpeningsPage({
                 <li key={p.id} className="card job-row">
                   <div className="job-row-head">
                     <div className="job-row-main">
-                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="job-row-title">
+                      <Link href={`/jobs/openings/${p.id}`} className="job-row-title">
                         {p.title}
-                      </a>
+                      </Link>
                       <span className="job-row-company">
                         {byCompany.get(p.company_id)?.name}
                         {p.location && ` · ${p.location}`}
+                        {p.pay && ` · ${p.pay}`}
                         {p.posted_at && ` · posted ${day(p.posted_at)}`}
                       </span>
                     </div>
@@ -275,7 +317,7 @@ function CompanyButtons({ list }: { list: { name: string; url: string }[] }) {
  * What the app searches for on the person's behalf. Drafted from the résumé by AI,
  * every part editable, and used only to find and rank openings.
  */
-function SearchProfileCard({ sp }: { sp: SearchProfile | null }) {
+function SearchProfileCard({ sp, behind }: { sp: SearchProfile | null; behind: boolean }) {
   const build = (label: string) => (
     <GenerateButton
       action="/api/profile/search"
@@ -321,7 +363,16 @@ function SearchProfileCard({ sp }: { sp: SearchProfile | null }) {
         <h2>Your search profile</h2>
       </div>
       <div className="card-body stack">
+        {behind && (
+          <p className="notice">
+            Your résumé or skill answers changed since this was built. Rebuild below to include them
+            {sp.edited ? '; it replaces your changes here' : ''}.
+          </p>
+        )}
         {sp.summary && <p>{sp.summary}</p>}
+        {!sp.edited && (
+          <p className="hint">It updates by itself when you add a résumé, answer skill questions or change your profile.</p>
+        )}
         <dl className="sp-list">
           <dt>Roles</dt>
           <dd>{chips(sp.roles)}</dd>
