@@ -7,7 +7,7 @@ import { extractJsonObject, proseBefore } from '@/lib/extract-json';
 import { ResumeSchema, type Resume } from '@/lib/resume-schema';
 import { backWithError, redirectTo } from '@/lib/redirect';
 import { verifyTailoring } from '@/lib/verify-tailoring';
-import { answerDetailText, answersForPrompt, claimableSkills, loadAnswers } from '@/lib/answers';
+import { answerDetailText, answersForPrompt, claimableSkills, loadAnswers, workingKnowledge } from '@/lib/answers';
 import { tailorMessage } from '@/lib/messages';
 
 export const runtime = 'nodejs';
@@ -128,6 +128,8 @@ export async function POST(req: Request) {
     [master.source_text ?? '', answerDetailText(answers)].join('\n'),
     claimableSkills(answers),
   );
+  // Code decides this line, never the model.
+  cleaned.workingKnowledge = workingKnowledge(answers, job.description, cleaned.skills);
   if (audit.removedSkills.length || audit.unsupportedNumbers.length || audit.unsupportedEmployers.length) {
     console.warn('[tailor] audit', {
       removedSkills: audit.removedSkills,

@@ -148,6 +148,8 @@ async function createSchema(): Promise<void> {
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS heard_from TEXT`;
   // Who they are and what they want (lib/profile.ts Preferences), all optional.
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS preferences JSONB`;
+  // Search terms built from the résumé and preferences (lib/search-profile.ts); the person can edit them.
+  await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS search_profile JSONB`;
   // Record of agreement: which Terms/Privacy version, and when. Kept for as long as the account exists.
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_version TEXT`;
   await q`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ`;
@@ -194,6 +196,8 @@ async function createSchema(): Promise<void> {
   await q`CREATE INDEX IF NOT EXISTS postings_sid_idx ON postings (sid, first_seen DESC)`;
   // The application form's questions, read when the posting is saved (lib/apply.ts). Null: not readable.
   await q`ALTER TABLE postings ADD COLUMN IF NOT EXISTS form JSONB`;
+  // Pay exactly as the feed or the posting's own text gives it; '' when it gives none.
+  await q`ALTER TABLE postings ADD COLUMN IF NOT EXISTS pay TEXT NOT NULL DEFAULT ''`;
 
   // Things waiting for the person: new openings for roles they want, jobs only they can apply to.
   await q`

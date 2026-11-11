@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { refreshSearchProfile } from '@/lib/search-profile';
 import { requireSid } from '@/lib/auth';
 import { parsePreferences, saveAbout, YEARS, SEARCH_STATUS } from '@/lib/profile';
 import { redirectTo } from '@/lib/redirect';
@@ -32,5 +34,6 @@ export async function POST(req: Request) {
     heard_from: text(form, 'heard_from'),
     preferences: parsePreferences(form),
   });
+  after(() => refreshSearchProfile(sid)); // the search profile learns from this without asking anything
   return redirectTo(req, '/start?saved=1');
 }

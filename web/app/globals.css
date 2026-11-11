@@ -251,6 +251,9 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 .nav-bell{margin-left:auto; display:flex; align-items:center; gap:var(--s-1); font-size:var(--text-sm); white-space:nowrap}
 .nav-bell + .account{margin-left:0}
 .bell-count{min-width:20px; padding:0 var(--s-1); border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:var(--text-xs); text-align:center}
+.sp-list{display:grid; grid-template-columns:max-content 1fr; gap:var(--s-2) var(--s-4); margin:0; align-items:start}
+.sp-list dt{font-size:var(--text-sm); color:var(--text-muted)}
+.sp-list dd{margin:0}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 .col-640{max-width:640px}
 .col-720{max-width:720px}
@@ -450,3 +453,12 @@ fieldset.field legend{padding:0; margin-bottom:var(--s-1)}
 .tier .btn{align-self:flex-start}
 .tier-lead{border-color:var(--accent)}
 @media (max-width:480px){.land-hero{grid-template-columns:1fr; padding-block:var(--s-8)}}
+
+/* An opening's description, as plain text from the feed. */
+.posting-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+ul.stack{padding-left:0; list-style:none; margin:0}
+form[role="search"] input[type="search"]{
+  font:inherit; min-height:32px; padding:var(--s-1) var(--s-3); border-radius:var(--r-md); flex:1 1 180px; min-width:0;
+  border:1px solid var(--border-strong); background:var(--bg-surface); color:var(--text);
+}
+form[role="search"] input[type="search"]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}

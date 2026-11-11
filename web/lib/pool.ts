@@ -2,6 +2,7 @@ import { sql } from './db';
 import { fetchBoard, type Ats, type Posting } from './job-sources';
 import { wantedTitle } from './apply';
 import { notify } from './notifications';
+import { readSearchProfile, wantedRoles } from './search-profile';
 
 export type CompanyRow = {
   id: string;
@@ -21,6 +22,7 @@ export type PostingRow = {
   url: string;
   description: string;
   posted_at: string | null;
+  pay: string;
   first_seen: string;
   job_id: string | null;
 };
@@ -53,19 +55,20 @@ export async function refreshCompany(c: CompanyRow, fetchImpl?: typeof fetch): P
     url: p.url,
     description: p.description.slice(0, MAX_DESCRIPTION),
     posted_at: p.postedAt,
+    pay: p.pay,
   }));
   const ids = rows.map((r) => r.external_id);
 
   const [inserted] = await q.transaction([
     q`
-      INSERT INTO postings (id, sid, company_id, external_id, title, location, url, description, posted_at)
+      INSERT INTO postings (id, sid, company_id, external_id, title, location, url, description, posted_at, pay)
       SELECT gen_random_uuid()::text, ${c.sid}, ${c.id}, r.external_id, r.title, r.location, r.url, r.description,
-             r.posted_at::timestamptz
+             r.posted_at::timestamptz, r.pay
       FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb)
-        AS r(external_id text, title text, location text, url text, description text, posted_at text)
+        AS r(external_id text, title text, location text, url text, description text, posted_at text, pay text)
       ON CONFLICT (company_id, external_id) DO UPDATE SET
         title = EXCLUDED.title, location = EXCLUDED.location, url = EXCLUDED.url,
-        description = EXCLUDED.description, posted_at = EXCLUDED.posted_at
+        description = EXCLUDED.description, posted_at = EXCLUDED.posted_at, pay = EXCLUDED.pay
       RETURNING (xmax = 0) AS inserted`,
     q`
       DELETE FROM postings
@@ -88,7 +91,7 @@ export function matchesSearch(p: { title: string; location: string }, search: st
 
 /**
  * After a daily check: one notification per company that posted jobs for the roles
- * the person wants (their target role and wanted roles). With no roles set, any new job counts.
+ * the person wants (their own roles and the search profile's). With no roles set, any new job counts.
  */
 export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<void> {
   const q = sql();
@@ -96,11 +99,13 @@ export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<voi
     SELECT title FROM postings WHERE sid = ${c.sid} AND company_id = ${c.id} AND first_seen >= ${since.toISOString()}`) as {
     title: string;
   }[];
-  const [p] = (await q`SELECT target_role, preferences FROM profiles WHERE sid = ${c.sid}`) as {
+  const [p] = (await q`SELECT target_role, preferences, search_profile FROM profiles WHERE sid = ${c.sid}`) as {
     target_role: string | null;
-    preferences: { target_roles?: string[] } | null;
+    preferences: { target_roles: string[] } | null;
+    search_profile: unknown;
   }[];
-  const roles = [p?.target_role ?? '', ...(p?.preferences?.target_roles ?? [])].filter((r) => r.trim());
+  // Their own roles plus the search profile's roles and nearby roles.
+  const roles = wantedRoles(readSearchProfile(p?.search_profile), p ? { target_role: p.target_role, preferences: p.preferences as never } : null);
   const hits = roles.length ? fresh.filter((f) => wantedTitle(f.title, roles)) : fresh;
   if (hits.length === 0) return;
   const text =
@@ -108,4 +113,32 @@ export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<voi
       ? `New at ${c.name}: ${hits[0].title}`
       : `${hits.length} new jobs at ${c.name}${roles.length ? ' for the roles you want' : ''}`;
   await notify(c.sid, text, `/jobs/openings?company=${c.id}`);
+}
+
+/**
+ * Places to offer as location filters: "Remote", then the places
+ * they typed in their profile. "Austin, TX" stays one place; "Austin, Denver" is two.
+ */
+export function placeChoices(location: string | null, places: string | null): string[] {
+  const parts: string[] = [];
+  for (const piece of [location ?? '', places ?? ''].join(';').split(/[;\n|]|\bor\b/)) {
+    for (const bit of piece.split(',').map((b) => b.trim()).filter(Boolean)) {
+      // A state or country code belongs to the place before it.
+      if (/^[A-Z]{2,3}$/.test(bit) && parts.length) parts[parts.length - 1] += `, ${bit}`;
+      else parts.push(bit);
+    }
+  }
+  const out = ['Remote'];
+  for (const p of parts.map((x) => x.slice(0, 60))) {
+    if (!out.some((o) => o.toLowerCase() === p.toLowerCase())) out.push(p);
+  }
+  return out.slice(0, 8);
+}
+
+/** Whether a posting's location is in a place: "Remote" matches remote or anywhere; a city matches by its name. */
+export function inPlace(location: string, place: string): boolean {
+  const loc = location.toLowerCase();
+  if (/^remote$/i.test(place.trim())) return /remote|anywhere/.test(loc);
+  const name = place.split(',')[0].trim().toLowerCase();
+  return name.length > 1 && loc.includes(name);
 }

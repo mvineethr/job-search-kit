@@ -34,6 +34,7 @@ core/                    agent-agnostic prompts — THE source of truth
   metric-fill.md         answers → résumé with holes filled
   cold-email.md          situation + recipient + résumé (+ job) → {subject,paragraphs,facts,gaps}; app writes the greeting
   linkedin-profile.md    LinkedIn text + résumé → {identity,audit,headline,about,experience,skills}
+  search-profile.md      résumé + profile words → search terms {summary,roles,nearby_roles,fields,industries,seniority,skills}
 skills/ commands/        plugin; skills/resume-review/SKILL.md now points at core/
 web/
   app/                   routes (App Router); api/* are form-post or NDJSON endpoints
@@ -62,7 +63,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `docx.ts` | hand-written .docx (zip via `node:zlib` crc32/deflate, no dependency); single-column paragraphs, same section order as the PDF |
 | `ats-check.ts` | checks on extracted PDF text: readable, no font garbage, email/phone, headings (case-insensitive), dates |
 | `generic-phrases.ts` | flags the `## Banned` words from `ats-rules.md` in résumés/letters, skipping words the posting uses |
-| `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText` |
+| `answers.ts` | per-person skill answers; `claimableSkills`, `answersForPrompt`, `answerDetailText`, `workingKnowledge` ("tried it" skills the posting names → the résumé's labelled `workingKnowledge` line, set by the tailor route, never by the model, never merged into Skills; owner's call 2026-11-11) |
 | `messages.ts` | the user message each prompt receives (`tailorMessage`, `letterMessage`, `reviewMessage`, `matchMessage`); routes and `evals/` share it |
 | `question-schema.ts` / `metric-schema.ts` / `letter-schema.ts` / `findings-schema.ts` | Zod shapes for model outputs |
 | `db.ts` | Neon via plain SQL; `ensureSchema()` creates tables on demand |
@@ -75,8 +76,9 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `resume-edit.ts` | inline editing: `parseEdit` (trim + `ResumeSchema` + plain-language errors), `clearFlags` (edits only remove flagged numbers), `moveBullet`, `isMatchStale`, `readNote` |
 | `nav.ts` | top-nav items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
 | `outreach.ts` / `load-master.ts` | cold email + LinkedIn: schemas, `greetingFor` (name only from what the person typed), `unsupportedNumbers`, `verifyLinkedIn` (drops skills/roles not in source and quotes not in the LinkedIn text); `loadMaster` gives the active master as prompt text and check source. Both store in `letters` with `kind` `email`/`linkedin`; cover-letter queries filter `kind = 'cover'` |
-| `job-sources.ts` / `pool.ts` | followed companies' job feeds: `parseBoardUrl` (Greenhouse/Lever/Ashby careers link → board), `readFeed`, `fetchBoard`; `refreshCompany` upserts a company's postings and removes closed unsaved ones. Daily via `/api/cron/pool` (`CRON_SECRET`, `vercel.json`), the one cross-`sid` route besides `/admin` |
+| `job-sources.ts` / `pool.ts` | followed companies' job feeds: `parseBoardUrl` (Greenhouse/Lever/Ashby careers link → board), `readFeed`, `fetchBoard`; feeds carry pay (`pay`, else a range quoted from the description by `payFromText`; never estimated); `placeChoices`/`inPlace` drive the Openings location tabs; `refreshCompany` upserts a company's postings and removes closed unsaved ones. Daily via `/api/cron/pool` (`CRON_SECRET`, `vercel.json`), the one cross-`sid` route besides `/admin` |
 | `apply.ts` / `notifications.ts` | apply step: `botSubmitChannel` (null: no permitted way for the app to submit, so every application waits for the person), `readGreenhouseForm`/`fetchForm` (form questions sorted into kit vs only-you; Lever/Ashby publish none), `wantedTitle`; `notify`, `unreadCount` (top-bar badge). `/notifications` lists them plus saved-but-not-applied jobs |
+| `search-profile.ts` / `starter-companies.ts` | AI-drafted, person-editable search terms: `verifySearchProfile` (fields/industries/levels from fixed lists, skills only if written on the résumé), `parseSearchProfileForm`, `wantedRoles` (typed roles + profile roles + nearby roles; filters Openings and the daily notifications), `buildSearchProfile` (fast tier; reads résumé, skill answers and LinkedIn text), `refreshSearchProfile` (run via `after()` when a master is added, skill answers or the profile are saved; skips hand-edited profiles). `STARTER_COMPANIES` (26 boards checked live 2026-11-11, tagged by industry) and `suggestCompanies` |
 | `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
 | `components/AppNav.tsx` | the signed-in top bar: sections on the left, account menu on the right; on phones the sections move into the menu (client; uses `NAV`) |
 | `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
@@ -100,7 +102,7 @@ Résumé editing: `/resume/[id]` renders `components/EditableResume.tsx` (fields
 - `companies(id, sid, ats, token, name, checked_at, check_error)` and `postings(id, sid, company_id, external_id, title, location, url, description, posted_at, first_seen, job_id)`: followed boards and their open jobs, copied per `sid` (no shared table). Saving a posting creates a `jobs` row, sets `postings.job_id`, stores its form questions in `postings.form` and a "waiting for you to apply" notification
 - `notifications(id, sid, text, href, created_at, read_at)`: `href` is always an in-app path built by code; marking a job applied marks its reminder read
 - `skill_answers(sid, skill_key, skill, level, detail)` — **per person, not per job**
-- `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from, terms_version, terms_accepted_at)` — LinkedIn text is stored, never merged into the résumé; the terms columns are the record of agreement
+- `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from, terms_version, terms_accepted_at, search_profile jsonb)` — LinkedIn text is stored, never merged into the résumé; the terms columns are the record of agreement
 - Better Auth's `user`, `session`, `account`, `verification` (camelCase quoted columns: `"userId"`, `"providerId"`, `"createdAt"`). `sid` everywhere = `user.id`. Rows from the old shared-password sessions remain, unreachable.
 
 ## Hard rules

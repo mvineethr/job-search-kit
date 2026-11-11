@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { refreshSearchProfile } from '@/lib/search-profile';
 import { requireSid } from '@/lib/auth';
 import { ensureSchema, sql, type JobRow } from '@/lib/db';
 import { loadAnswers, saveAnswer } from '@/lib/answers';
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
     return backWithError(req, jobId ? `/jobs/${jobId}/questions` : '/jobs', 'Nothing was saved — no questions were answered.');
   }
 
+  after(() => refreshSearchProfile(sid)); // the search profile learns from this without asking anything
   if (!jobId) return redirectTo(req, '/jobs');
   return redirectTo(req, `/jobs/${jobId}?answered=${saved}${before !== null ? `&was=${before}` : ''}`);
 }

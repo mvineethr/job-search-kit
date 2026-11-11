@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { refreshSearchProfile } from '@/lib/search-profile';
 import { requireSid } from '@/lib/auth';
 import { saveMaster } from '@/lib/save-master';
 import { upsertProfile } from '@/lib/profile';
@@ -30,5 +32,6 @@ export async function POST(req: Request) {
 
   const { id, content } = await saveMaster(sid, source, resumeText ? 'My résumé' : 'From LinkedIn');
   await upsertProfile(sid, content?.name ?? '', linkedinText || null);
+  after(() => refreshSearchProfile(sid)); // the search profile learns from this without asking anything
   return redirectTo(req, `/resume/${id}`);
 }

@@ -54,6 +54,13 @@ export default async function PrivacyPage() {
             jobs and applications waiting for you.
           </li>
           <li>
+            <strong>Your search profile:</strong> job titles, nearby roles, fields, industries, level and skills to
+            search for. The AI provider drafts it from your résumé, your answers to skill questions, your LinkedIn
+            text and the profile details it is allowed to see, and drafts it again when you add a résumé, answer
+            skill questions or change your profile, unless you have edited it yourself. You can change all of it.
+            It is only used to find and sort job openings for you.
+          </li>
+          <li>
             <strong>Your agreement:</strong> which version of these terms you accepted, and when.
           </li>
           <li>
@@ -101,8 +108,8 @@ export default async function PrivacyPage() {
           <li>
             <strong>Moonshot AI</strong>, the company behind the Kimi models, receives the text of your résumé, the
             job description and your answers when you ask for a review, a tailored résumé, a letter or anything
-            else written by AI. Its servers may be outside your country, including in China. We send only what is
-            needed for the request you made.
+            else written by AI, and when your search profile is drafted (see above). Its servers may be outside
+            your country, including in China. We send only what is needed for that request.
           </li>
           <li>
             <strong>Google</strong> and <strong>LinkedIn</strong>, only if you choose to sign in with them.

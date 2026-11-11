@@ -31,6 +31,20 @@ export function claimableSkills(answers: Answer[]): string[] {
 }
 
 /**
+ * Skills rated "tried it" that this posting names, for a separate, labelled
+ * "Working knowledge" line: the word reaches a keyword screen, and the label says
+ * exactly what the person can back up. Never merged into Skills.
+ */
+export function workingKnowledge(answers: Answer[], jobDescription: string, skills: string[]): string[] {
+  const jd = jobDescription.toLowerCase();
+  const have = new Set(skills.map((s) => s.toLowerCase().trim()));
+  return answers
+    .filter((a) => a.level === 'some' && jd.includes(a.skill.toLowerCase().trim()) && !have.has(a.skill.toLowerCase().trim()))
+    .map((a) => a.skill.trim())
+    .slice(0, 8);
+}
+
+/**
  * What the person typed when answering, as verification source. Without this the
  * audit flags numbers they supplied themselves — answer "ran it across 12
  * services" and the tailored bullet's "12" looks invented.

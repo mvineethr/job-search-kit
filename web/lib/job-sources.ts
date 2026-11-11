@@ -18,6 +18,8 @@ export type Posting = {
   url: string;
   description: string; // plain text
   postedAt: string | null; // ISO
+  /** Pay as the employer published it, or '' when the posting gives none. Never estimated. */
+  pay: string;
 };
 
 const HOSTS: { ats: Ats; re: RegExp }[] = [
@@ -47,9 +49,9 @@ export function parseBoardUrl(input: string): Board | null {
 /** Where the board's feed lives. The token is a checked slug, still encoded to be safe. */
 export function feedUrl({ ats, token }: Board): string {
   const t = encodeURIComponent(token);
-  if (ats === 'greenhouse') return `https://boards-api.greenhouse.io/v1/boards/${t}/jobs?content=true`;
+  if (ats === 'greenhouse') return `https://boards-api.greenhouse.io/v1/boards/${t}/jobs?content=true&pay_transparency=true`;
   if (ats === 'lever') return `https://api.lever.co/v0/postings/${t}?mode=json`;
-  return `https://api.ashbyhq.com/posting-api/job-board/${t}`;
+  return `https://api.ashbyhq.com/posting-api/job-board/${t}?includeCompensation=true`;
 }
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" };
@@ -85,6 +87,31 @@ const iso = (v: unknown) => {
   return d && !Number.isNaN(d.getTime()) ? d.toISOString() : null;
 };
 
+function money(n: unknown, currency: string): string {
+  const v = typeof n === 'number' ? n : Number(n);
+  if (!Number.isFinite(v) || v <= 0) return '';
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(v);
+  } catch {
+    return `${Math.round(v).toLocaleString('en-US')} ${currency}`.trim();
+  }
+}
+
+function range(min: unknown, max: unknown, currency: string): string {
+  const a = money(min, currency);
+  const b = money(max, currency);
+  const code = currency && currency !== 'USD' ? ` ${currency}` : '';
+  return a && b && a !== b ? `${a} – ${b}${code}` : a || b ? `${a || b}${code}` : '';
+}
+
+// "$120,000 - $150,000", "$95k–$120k", "$40 to $55": a range written in the posting itself.
+const PAY_IN_TEXT = /\$\s?\d[\d,]*(?:\.\d+)?\s?[kK]?(?:\s?(?:USD|CAD))?\s?(?:-|–|—|to)\s?(?:USD\s?)?\$?\s?\d[\d,]*(?:\.\d+)?\s?[kK]?(?:\s?(?:USD|CAD))?/;
+
+/** A pay range quoted word for word from the description, when the feed has no pay field. */
+export function payFromText(text: string): string {
+  return text.match(PAY_IN_TEXT)?.[0].replace(/\s+/g, ' ').trim() ?? '';
+}
+
 /** One feed's JSON → postings. Items without an id, title or link are skipped. */
 export function readFeed(ats: Ats, data: unknown): Posting[] {
   const items: unknown[] =
@@ -103,6 +130,14 @@ export function readFeed(ats: Ats, data: unknown): Posting[] {
         url: str(j.absolute_url),
         description: htmlToText(decodeEntities(str(j.content))),
         postedAt: iso(j.first_published ?? j.updated_at),
+        pay: (Array.isArray(j.pay_input_ranges) ? j.pay_input_ranges : [])
+          .map((r: Record<string, unknown> | null) => {
+            const v = range(Number(r?.min_cents) / 100, Number(r?.max_cents) / 100, str(r?.currency_type));
+            const t = str(r?.title).trim();
+            return v && t && j.pay_input_ranges.length > 1 ? `${v} (${t})` : v;
+          })
+          .filter(Boolean)
+          .join('; '),
       };
     } else if (ats === 'lever') {
       const lists = Array.isArray(j.lists)
@@ -118,6 +153,12 @@ export function readFeed(ats: Ats, data: unknown): Posting[] {
           .join('\n\n')
           .trim(),
         postedAt: iso(j.createdAt),
+        pay: (() => {
+          const v = range(j.salaryRange?.min, j.salaryRange?.max, str(j.salaryRange?.currency));
+          // Lever's intervals read "per-year-salary", "per-hour-wage".
+          const per = str(j.salaryRange?.interval).replace(/-(salary|wage)$/, '').replace(/-/g, ' ');
+          return v && per ? `${v} ${per}` : v;
+        })(),
       };
     } else {
       if (j.isListed === false) continue;
@@ -128,8 +169,15 @@ export function readFeed(ats: Ats, data: unknown): Posting[] {
         url: str(j.jobUrl),
         description: str(j.descriptionPlain).trim() || htmlToText(str(j.descriptionHtml)),
         postedAt: iso(j.publishedAt),
+        pay:
+          j.shouldDisplayCompensationOnJobPostings === false
+            ? ''
+            : str(j.compensation?.scrapeableCompensationSalarySummary).trim() ||
+              str(j.compensation?.compensationTierSummary).trim(),
       };
     }
+    if (!p.pay) p.pay = payFromText(p.description);
+    p.pay = p.pay.slice(0, 200);
     if (p.externalId && p.title && /^https:\/\//.test(p.url)) out.push(p);
   }
   return out;
