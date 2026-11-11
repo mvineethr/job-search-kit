@@ -16,7 +16,7 @@ export async function GET() {
   await ensureSchema();
   const q = sql();
   const sid = user.id;
-  const [account, signIns, sessions, profile, resumes, jobs, letters, answers, companies, postings] = await Promise.all([
+  const [account, signIns, sessions, profile, resumes, jobs, letters, answers, companies, postings, notifications] = await Promise.all([
     q`SELECT id, name, email, "emailVerified", image, "createdAt", "updatedAt" FROM "user" WHERE id = ${sid}`,
     q`SELECT "providerId", "createdAt" FROM account WHERE "userId" = ${sid}`,
     q`SELECT "createdAt", "expiresAt", "ipAddress", "userAgent" FROM session WHERE "userId" = ${sid}`,
@@ -27,6 +27,7 @@ export async function GET() {
     q`SELECT * FROM skill_answers WHERE sid = ${sid}`,
     q`SELECT * FROM companies WHERE sid = ${sid} ORDER BY created_at`,
     q`SELECT * FROM postings WHERE sid = ${sid} ORDER BY first_seen`,
+    q`SELECT * FROM notifications WHERE sid = ${sid} ORDER BY created_at`,
   ]);
 
   const body = JSON.stringify(
@@ -43,6 +44,7 @@ export async function GET() {
       skillAnswers: answers,
       followedCompanies: companies,
       openings: postings,
+      notifications,
     },
     null,
     2,

@@ -9,6 +9,7 @@ import FitMeter from '@/components/FitMeter';
 import PageBar from '@/components/PageBar';
 import GenerateButton from '@/components/GenerateButton';
 import ConfirmButton from '@/components/ConfirmButton';
+import type { FormQuestion } from '@/lib/apply';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,54 @@ function RequirementList({ title, items }: { title: string; items: MatchedRequir
   );
 }
 
+/**
+ * The apply step. The app never presses Submit: no permitted way exists (lib/apply.ts),
+ * so it lays out what is ready and what only the person can answer, and links to the form.
+ */
+function ApplyCard({ url, form, tailored, letter }: { url: string; form: FormQuestion[] | null; tailored: boolean; letter: boolean }) {
+  const yours = form?.filter((f) => f.who === 'you') ?? [];
+  return (
+    <section className="card col-640 apply-card">
+      <div className="card-head">
+        <h2>Apply on the company&apos;s page</h2>
+      </div>
+      <div className="card-body stack">
+        <p className="hint">
+          Applications are sent by you, on the employer&apos;s own form. The app gets everything ready but never
+          submits for you, and never answers a question about you that you have not answered yourself.
+        </p>
+        <ul className="apply-list">
+          <li>{tailored ? 'Tailored résumé: ready. Download it as PDF or Word from its page.' : 'Tailored résumé: not yet. Tailor it first (top of the page).'}</li>
+          <li>{letter ? 'Cover letter: ready.' : 'Cover letter: not written. Optional on most forms.'}</li>
+        </ul>
+        {form === null ? (
+          <p className="notice">This site does not publish its form, so check the questions on the page before you start.</p>
+        ) : yours.length > 0 ? (
+          <div className="stack">
+            <strong>Only you can answer these</strong>
+            <ul className="apply-list">
+              {yours.map((f, i) => (
+                <li key={i}>
+                  {f.label}
+                  {f.required ? '' : ' (optional)'}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="notice notice-ok">The form only asks for your details, résumé and letter.</p>
+        )}
+        <div className="row">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            Open the application
+          </a>
+          <span className="hint">Then come back and mark it as applied.</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function JobPage({
   params,
   searchParams,
@@ -77,6 +126,12 @@ export default async function JobPage({
   const letter = ((await q`
     SELECT id FROM letters WHERE sid = ${sid} AND job_id = ${id} AND kind = 'cover'
     ORDER BY created_at DESC LIMIT 1`) as unknown as LetterRow[])[0];
+  // Set when the job was saved from a followed company's openings.
+  const posting = ((await q`
+    SELECT url, form FROM postings WHERE sid = ${sid} AND job_id = ${id} LIMIT 1`) as {
+    url: string;
+    form: FormQuestion[] | null;
+  }[])[0];
 
   const match = readMatch(job.match);
   // The score was verified against the master as it was; an edit since then can change it.
@@ -163,6 +218,10 @@ export default async function JobPage({
               ? `Your fit went from ${wasScore} to ${view.score} from what you told us.`
               : 'They apply to every job you tailor to from now on.'}
           </p>
+        )}
+
+        {posting && !job.applied_at && (
+          <ApplyCard url={posting.url} form={posting.form} tailored={Boolean(tailored)} letter={Boolean(letter)} />
         )}
 
         {!view ? (

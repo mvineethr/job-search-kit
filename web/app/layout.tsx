@@ -5,6 +5,7 @@ import './globals.css';
 import TopBar from '@/components/TopBar';
 import AppNav from '@/components/AppNav';
 import { currentUser } from '@/lib/auth';
+import { unreadCount } from '@/lib/notifications';
 import { isAdmin } from '@/lib/admin';
 import { REPO_URL, SITE_NAME } from '@/lib/site';
 
@@ -20,12 +21,13 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
+  const unread = user ? await unreadCount(user.id) : 0;
   const me = user ? { name: user.name || user.email, email: user.email, admin: isAdmin(user.email) } : null;
 
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
-        {me ? <AppNav me={me} /> : <TopBar />}
+        {me ? <AppNav me={me} unread={unread} /> : <TopBar />}
         <div className={me ? 'shell' : 'shell-public'}>
           {children}
           <footer className="site-foot">

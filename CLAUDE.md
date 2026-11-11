@@ -76,6 +76,7 @@ docs/superpowers/        specs (design, UX, match score, onboarding, accounts) a
 | `nav.ts` | top-nav items (`NAV`, `soon` flags) and `navCurrent` (which item a path belongs to) |
 | `outreach.ts` / `load-master.ts` | cold email + LinkedIn: schemas, `greetingFor` (name only from what the person typed), `unsupportedNumbers`, `verifyLinkedIn` (drops skills/roles not in source and quotes not in the LinkedIn text); `loadMaster` gives the active master as prompt text and check source. Both store in `letters` with `kind` `email`/`linkedin`; cover-letter queries filter `kind = 'cover'` |
 | `job-sources.ts` / `pool.ts` | followed companies' job feeds: `parseBoardUrl` (Greenhouse/Lever/Ashby careers link → board), `readFeed`, `fetchBoard`; `refreshCompany` upserts a company's postings and removes closed unsaved ones. Daily via `/api/cron/pool` (`CRON_SECRET`, `vercel.json`), the one cross-`sid` route besides `/admin` |
+| `apply.ts` / `notifications.ts` | apply step: `botSubmitChannel` (null: no permitted way for the app to submit, so every application waits for the person), `readGreenhouseForm`/`fetchForm` (form questions sorted into kit vs only-you; Lever/Ashby publish none), `wantedTitle`; `notify`, `unreadCount` (top-bar badge). `/notifications` lists them plus saved-but-not-applied jobs |
 | `resume-groups.ts` | `groupResumes`: masters, then tailored copies grouped under their job |
 | `components/AppNav.tsx` | the signed-in top bar: sections on the left, account menu on the right; on phones the sections move into the menu (client; uses `NAV`) |
 | `components/PageBar.tsx` | breadcrumb row plus action rail at the top of every signed-in page |
@@ -96,7 +97,8 @@ Résumé editing: `/resume/[id]` renders `components/EditableResume.tsx` (fields
   - For tailored rows, `source_text` holds JSON `{note, audit}`; older rows hold plain prose.
   - Masters from the guided builder hold the flattened answers (`answersToText`) in `source_text`: the person's words are the original.
 - `letters(id, sid, kind, job_id, resume_id, content jsonb)`
-- `companies(id, sid, ats, token, name, checked_at, check_error)` and `postings(id, sid, company_id, external_id, title, location, url, description, posted_at, first_seen, job_id)`: followed boards and their open jobs, copied per `sid` (no shared table). Saving a posting creates a `jobs` row and sets `postings.job_id`
+- `companies(id, sid, ats, token, name, checked_at, check_error)` and `postings(id, sid, company_id, external_id, title, location, url, description, posted_at, first_seen, job_id)`: followed boards and their open jobs, copied per `sid` (no shared table). Saving a posting creates a `jobs` row, sets `postings.job_id`, stores its form questions in `postings.form` and a "waiting for you to apply" notification
+- `notifications(id, sid, text, href, created_at, read_at)`: `href` is always an in-app path built by code; marking a job applied marks its reminder read
 - `skill_answers(sid, skill_key, skill, level, detail)` — **per person, not per job**
 - `profiles(sid PK, name, linkedin_text, target_role, years_experience, location, search_status, heard_from, terms_version, terms_accepted_at)` — LinkedIn text is stored, never merged into the résumé; the terms columns are the record of agreement
 - Better Auth's `user`, `session`, `account`, `verification` (camelCase quoted columns: `"userId"`, `"providerId"`, `"createdAt"`). `sid` everywhere = `user.id`. Rows from the old shared-password sessions remain, unreachable.

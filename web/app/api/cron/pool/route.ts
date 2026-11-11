@@ -1,5 +1,5 @@
 import { ensureSchema, sql } from '@/lib/db';
-import { refreshCompany, type CompanyRow } from '@/lib/pool';
+import { notifyNewOpenings, refreshCompany, type CompanyRow } from '@/lib/pool';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -24,10 +24,17 @@ export async function GET(req: Request) {
     ORDER BY checked_at ASC NULLS FIRST LIMIT ${PER_RUN}`) as unknown as CompanyRow[];
 
   // A few at a time: polite to the hiring sites, and well inside the time limit.
+  // Postings first seen from here on are this run's new ones (the database clock sets first_seen).
+  const [{ now }] = (await sql()`SELECT now() AS now`) as { now: string | Date }[];
   let added = 0;
   for (let i = 0; i < companies.length; i += 8) {
-    const counts = await Promise.all(companies.slice(i, i + 8).map((c) => refreshCompany(c)));
-    added += counts.reduce((a, b) => a + b, 0);
+    await Promise.all(
+      companies.slice(i, i + 8).map(async (c) => {
+        const n = await refreshCompany(c);
+        added += n;
+        if (n > 0) await notifyNewOpenings(c, new Date(now));
+      }),
+    );
   }
   return Response.json({ ok: true, checked: companies.length, added });
 }

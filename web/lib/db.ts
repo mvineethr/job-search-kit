@@ -192,6 +192,20 @@ async function createSchema(): Promise<void> {
       UNIQUE (company_id, external_id)
     )`;
   await q`CREATE INDEX IF NOT EXISTS postings_sid_idx ON postings (sid, first_seen DESC)`;
+  // The application form's questions, read when the posting is saved (lib/apply.ts). Null: not readable.
+  await q`ALTER TABLE postings ADD COLUMN IF NOT EXISTS form JSONB`;
+
+  // Things waiting for the person: new openings for roles they want, jobs only they can apply to.
+  await q`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id         TEXT PRIMARY KEY,
+      sid        TEXT NOT NULL,
+      text       TEXT NOT NULL,
+      href       TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      read_at    TIMESTAMPTZ
+    )`;
+  await q`CREATE INDEX IF NOT EXISTS notifications_sid_idx ON notifications (sid, created_at DESC)`;
 
   await q`CREATE INDEX IF NOT EXISTS jobs_sid_idx ON jobs (sid, created_at DESC)`;
   await q`CREATE INDEX IF NOT EXISTS letters_sid_idx ON letters (sid, job_id)`;

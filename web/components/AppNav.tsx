@@ -51,7 +51,7 @@ function Links({ pathname }: { pathname: string }) {
 }
 
 /** The signed-in bar: brand and sections on the left, the account menu on the right. Phones get the sections inside the menu. */
-export default function AppNav({ me }: { me: Me }) {
+export default function AppNav({ me, unread = 0 }: { me: Me; unread?: number }) {
   const pathname = usePathname();
   const account = useRef<HTMLDetailsElement>(null);
   useDetailsClose(account, pathname);
@@ -66,6 +66,16 @@ export default function AppNav({ me }: { me: Me }) {
         <nav className="top-nav" aria-label="Main">
           <Links pathname={pathname} />
         </nav>
+        {/* On phones only the count shows here; the menu has the full link. */}
+        <Link
+          href="/notifications"
+          className="nav-link nav-bell"
+          aria-current={pathname === '/notifications' ? 'page' : undefined}
+          aria-label={unread > 0 ? `Notifications, ${unread} new` : 'Notifications'}
+        >
+          <span className="bell-label">Notifications</span>
+          {unread > 0 && <span className="bell-count tnum">{unread > 99 ? '99+' : unread}</span>}
+        </Link>
         <details className="menu account" ref={account}>
           <summary aria-label={`Account menu for ${me.name}`}>
             <span className="avatar" aria-hidden="true">{initials(me.name) || '?'}</span>
@@ -79,6 +89,7 @@ export default function AppNav({ me }: { me: Me }) {
               <strong>{me.name}</strong>
               <span>{me.email}</span>
             </div>
+            <Link href="/notifications">Notifications</Link>
             <Link href="/start">Profile</Link>
             <Link href="/settings">Settings</Link>
             <Link href="/help">Help</Link>

@@ -1,5 +1,7 @@
 import { sql } from './db';
 import { fetchBoard, type Ats, type Posting } from './job-sources';
+import { wantedTitle } from './apply';
+import { notify } from './notifications';
 
 export type CompanyRow = {
   id: string;
@@ -82,4 +84,28 @@ export function matchesSearch(p: { title: string; location: string }, search: st
     .split(/\s+/)
     .filter(Boolean)
     .every((w) => hay.includes(w));
+}
+
+/**
+ * After a daily check: one notification per company that posted jobs for the roles
+ * the person wants (their target role and wanted roles). With no roles set, any new job counts.
+ */
+export async function notifyNewOpenings(c: CompanyRow, since: Date): Promise<void> {
+  const q = sql();
+  const fresh = (await q`
+    SELECT title FROM postings WHERE sid = ${c.sid} AND company_id = ${c.id} AND first_seen >= ${since.toISOString()}`) as {
+    title: string;
+  }[];
+  const [p] = (await q`SELECT target_role, preferences FROM profiles WHERE sid = ${c.sid}`) as {
+    target_role: string | null;
+    preferences: { target_roles?: string[] } | null;
+  }[];
+  const roles = [p?.target_role ?? '', ...(p?.preferences?.target_roles ?? [])].filter((r) => r.trim());
+  const hits = roles.length ? fresh.filter((f) => wantedTitle(f.title, roles)) : fresh;
+  if (hits.length === 0) return;
+  const text =
+    hits.length === 1
+      ? `New at ${c.name}: ${hits[0].title}`
+      : `${hits.length} new jobs at ${c.name}${roles.length ? ' for the roles you want' : ''}`;
+  await notify(c.sid, text, `/jobs/openings?company=${c.id}`);
 }

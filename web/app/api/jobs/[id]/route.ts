@@ -34,6 +34,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     await q`
       UPDATE jobs SET applied_at = CASE WHEN applied_at IS NULL THEN now() ELSE NULL END
       WHERE id = ${id} AND sid = ${sid}`;
+    // Applied: the "waiting for you to apply" reminder is done.
+    await q`UPDATE notifications SET read_at = now()
+            WHERE sid = ${sid} AND href = ${`/jobs/${id}`} AND read_at IS NULL`;
     return redirectTo(req, returnTo);
   } else if (op === 'match') {
     const rows = (await q`
@@ -46,6 +49,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     // Letters go with the job via ON DELETE CASCADE.
     await q.transaction([
       q`DELETE FROM resumes WHERE job_id = ${id} AND sid = ${sid} AND parent_id IS NOT NULL`,
+      q`DELETE FROM notifications WHERE sid = ${sid} AND href = ${`/jobs/${id}`}`,
       q`DELETE FROM jobs WHERE id = ${id} AND sid = ${sid}`,
     ]);
   } else {
