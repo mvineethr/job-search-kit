@@ -47,6 +47,11 @@ export default async function PrivacyPage() {
             them in. Sponsorship, pay, places and dealbreakers are never sent to the AI provider.
           </li>
           <li>
+            <strong>Companies you follow:</strong> the careers pages you follow and copies of their open job
+            postings, which our server fetches from the company&apos;s public job list on Greenhouse, Lever or
+            Ashby. Those requests carry only the company&apos;s board name, nothing about you.
+          </li>
+          <li>
             <strong>Your agreement:</strong> which version of these terms you accepted, and when.
           </li>
           <li>

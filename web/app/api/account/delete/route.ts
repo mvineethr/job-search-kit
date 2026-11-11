@@ -30,6 +30,8 @@ export async function POST(req: Request) {
   await q.transaction([
     q`DELETE FROM letters WHERE sid = ${sid}`,
     q`DELETE FROM resumes WHERE sid = ${sid}`,
+    q`DELETE FROM postings WHERE sid = ${sid}`,
+    q`DELETE FROM companies WHERE sid = ${sid}`,
     q`DELETE FROM jobs WHERE sid = ${sid}`,
     q`DELETE FROM skill_answers WHERE sid = ${sid}`,
     q`DELETE FROM profiles WHERE sid = ${sid}`,

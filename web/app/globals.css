@@ -244,6 +244,7 @@ button{font:inherit; color:inherit; cursor:pointer; border:0; background:none; t
 
 .stack{display:flex; flex-direction:column; gap:var(--s-3)}
 .row{display:flex; flex-wrap:wrap; gap:var(--s-2); align-items:center}
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 .col-640{max-width:640px}
 .col-720{max-width:720px}
 .section-title{font-size:var(--text-sm); font-weight:600; margin-bottom:var(--s-2)}
